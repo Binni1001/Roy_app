@@ -1,5 +1,6 @@
 import express from "express";
 import cors from "cors";
+
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
 import periodMembersRoutes from "./modules/period-members/periodMembers.routes.js";
@@ -19,14 +20,14 @@ app.use(express.json());
 
 app.get("/", (req, res) => {
   res.json({
-    message: "Roy Badminton API is running",
+    message: "Roy Badminton API is running"
   });
 });
 
 app.get("/api/health", (req, res) => {
   res.json({
     status: "ok",
-    app: "roy_badminton",
+    app: "roy_badminton"
   });
 });
 
@@ -41,6 +42,5 @@ app.use("/api/balance-offsets", balanceOffsetsRoutes);
 app.use("/api/club-fund-transactions", clubFundTransactionsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentsRoutes);
-router.post("/payos-webhook", paymentsController.payosWebhook);
 
 export default app;

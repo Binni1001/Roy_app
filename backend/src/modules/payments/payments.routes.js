@@ -8,4 +8,6 @@ router.post(
   paymentsController.createForPersonPeriod
 );
 
+router.post("/payos-webhook", paymentsController.payosWebhook);
+
 export default router;
