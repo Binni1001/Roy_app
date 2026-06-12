@@ -156,7 +156,11 @@ export const paymentsService = {
     const payment = paymentResult.data;
 
     if (!payment) {
-      throw new Error("Không tìm thấy payment theo orderCode");
+      return {
+        message: "Webhook hợp lệ nhưng orderCode chưa tồn tại trong hệ thống. Có thể là request test từ PayOS.",
+        test_webhook: true,
+        orderCode
+      };
     }
 
     if (payment.status === "paid") {
