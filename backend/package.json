@@ -1,0 +1,19 @@
+{
+  "name": "roy-badminton-backend",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "nodemon api/index.js",
+    "start": "node api/index.js"
+  },
+  "dependencies": {
+    "@payos/node": "^2.0.5",
+    "@supabase/supabase-js": "latest",
+    "cors": "latest",
+    "dotenv": "latest",
+    "express": "latest"
+  },
+  "devDependencies": {
+    "nodemon": "latest"
+  }
+}

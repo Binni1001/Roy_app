@@ -1,0 +1,187 @@
+import { shuttleSettlementsRepository } from "./shuttleSettlements.repository.js";
+
+export const shuttleSettlementsService = {
+  async preview(periodId) {
+    if (!periodId) {
+      throw new Error("Period ID không được để trống");
+    }
+
+    const membersResult = await shuttleSettlementsRepository.getFixedMembers(periodId);
+    if (membersResult.error) throw new Error(membersResult.error.message);
+
+    const fixedMembers = membersResult.data;
+
+    if (fixedMembers.length === 0) {
+      throw new Error("Kỳ này chưa có fixed member");
+    }
+
+    const expensesResult = await shuttleSettlementsRepository.getShuttleExpenses(periodId);
+    if (expensesResult.error) throw new Error(expensesResult.error.message);
+
+    const expenses = expensesResult.data;
+
+    const totalAmount = expenses.reduce(
+      (sum, item) => sum + Number(item.total_amount),
+      0
+    );
+
+    const totalShuttles = expenses.reduce(
+      (sum, item) => sum + Number(item.total_shuttle_count),
+      0
+    );
+
+    const sharePerMember = Math.round(totalAmount / fixedMembers.length);
+
+    const buyerMap = {};
+
+    for (const expense of expenses) {
+      const buyerId = expense.buyer_id;
+
+      if (!buyerMap[buyerId]) {
+        buyerMap[buyerId] = 0;
+      }
+
+      buyerMap[buyerId] += Number(expense.total_amount);
+    }
+
+    const details = fixedMembers.map((member) => {
+      const personId = member.person_id;
+      const paidForShuttles = buyerMap[personId] || 0;
+      const netAmount = paidForShuttles - sharePerMember;
+
+      return {
+        person_id: personId,
+        person: member.person,
+        paid_for_shuttles: paidForShuttles,
+        shuttle_share: sharePerMember,
+        net_amount: netAmount,
+        result:
+          netAmount > 0
+            ? "positive_balance"
+            : netAmount < 0
+              ? "need_to_pay"
+              : "settled"
+      };
+    });
+
+    return {
+      period_id: periodId,
+      fixed_member_count: fixedMembers.length,
+      total_shuttle_amount: totalAmount,
+      total_shuttle_count: totalShuttles,
+      share_per_member: sharePerMember,
+      details
+    };
+  },
+
+  async settle(periodId) {
+    const preview = await this.preview(periodId);
+
+    const results = [];
+
+    for (const item of preview.details) {
+      const netAmount = Number(item.net_amount);
+
+      if (netAmount === 0) {
+        results.push({
+          person_id: item.person_id,
+          action: "no_action",
+          amount: 0
+        });
+        continue;
+      }
+
+      const balanceResult = await shuttleSettlementsRepository.findPersonBalance(
+        item.person_id
+      );
+
+      if (balanceResult.error) {
+        throw new Error(balanceResult.error.message);
+      }
+
+      const currentBalance = balanceResult.data
+        ? Number(balanceResult.data.balance)
+        : 0;
+
+      const newBalance = currentBalance + netAmount;
+
+      if (balanceResult.data) {
+        const updateBalanceResult =
+          await shuttleSettlementsRepository.updatePersonBalance(
+            item.person_id,
+            newBalance
+          );
+
+        if (updateBalanceResult.error) {
+          throw new Error(updateBalanceResult.error.message);
+        }
+      } else {
+        const createBalanceResult =
+          await shuttleSettlementsRepository.createPersonBalance(
+            item.person_id,
+            newBalance
+          );
+
+        if (createBalanceResult.error) {
+          throw new Error(createBalanceResult.error.message);
+        }
+      }
+
+      const transactionResult =
+        await shuttleSettlementsRepository.createBalanceTransaction({
+          person_id: item.person_id,
+          period_id: periodId,
+          transaction_type:
+            netAmount > 0
+              ? "credit_from_shuttle_purchase"
+              : "debit_shuttle_share",
+          amount: Math.abs(netAmount),
+          direction: netAmount > 0 ? "plus" : "minus",
+          description:
+            netAmount > 0
+              ? "Dương tiền do mua cầu nhiều hơn phần phải chịu"
+              : "Âm tiền do chưa đóng đủ phần cầu phải chịu"
+        });
+
+      if (transactionResult.error) {
+        throw new Error(transactionResult.error.message);
+      }
+
+      if (netAmount < 0) {
+        const debtResult = await shuttleSettlementsRepository.createDebt({
+          period_id: periodId,
+          person_id: item.person_id,
+          debt_type: "shuttle_extra",
+          amount: Math.abs(netAmount),
+          status: "unpaid",
+          description: "Tiền cầu cần đóng thêm"
+        });
+
+        if (debtResult.error) {
+          throw new Error(debtResult.error.message);
+        }
+
+        results.push({
+          person_id: item.person_id,
+          action: "created_shuttle_debt",
+          amount: Math.abs(netAmount),
+          new_balance: newBalance,
+          debt: debtResult.data
+        });
+      } else {
+        results.push({
+          person_id: item.person_id,
+          action: "added_positive_balance",
+          amount: netAmount,
+          new_balance: newBalance
+        });
+      }
+    }
+
+    return {
+      message: "Chốt tiền cầu thành công",
+      preview,
+      results
+    };
+  }
+};
