@@ -1,53 +1,73 @@
-# Miscellaneous
-*.class
+# =========================
+# Dependencies
+# =========================
+node_modules/
+**/node_modules/
+
+# =========================
+# Environment
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Build
+# =========================
+dist/
+build/
+coverage/
+
+# =========================
+# Logs
+# =========================
+logs/
 *.log
-*.pyc
-*.swp
-.DS_Store
-.atom/
-.build/
-.buildlog/
-.history
-.svn/
-.swiftpm/
-migrate_working_dir/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
 
-# IntelliJ related
-*.iml
-*.ipr
-*.iws
+# =========================
+# IDE
+# =========================
 .idea/
+.vscode/
+*.iml
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# =========================
+# OS
+# =========================
+.DS_Store
+Thumbs.db
 
-# Flutter/Dart/Pub related
-**/doc/api/
-**/ios/Flutter/.last_build_id
-.dart_tool/
-.flutter-plugins-dependencies
-.pub-cache/
-.pub/
-/build/
-/coverage/
-backend/.env
-backend/node_modules/
-frontend/.env
-frontend/node_modules/
-frontend/dist/
-.env.local
-.env.*.local
-flutter_run*.log
+# =========================
+# Vercel
+# =========================
+.vercel/
 
-# Symbolication related
-app.*.symbols
+# =========================
+# Supabase
+# =========================
+.supabase/
+supabase/.temp/
+supabase/.branches/
 
-# Obfuscation related
-app.*.map.json
+# =========================
+# Temporary
+# =========================
+.history/
+tmp/
+temp/
 
-# Android Studio will place build artifacts here
-/android/app/debug
-/android/app/profile
-/android/app/release
+# =========================
+# Test files
+# =========================
+*.sqlite
+*.db
+
+# =========================
+# Mac/Linux
+# =========================
+*.swp
+*.swo
