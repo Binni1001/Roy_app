@@ -72,5 +72,17 @@ export const paymentsController = {
       error: error.message
     });
   }
-}
+},
+
+  async cancelPayment(req, res) {
+    try {
+      const data = await paymentsService.cancelPayment(req.params.id);
+
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({
+        message: error.message
+      });
+    }
+  }
 };

@@ -354,5 +354,22 @@ export const paymentsService = {
       updated_debts: updatedDebts,
       fund_transactions: fundTransactions
     };
+  },
+
+  async cancelPayment(paymentId) {
+    if (!paymentId) {
+      throw new Error("Payment ID không được để trống");
+    }
+
+    const result = await paymentsRepository.cancelPayment(paymentId);
+
+    if (result.error) {
+      throw new Error(result.error.message);
+    }
+
+    return {
+      message: "Đã hủy payment pending",
+      payment: result.data
+    };
   }
 };

@@ -9,5 +9,6 @@ router.post(
 );
 
 router.post("/payos-webhook", paymentsController.payosWebhook);
+router.put("/:id/cancel", paymentsController.cancelPayment);
 
 export default router;
