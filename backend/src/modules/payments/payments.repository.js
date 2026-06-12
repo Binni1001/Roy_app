@@ -118,5 +118,49 @@ export const paymentsRepository = {
       .insert([payload])
       .select()
       .single();
+  },
+
+  async findPaymentByOrderCode(orderCode) {
+    return await supabase
+      .from("payments")
+      .select("*")
+      .eq("payos_order_code", orderCode)
+      .maybeSingle();
+  },
+
+  async updatePayment(id, payload) {
+    return await supabase
+      .from("payments")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+  },
+
+  async getPaymentDebtsWithDebt(paymentId) {
+    return await supabase
+      .from("payment_debts")
+      .select(`
+        *,
+        debt:debts(*)
+      `)
+      .eq("payment_id", paymentId);
+  },
+
+  async updateDebt(id, payload) {
+    return await supabase
+      .from("debts")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+  },
+
+  async createFundTransaction(payload) {
+    return await supabase
+      .from("club_fund_transactions")
+      .insert([payload])
+      .select()
+      .single();
   }
 };

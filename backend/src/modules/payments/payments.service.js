@@ -242,5 +242,113 @@ export const paymentsService = {
       payment: updatedPaymentResult.data,
       updated_debts: updatedDebts
     };
+  },
+
+  async handlePayosWebhook(webhookBody = {}) {
+    const verifiedData = payOS.webhooks.verify(webhookBody);
+
+    const orderCode = verifiedData.orderCode;
+    const code = verifiedData.code;
+
+    const paymentResult =
+      await paymentsRepository.findPaymentByOrderCode(orderCode);
+
+    if (paymentResult.error) {
+      throw new Error(paymentResult.error.message);
+    }
+
+    const payment = paymentResult.data;
+
+    if (!payment) {
+      throw new Error("Không tìm thấy payment theo orderCode");
+    }
+
+    if (payment.status === "paid") {
+      return {
+        message: "Payment đã paid trước đó",
+        payment
+      };
+    }
+
+    const now = new Date().toISOString();
+
+    if (code !== "00") {
+      const failedResult = await paymentsRepository.updatePayment(payment.id, {
+        status: "failed",
+        raw_payload: webhookBody,
+        updated_at: now
+      });
+
+      if (failedResult.error) {
+        throw new Error(failedResult.error.message);
+      }
+
+      return {
+        message: "Payment không thành công",
+        payment: failedResult.data
+      };
+    }
+
+    const updatedPaymentResult = await paymentsRepository.updatePayment(payment.id, {
+      status: "paid",
+      paid_at: now,
+      raw_payload: webhookBody,
+      updated_at: now
+    });
+
+    if (updatedPaymentResult.error) {
+      throw new Error(updatedPaymentResult.error.message);
+    }
+
+    const paymentDebtsResult =
+      await paymentsRepository.getPaymentDebtsWithDebt(payment.id);
+
+    if (paymentDebtsResult.error) {
+      throw new Error(paymentDebtsResult.error.message);
+    }
+
+    const paymentDebts = paymentDebtsResult.data || [];
+    const updatedDebts = [];
+    const fundTransactions = [];
+
+    for (const item of paymentDebts) {
+      const debt = item.debt;
+
+      if (!debt) continue;
+
+      const debtResult = await paymentsRepository.updateDebt(debt.id, {
+        status: "paid",
+        paid_at: now,
+        updated_at: now
+      });
+
+      if (debtResult.error) {
+        throw new Error(debtResult.error.message);
+      }
+
+      updatedDebts.push(debtResult.data);
+
+      const fundResult = await paymentsRepository.createFundTransaction({
+        period_id: debt.period_id,
+        person_id: debt.person_id,
+        payment_id: payment.id,
+        transaction_type: "income",
+        amount: Number(debt.amount),
+        description: `Thu tiền ${debt.debt_type}`
+      });
+
+      if (fundResult.error) {
+        throw new Error(fundResult.error.message);
+      }
+
+      fundTransactions.push(fundResult.data);
+    }
+
+    return {
+      message: "Xử lý webhook PayOS thành công",
+      payment: updatedPaymentResult.data,
+      updated_debts: updatedDebts,
+      fund_transactions: fundTransactions
+    };
   }
 };
