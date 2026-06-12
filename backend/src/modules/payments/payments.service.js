@@ -141,13 +141,34 @@ export const paymentsService = {
   },
 
   async handlePayosWebhook(webhookBody = {}) {
+    console.log("WEBHOOK BODY", JSON.stringify(webhookBody, null, 2));
+
     const verifiedData = payOS.webhooks.verify(webhookBody);
 
-    const orderCode = verifiedData.orderCode;
-    const paymentStatus = verifiedData.code;
+    console.log("VERIFIED DATA", JSON.stringify(verifiedData, null, 2));
+
+    const orderCode =
+      verifiedData?.data?.orderCode ||
+      verifiedData?.orderCode ||
+      webhookBody?.data?.orderCode ||
+      webhookBody?.orderCode;
+
+    const code =
+      verifiedData?.code ||
+      webhookBody?.code ||
+      webhookBody?.data?.code;
+
+    if (!orderCode) {
+      return {
+        message: "Webhook received but orderCode is missing",
+        test_webhook: true,
+        webhookBody,
+        verifiedData
+      };
+    }
 
     const paymentResult =
-      await paymentsRepository.findPaymentByOrderCode(orderCode);
+      await paymentsRepository.findPaymentByOrderCode(Number(orderCode));
 
     if (paymentResult.error) {
       throw new Error(paymentResult.error.message);
@@ -161,110 +182,6 @@ export const paymentsService = {
         test_webhook: true,
         orderCode
       };
-    }
-
-    if (payment.status === "paid") {
-      return {
-        message: "Payment đã paid trước đó",
-        payment
-      };
-    }
-
-    if (paymentStatus !== "00") {
-      const cancelResult = await paymentsRepository.updatePayment(payment.id, {
-        status: "failed",
-        raw_payload: webhookBody,
-        updated_at: new Date().toISOString()
-      });
-
-      if (cancelResult.error) {
-        throw new Error(cancelResult.error.message);
-      }
-
-      return {
-        message: "Payment không thành công",
-        payment: cancelResult.data
-      };
-    }
-
-    const paidAt = new Date().toISOString();
-
-    const updatedPaymentResult = await paymentsRepository.updatePayment(payment.id, {
-      status: "paid",
-      paid_at: paidAt,
-      raw_payload: webhookBody,
-      updated_at: paidAt
-    });
-
-    if (updatedPaymentResult.error) {
-      throw new Error(updatedPaymentResult.error.message);
-    }
-
-    const paymentDebtsResult =
-      await paymentsRepository.getPaymentDebtsWithDebt(payment.id);
-
-    if (paymentDebtsResult.error) {
-      throw new Error(paymentDebtsResult.error.message);
-    }
-
-    const paymentDebts = paymentDebtsResult.data || [];
-    const updatedDebts = [];
-
-    for (const item of paymentDebts) {
-      const debt = item.debt;
-
-      if (!debt) continue;
-
-      const debtResult = await paymentsRepository.updateDebt(debt.id, {
-        status: "paid",
-        paid_at: paidAt,
-        updated_at: paidAt
-      });
-
-      if (debtResult.error) {
-        throw new Error(debtResult.error.message);
-      }
-
-      updatedDebts.push(debtResult.data);
-
-      const fundResult = await paymentsRepository.createFundTransaction({
-        period_id: debt.period_id,
-        person_id: debt.person_id,
-        payment_id: payment.id,
-        transaction_type: "income",
-        amount: Number(debt.amount),
-        description: `Thu tiền ${debt.debt_type}`
-      });
-
-      if (fundResult.error) {
-        throw new Error(fundResult.error.message);
-      }
-    }
-
-    return {
-      message: "Xử lý webhook PayOS thành công",
-      payment: updatedPaymentResult.data,
-      updated_debts: updatedDebts
-    };
-  },
-
-  async handlePayosWebhook(webhookBody = {}) {
-    const verifiedData = payOS.webhooks.verify(webhookBody);
-
-    const orderCode = verifiedData.orderCode;
-    const code = verifiedData.code;
-
-    const paymentResult =
-      await paymentsRepository.findPaymentByOrderCode(orderCode);
-
-    if (paymentResult.error) {
-      throw new Error(paymentResult.error.message);
-    }
-
-    const payment = paymentResult.data;
-
-    if (!payment) {
-      throw new Error("Không tìm thấy payment theo orderCode");
     }
 
     if (payment.status === "paid") {
