@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { supabase } from '../lib/supabase'
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
@@ -8,6 +9,17 @@ const http = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
+})
+
+http.interceptors.request.use(async (config) => {
+  const { data } = await supabase.auth.getSession()
+  const token = data.session?.access_token
+
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
+  }
+
+  return config
 })
 
 async function request(config) {
@@ -136,6 +148,12 @@ export const api = {
 
   dashboard: {
     byPeriod: (periodId) => request({ url: `/api/dashboard/period/${periodId}` }),
+  },
+
+  adminUsers: {
+    list: () => request({ url: '/api/admin-users' }),
+    invite: (payload) =>
+      request({ url: '/api/admin-users', method: 'POST', data: payload }),
   },
 }
 

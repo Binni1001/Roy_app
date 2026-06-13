@@ -1,0 +1,124 @@
+import { supabase } from "../../config/supabase.js";
+
+const adminRoles = new Set(["owner", "admin"]);
+
+async function listAllUsers() {
+  const users = [];
+  let page = 1;
+  const perPage = 100;
+
+  while (true) {
+    const { data, error } = await supabase.auth.admin.listUsers({
+      page,
+      perPage
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    users.push(...(data?.users || []));
+
+    if (!data?.users?.length || data.users.length < perPage) {
+      break;
+    }
+
+    page += 1;
+  }
+
+  return users;
+}
+
+function publicUser(user) {
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.app_metadata?.role || user.user_metadata?.role || "user",
+    full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
+    created_at: user.created_at,
+    last_sign_in_at: user.last_sign_in_at
+  };
+}
+
+async function findUserByEmail(email) {
+  const normalizedEmail = email.trim().toLowerCase();
+  const users = await listAllUsers();
+
+  return users.find((user) => user.email?.toLowerCase() === normalizedEmail) || null;
+}
+
+async function updateRole(user, role, fullName = "") {
+  const appMetadata = {
+    ...(user.app_metadata || {}),
+    role
+  };
+  const userMetadata = {
+    ...(user.user_metadata || {}),
+    ...(fullName ? { full_name: fullName } : {})
+  };
+
+  const { data, error } = await supabase.auth.admin.updateUserById(user.id, {
+    app_metadata: appMetadata,
+    user_metadata: userMetadata
+  });
+
+  if (error) {
+    throw error;
+  }
+
+  return data.user;
+}
+
+export const adminUsersService = {
+  async listAdmins() {
+    const users = await listAllUsers();
+
+    return users
+      .filter((user) => adminRoles.has(user.app_metadata?.role || user.user_metadata?.role))
+      .map(publicUser);
+  },
+
+  async inviteAdmin({ email, full_name: fullName = "" }) {
+    if (!email || !email.includes("@")) {
+      const error = new Error("A valid email is required");
+      error.statusCode = 400;
+      throw error;
+    }
+
+    const existingUser = await findUserByEmail(email);
+
+    if (existingUser) {
+      const updatedUser = await updateRole(existingUser, "admin", fullName);
+      return {
+        invited: false,
+        user: publicUser(updatedUser)
+      };
+    }
+
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+      data: {
+        full_name: fullName,
+        role: "admin"
+      }
+    });
+
+    if (error) {
+      throw error;
+    }
+
+    const invitedUser = data?.user;
+
+    if (!invitedUser) {
+      const inviteError = new Error("Admin invitation did not return a user");
+      inviteError.statusCode = 500;
+      throw inviteError;
+    }
+
+    const updatedUser = await updateRole(invitedUser, "admin", fullName);
+
+    return {
+      invited: true,
+      user: publicUser(updatedUser)
+    };
+  }
+};

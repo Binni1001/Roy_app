@@ -1,0 +1,27 @@
+import { adminUsersService } from "./adminUsers.service.js";
+
+function handleError(error, res) {
+  res.status(error.statusCode || 500).json({
+    message: error.message || "Admin user request failed"
+  });
+}
+
+export const adminUsersController = {
+  async list(req, res) {
+    try {
+      const users = await adminUsersService.listAdmins();
+      res.json(users);
+    } catch (error) {
+      handleError(error, res);
+    }
+  },
+
+  async invite(req, res) {
+    try {
+      const result = await adminUsersService.inviteAdmin(req.body);
+      res.status(result.invited ? 201 : 200).json(result);
+    } catch (error) {
+      handleError(error, res);
+    }
+  }
+};

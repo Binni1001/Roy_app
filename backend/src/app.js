@@ -1,5 +1,13 @@
 import express from "express";
 import cors from "cors";
+import {
+  corsOptions,
+  generalApiLimiter,
+  paymentLimiter,
+  securityHeaders,
+  webhookLimiter,
+  writeApiLimiter
+} from "./middleware/security.js";
 
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
@@ -14,11 +22,16 @@ import balanceOffsetsRoutes from "./modules/balance-offsets/balanceOffsets.route
 import clubFundTransactionsRoutes from "./modules/club-fund-transactions/clubFundTransactions.routes.js";
 import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
+import adminUsersRoutes from "./modules/admin-users/adminUsers.routes.js";
 
 const app = express();
 
-app.use(cors());
-app.use(express.json());
+app.set("trust proxy", 1);
+app.disable("x-powered-by");
+
+app.use(securityHeaders);
+app.use(cors(corsOptions()));
+app.use(express.json({ limit: process.env.JSON_BODY_LIMIT || "64kb" }));
 
 app.get("/", (req, res) => {
   res.json({
@@ -33,6 +46,12 @@ app.get("/api/health", (req, res) => {
   });
 });
 
+app.use("/api", generalApiLimiter);
+app.use("/api", writeApiLimiter);
+app.use("/api/payments/create-for-person-period", paymentLimiter);
+app.use("/api/payments/:id/cancel", paymentLimiter);
+app.use("/api/payments/payos-webhook", webhookLimiter);
+
 app.use("/api/people", peopleRoutes);
 app.use("/api/periods", periodsRoutes);
 app.use("/api/period-members", periodMembersRoutes);
@@ -46,5 +65,6 @@ app.use("/api/balance-offsets", balanceOffsetsRoutes);
 app.use("/api/club-fund-transactions", clubFundTransactionsRoutes);
 app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentsRoutes);
+app.use("/api/admin-users", adminUsersRoutes);
 
 export default app;
