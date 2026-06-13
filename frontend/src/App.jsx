@@ -117,23 +117,6 @@ function displayRole(role) {
   return 'người dùng'
 }
 
-function findPersonForSession(people, session) {
-  const email = session?.user?.email?.toLowerCase()
-  const userId = session?.user?.id
-
-  return people.find((person) => {
-    const personEmail = (
-      person.email ||
-      person.user_email ||
-      person.auth_email ||
-      ''
-    ).toLowerCase()
-    const personUserId = person.supabase_user_id || person.auth_user_id || person.user_id
-
-    return (email && personEmail === email) || (userId && personUserId === userId)
-  })
-}
-
 function App() {
   const [session, setSession] = useState(null)
   const [checkingAuth, setCheckingAuth] = useState(true)
@@ -383,6 +366,11 @@ function UserPortal({ session, role, onSignOut }) {
   const [activePerson, setActivePerson] = useState(null)
   const [selectedPeriodId, setSelectedPeriodId] = useState('')
   const [attendanceType, setAttendanceType] = useState('fixed')
+  const [profileForm, setProfileForm] = useState({
+    full_name: session?.user?.user_metadata?.full_name || session?.user?.user_metadata?.name || '',
+    phone: '',
+    attendance_type: 'fixed',
+  })
   const [data, setData] = useState({ debts: [], balance: null, transactions: [], sessions: [] })
   const [checkout, setCheckout] = useState(null)
   const [toast, setToast] = useState('')
@@ -393,7 +381,6 @@ function UserPortal({ session, role, onSignOut }) {
 
   useEffect(() => {
     boot()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [])
 
   useAutoDismissToast(toast, setToast)
@@ -409,13 +396,15 @@ function UserPortal({ session, role, onSignOut }) {
   async function boot() {
     setLoading(true)
     try {
-      const [peopleResult, periodsResult] = await Promise.all([
-        api.people.list(),
+      const [personResult, periodsResult] = await Promise.all([
+        api.people.me().catch(() => null),
         api.periods.list(),
       ])
-      const nextPeople = asArray(peopleResult)
       const nextPeriods = asArray(periodsResult)
-      setActivePerson(findPersonForSession(nextPeople, session) || null)
+      setActivePerson(personResult || null)
+      if (personResult?.attendance_type) {
+        setAttendanceType(personResult.attendance_type)
+      }
       setPeriods(nextPeriods)
       setSelectedPeriodId((current) =>
         current ||
@@ -476,6 +465,50 @@ function UserPortal({ session, role, onSignOut }) {
     }
   }
 
+  async function createProfile(event) {
+    event.preventDefault()
+    if (!profileForm.full_name.trim()) {
+      setToast('Vui lòng nhập họ tên để tạo hồ sơ.')
+      return
+    }
+
+    setLoading(true)
+    try {
+      await api.people.createMe({
+        full_name: profileForm.full_name.trim(),
+        phone: profileForm.phone.trim() || null,
+        attendance_type: profileForm.attendance_type,
+        note: profileForm.attendance_type === 'fixed'
+          ? 'Người chơi đăng ký đánh cố định'
+          : 'Người chơi đăng ký đánh vãng lai',
+      })
+      setAttendanceType(profileForm.attendance_type)
+      setToast('Đã tạo hồ sơ người chơi.')
+      await boot()
+    } catch (error) {
+      setToast(errorText(error))
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  async function updateAttendanceType(nextType) {
+    if (!activePerson || nextType === attendanceType) return
+
+    setAttendanceType(nextType)
+    setLoading(true)
+    try {
+      const updatedPerson = await api.people.updateMe({ attendance_type: nextType })
+      setActivePerson(updatedPerson)
+      setToast('Đã cập nhật hình thức chơi.')
+    } catch (error) {
+      setAttendanceType(activePerson.attendance_type || 'fixed')
+      setToast(errorText(error))
+    } finally {
+      setLoading(false)
+    }
+  }
+
   return (
     <div className="user-shell">
       <aside className="user-sidebar">
@@ -509,52 +542,61 @@ function UserPortal({ session, role, onSignOut }) {
           onPeriodChange={setSelectedPeriodId}
         />
         <StatusLine text={toast} />
-        {!activePerson && (
-          <div className="toast inline-alert" role="alert">
-            Tài khoản này chưa được liên kết với hồ sơ người chơi.
-          </div>
+        {!activePerson ? (
+          <ProfileSetup
+            form={profileForm}
+            setForm={setProfileForm}
+            loading={loading}
+            email={session.user.email}
+            onSubmit={createProfile}
+          />
+        ) : (
+          <>
+            <section className="member-hero">
+              <div>
+                <span className="avatar large">{initials(activePerson?.full_name)}</span>
+                <div className="membership-toggle">
+                  <button
+                    className={attendanceType === 'fixed' ? 'active' : ''}
+                    onClick={() => updateAttendanceType('fixed')}
+                    disabled={loading}
+                  >
+                    Đánh cố định
+                  </button>
+                  <button
+                    className={attendanceType === 'guest' ? 'active' : ''}
+                    onClick={() => updateAttendanceType('guest')}
+                    disabled={loading}
+                  >
+                    Đánh vãng lai
+                  </button>
+                </div>
+                <p className="eyebrow">Số dư hiện tại</p>
+                <strong>{formatMoney(data.balance?.balance || 0)}</strong>
+                <small>
+                  {attendanceType === 'fixed'
+                    ? 'Bạn đang xem theo diện cố định tháng này.'
+                    : 'Bạn đang xem theo diện vãng lai tháng này.'}
+                </small>
+              </div>
+              <div>
+                <p>Nợ cần thanh toán</p>
+                <strong>{formatMoney(totalDebt)}</strong>
+                <button onClick={createPayment} disabled={loading || !activePerson}>
+                  Thanh toán qua PayOS
+                </button>
+              </div>
+            </section>
+            <UserContent
+              activeTab={activeTab}
+              debts={data.debts}
+              unpaidDebts={unpaidDebts}
+              transactions={data.transactions}
+              sessions={data.sessions}
+              checkout={checkout}
+            />
+          </>
         )}
-        <section className="member-hero">
-          <div>
-            <span className="avatar large">{initials(activePerson?.full_name)}</span>
-            <div className="membership-toggle">
-              <button
-                className={attendanceType === 'fixed' ? 'active' : ''}
-                onClick={() => setAttendanceType('fixed')}
-              >
-                Đánh cố định
-              </button>
-              <button
-                className={attendanceType === 'guest' ? 'active' : ''}
-                onClick={() => setAttendanceType('guest')}
-              >
-                Đánh vãng lai
-              </button>
-            </div>
-            <p className="eyebrow">Số dư hiện tại</p>
-            <strong>{formatMoney(data.balance?.balance || 0)}</strong>
-            <small>
-              {attendanceType === 'fixed'
-                ? 'Bạn đang xem theo diện cố định tháng này.'
-                : 'Bạn đang xem theo diện vãng lai tháng này.'}
-            </small>
-          </div>
-          <div>
-            <p>Nợ cần thanh toán</p>
-            <strong>{formatMoney(totalDebt)}</strong>
-            <button onClick={createPayment} disabled={loading || !activePerson}>
-              Thanh toán qua PayOS
-            </button>
-          </div>
-        </section>
-        <UserContent
-          activeTab={activeTab}
-          debts={data.debts}
-          unpaidDebts={unpaidDebts}
-          transactions={data.transactions}
-          sessions={data.sessions}
-          checkout={checkout}
-        />
       </main>
     </div>
   )
@@ -982,6 +1024,46 @@ function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, ch
       </Panel>
       <Panel title="Lịch chơi">
         <SimpleTable rows={sessions.slice(0, 5)} columns={[['session_date', 'Ngày', formatDate], ['guest_count', 'Khách'], ['note', 'Ghi chú']]} />
+      </Panel>
+    </section>
+  )
+}
+
+function ProfileSetup({ form, setForm, loading, email, onSubmit }) {
+  function updateField(key, value) {
+    setForm((current) => ({ ...current, [key]: value }))
+  }
+
+  return (
+    <section className="grid one">
+      <Panel title="Hoàn thiện hồ sơ người chơi">
+        <form className="form profile-setup" onSubmit={onSubmit}>
+          <p className="muted">
+            Tài khoản {email} chưa có hồ sơ trong câu lạc bộ. Vui lòng nhập thông tin để bắt đầu sử dụng khu người dùng.
+          </p>
+          <Input
+            label="Họ tên"
+            value={form.full_name}
+            onChange={(value) => updateField('full_name', value)}
+            required
+          />
+          <Input
+            label="Số điện thoại"
+            value={form.phone}
+            onChange={(value) => updateField('phone', value)}
+          />
+          <label>
+            Hình thức chơi
+            <select
+              value={form.attendance_type}
+              onChange={(event) => updateField('attendance_type', event.target.value)}
+            >
+              <option value="fixed">Đánh cố định</option>
+              <option value="guest">Đánh vãng lai</option>
+            </select>
+          </label>
+          <button disabled={loading}>Tạo hồ sơ</button>
+        </form>
       </Panel>
     </section>
   )

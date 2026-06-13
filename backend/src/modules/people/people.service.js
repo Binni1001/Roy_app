@@ -1,6 +1,7 @@
 import { peopleRepository } from "./people.repository.js";
 
 const allowedStatuses = ["active", "inactive"];
+const allowedAttendanceTypes = ["fixed", "guest"];
 
 export const peopleService = {
   async getAllPeople() {
@@ -23,15 +24,70 @@ export const peopleService = {
     return data;
   },
 
+  async getPersonByAuthUser(user) {
+    const email = user?.email;
+
+    if (!email) {
+      throw new Error("Auth user email is required");
+    }
+
+    const { data, error } = await peopleRepository.getByEmail(email);
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return data;
+  },
+
+  async createPersonForAuthUser(user, payload) {
+    const email = user?.email;
+
+    if (!email) {
+      throw new Error("Auth user email is required");
+    }
+
+    const existing = await this.getPersonByAuthUser(user);
+    if (existing) return existing;
+
+    return await this.createPerson({
+      ...payload,
+      email
+    });
+  },
+
+  async updatePersonForAuthUser(user, payload = {}) {
+    const person = await this.getPersonByAuthUser(user);
+
+    if (!person) {
+      throw new Error("Player profile does not exist");
+    }
+
+    const allowedPayload = {};
+
+    if (payload.full_name !== undefined) allowedPayload.full_name = payload.full_name;
+    if (payload.phone !== undefined) allowedPayload.phone = payload.phone;
+    if (payload.attendance_type !== undefined) {
+      allowedPayload.attendance_type = payload.attendance_type;
+    }
+
+    return await this.updatePerson(person.id, allowedPayload);
+  },
+
   async createPerson(payload) {
     if (!payload.full_name) {
       throw new Error("Full name is required");
     }
 
     const status = payload.status || "active";
+    const attendanceType = payload.attendance_type || "guest";
 
     if (!allowedStatuses.includes(status)) {
       throw new Error("Status khong hop le. Chi duoc dung: active, inactive");
+    }
+
+    if (!allowedAttendanceTypes.includes(attendanceType)) {
+      throw new Error("Attendance type khong hop le. Chi duoc dung: fixed, guest");
     }
 
     const { data, error } = await peopleRepository.create({
@@ -44,6 +100,7 @@ export const peopleService = {
       birthday: payload.birthday || null,
       gender: payload.gender || null,
       status,
+      attendance_type: attendanceType,
       joined_at: payload.joined_at || null,
       last_play_date: payload.last_play_date || null,
       note: payload.note || null
@@ -92,6 +149,14 @@ export const peopleService = {
       }
 
       updateData.status = payload.status;
+    }
+
+    if (payload.attendance_type !== undefined) {
+      if (!allowedAttendanceTypes.includes(payload.attendance_type)) {
+        throw new Error("Attendance type khong hop le. Chi duoc dung: fixed, guest");
+      }
+
+      updateData.attendance_type = payload.attendance_type;
     }
 
     const { data, error } = await peopleRepository.update(id, updateData);

@@ -19,6 +19,39 @@ export const peopleController = {
     }
   },
 
+  async getMe(req, res) {
+    try {
+      const data = await peopleService.getPersonByAuthUser(req.authUser);
+
+      if (!data) {
+        res.status(404).json({ message: "Player profile does not exist" });
+        return;
+      }
+
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async createMe(req, res) {
+    try {
+      const data = await peopleService.createPersonForAuthUser(req.authUser, req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async updateMe(req, res) {
+    try {
+      const data = await peopleService.updatePersonForAuthUser(req.authUser, req.body);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async create(req, res) {
     try {
       const data = await peopleService.createPerson(req.body);

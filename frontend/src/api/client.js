@@ -41,6 +41,9 @@ export const api = {
 
   people: {
     list: () => request({ url: '/api/people' }),
+    me: () => request({ url: '/api/people/me' }),
+    createMe: (payload) => request({ url: '/api/people/me', method: 'POST', data: payload }),
+    updateMe: (payload) => request({ url: '/api/people/me', method: 'PUT', data: payload }),
     create: (payload) => request({ url: '/api/people', method: 'POST', data: payload }),
     update: (id, payload) =>
       request({ url: `/api/people/${id}`, method: 'PUT', data: payload }),

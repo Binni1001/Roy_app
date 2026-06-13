@@ -54,6 +54,44 @@ test("admin user management requires owner role", () => {
   assert.match(service, /role/);
 });
 
+test("people module exposes authenticated self profile endpoints", () => {
+  const routes = read("src/modules/people/people.routes.js");
+  const controller = read("src/modules/people/people.controller.js");
+  const service = read("src/modules/people/people.service.js");
+
+  assert.match(routes, /requireAuth/);
+  assert.match(routes, /router\.get\("\/me", requireAuth/);
+  assert.match(routes, /router\.post\("\/me", requireAuth/);
+  assert.match(routes, /router\.put\("\/me", requireAuth/);
+  assert.match(controller, /getMe/);
+  assert.match(controller, /createMe/);
+  assert.match(controller, /updateMe/);
+  assert.match(service, /getPersonByAuthUser/);
+  assert.match(service, /createPersonForAuthUser/);
+  assert.match(service, /updatePersonForAuthUser/);
+});
+
+test("admin write routes require admin role", () => {
+  const routeFiles = [
+    "src/modules/people/people.routes.js",
+    "src/modules/periods/periods.routes.js",
+    "src/modules/period-members/periodMembers.routes.js",
+    "src/modules/badminton-sessions/badmintonSessions.routes.js",
+    "src/modules/debts/debts.routes.js",
+    "src/modules/shuttle-expenses/shuttleExpenses.routes.js",
+    "src/modules/shuttle-settlements/shuttleSettlements.routes.js",
+    "src/modules/club-fund-transactions/clubFundTransactions.routes.js",
+    "src/modules/balance-offsets/balanceOffsets.routes.js",
+    "src/modules/dashboard/dashboard.routes.js"
+  ];
+
+  for (const file of routeFiles) {
+    const routes = read(file);
+    assert.match(routes, /requireAuth/, `${file} should require auth`);
+    assert.match(routes, /requireAdmin/, `${file} should require admin`);
+  }
+});
+
 test("app applies security and rate limit middleware", () => {
   const app = read("src/app.js");
 
@@ -116,4 +154,12 @@ test("finance RPC migration exposes required functions", () => {
     assert.match(sql, new RegExp(`create or replace function public\\.${name}`));
     assert.match(sql, new RegExp(`grant execute on function public\\.${name}`));
   }
+});
+
+test("people profile migration adds attendance type and unique email", () => {
+  const sql = read("../supabase/20260613_people_auth_profile.sql");
+
+  assert.match(sql, /attendance_type/);
+  assert.match(sql, /people_attendance_type_check/);
+  assert.match(sql, /people_email_unique_not_null/);
 });

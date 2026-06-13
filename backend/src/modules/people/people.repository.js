@@ -16,6 +16,14 @@ export const peopleRepository = {
       .single();
   },
 
+  async getByEmail(email) {
+    return await supabase
+      .from("people")
+      .select("*")
+      .ilike("email", email)
+      .maybeSingle();
+  },
+
   async create(payload) {
     return await supabase
       .from("people")

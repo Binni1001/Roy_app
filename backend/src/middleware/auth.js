@@ -49,3 +49,14 @@ export function requireOwner(req, res, next) {
 
   next();
 }
+
+export function requireAdmin(req, res, next) {
+  if (req.authRole !== "owner" && req.authRole !== "admin") {
+    res.status(403).json({
+      message: "Admin role is required"
+    });
+    return;
+  }
+
+  next();
+}
