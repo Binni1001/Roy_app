@@ -92,6 +92,21 @@ test("admin write routes require admin role", () => {
   }
 });
 
+test("person scoped user routes require matching profile ownership", () => {
+  const routeFiles = [
+    "src/modules/debts/debts.routes.js",
+    "src/modules/person-balances/personBalances.routes.js",
+    "src/modules/guest-attendances/guestAttendances.routes.js",
+    "src/modules/payments/payments.routes.js"
+  ];
+
+  for (const file of routeFiles) {
+    const routes = read(file);
+    assert.match(routes, /requireAuth/, `${file} should require auth`);
+    assert.match(routes, /requireSelfPersonOrAdmin|requirePaymentOwnerOrAdmin/, `${file} should verify ownership`);
+  }
+});
+
 test("app applies security and rate limit middleware", () => {
   const app = read("src/app.js");
 

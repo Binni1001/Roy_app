@@ -12,7 +12,7 @@ const money = new Intl.NumberFormat('vi-VN', {
   maximumFractionDigits: 0,
 })
 
-const emptyPerson = { full_name: '', phone: '', note: '' }
+const emptyPerson = { full_name: '', phone: '', email: '', attendance_type: 'guest', note: '' }
 const emptyPeriod = { name: '', start_date: '', end_date: '', status: 'active' }
 
 const adminTabs = [
@@ -45,6 +45,8 @@ const valueLabels = {
   guest_fee: 'Phí khách',
   shuttle_fee: 'Phí cầu',
   other: 'Khác',
+  fixed: 'Đánh cố định',
+  guest: 'Đánh vãng lai',
 }
 
 function asArray(value) {
@@ -784,6 +786,14 @@ function AdminContent(props) {
           >
             <Input label="Họ tên" value={forms.person.full_name} onChange={(value) => setForm('person', { full_name: value })} required />
             <Input label="Điện thoại" value={forms.person.phone} onChange={(value) => setForm('person', { phone: value })} />
+            <Input label="Thư điện tử" value={forms.person.email} onChange={(value) => setForm('person', { email: value })} />
+            <label>
+              Hình thức chơi
+              <select value={forms.person.attendance_type} onChange={(event) => setForm('person', { attendance_type: event.target.value })}>
+                <option value="fixed">Đánh cố định</option>
+                <option value="guest">Đánh vãng lai</option>
+              </select>
+            </label>
             <Input label="Ghi chú" value={forms.person.note} onChange={(value) => setForm('person', { note: value })} />
             <button>Thêm người</button>
           </form>
@@ -791,7 +801,13 @@ function AdminContent(props) {
         <Panel title="Danh sách người">
           <SimpleTable
             rows={people}
-            columns={[['full_name', 'Họ tên'], ['phone', 'Điện thoại'], ['note', 'Ghi chú']]}
+            columns={[
+              ['full_name', 'Họ tên'],
+              ['phone', 'Điện thoại'],
+              ['email', 'Thư điện tử'],
+              ['attendance_type', 'Hình thức chơi', displayValue],
+              ['note', 'Ghi chú'],
+            ]}
             actions={(person) => (
               <ActionGroup>
                 <button onClick={() => editPerson(person, submit)}>Sửa</button>
@@ -1173,9 +1189,22 @@ function editPerson(person, submit) {
   if (fullName === null) return
   const phone = window.prompt('Điện thoại', person.phone || '')
   if (phone === null) return
+  const email = window.prompt('Thư điện tử', person.email || '')
+  if (email === null) return
+  const attendanceType = window.prompt('Hình thức chơi: fixed hoặc guest', person.attendance_type || 'guest')
+  if (attendanceType === null) return
   const note = window.prompt('Ghi chú', person.note || '')
   if (note === null) return
-  submit(() => api.people.update(person.id, { full_name: fullName, phone, note }), 'Đã cập nhật người.')
+  submit(
+    () => api.people.update(person.id, {
+      full_name: fullName,
+      phone,
+      email,
+      attendance_type: attendanceType,
+      note,
+    }),
+    'Đã cập nhật người.',
+  )
 }
 
 function removePerson(person, submit) {

@@ -132,7 +132,7 @@ export const peopleService = {
 
     if (payload.nickname !== undefined) updateData.nickname = payload.nickname;
     if (payload.phone !== undefined) updateData.phone = payload.phone;
-    if (payload.email !== undefined) updateData.email = payload.email;
+    if (payload.email !== undefined) updateData.email = payload.email || null;
     if (payload.avatar_url !== undefined) updateData.avatar_url = payload.avatar_url;
     if (payload.bio !== undefined) updateData.bio = payload.bio;
     if (payload.birthday !== undefined) updateData.birthday = payload.birthday;
