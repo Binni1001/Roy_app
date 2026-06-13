@@ -170,30 +170,13 @@ function App() {
     await supabase.auth.signOut()
   }
 
-  if (path.startsWith('/admin') && !canOpenAdmin(role)) {
-    return <AccessDenied session={session} role={role} onSignOut={signOut} />
+  if (canOpenAdmin(role)) {
+    if (!path.startsWith('/admin')) return <RedirectTo to="/admin" />
+    return <AdminPortal session={session} role={role} onSignOut={signOut} />
   }
 
-  if (path.startsWith('/user')) return <UserPortal session={session} role={role} onSignOut={signOut} />
-  if (path.startsWith('/admin')) return <AdminPortal session={session} role={role} onSignOut={signOut} />
-
-  return (
-    <main className="gateway">
-      <section className="gateway-panel">
-        <BrandLogo />
-        <p className="eyebrow">Roy Badminton</p>
-        <h1>Chọn không gian làm việc</h1>
-        <p className="muted">
-          Quản trị viên và người dùng đã được tách thành hai khu vực riêng để sau này
-          gắn đăng nhập, phân quyền và phiên làm việc độc lập.
-        </p>
-        <div className="gateway-actions">
-          {canOpenAdmin(role) && <a href="/admin">Vào khu quản trị</a>}
-          <a href="/user">Vào khu người dùng</a>
-        </div>
-      </section>
-    </main>
-  )
+  if (!path.startsWith('/user')) return <RedirectTo to="/user" />
+  return <UserPortal session={session} role={role} onSignOut={signOut} />
 }
 
 function AuthLoading() {
@@ -204,25 +187,6 @@ function AuthLoading() {
         <p className="eyebrow">Roy Badminton</p>
         <h1>Đang kiểm tra đăng nhập</h1>
         <p className="muted">Vui lòng chờ trong giây lát.</p>
-      </section>
-    </main>
-  )
-}
-
-function AccessDenied({ session, role, onSignOut }) {
-  return (
-    <main className="gateway">
-      <section className="gateway-panel access-panel">
-        <BrandLogo />
-        <p className="eyebrow">Không có quyền truy cập</p>
-        <h1>Khu qu?n tr? ch? d?nh cho qu?n tr? vi?n</h1>
-        <p className="muted">
-          Tài khoản {session?.user?.email} hiện có quyền {displayRole(role)}.
-        </p>
-        <div className="gateway-actions">
-          <a href="/user">Về khu người dùng</a>
-          <button onClick={onSignOut}>Đăng xuất</button>
-        </div>
       </section>
     </main>
   )
