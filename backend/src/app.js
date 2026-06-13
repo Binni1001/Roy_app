@@ -4,6 +4,8 @@ import cors from "cors";
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
 import periodMembersRoutes from "./modules/period-members/periodMembers.routes.js";
+import badmintonSessionsRoutes from "./modules/badminton-sessions/badmintonSessions.routes.js";
+import guestAttendancesRoutes from "./modules/guest-attendances/guestAttendances.routes.js";
 import debtsRoutes from "./modules/debts/debts.routes.js";
 import shuttleExpensesRoutes from "./modules/shuttle-expenses/shuttleExpenses.routes.js";
 import shuttleSettlementsRoutes from "./modules/shuttle-settlements/shuttleSettlements.routes.js";
@@ -34,6 +36,8 @@ app.get("/api/health", (req, res) => {
 app.use("/api/people", peopleRoutes);
 app.use("/api/periods", periodsRoutes);
 app.use("/api/period-members", periodMembersRoutes);
+app.use("/api/badminton-sessions", badmintonSessionsRoutes);
+app.use("/api/guest-attendances", guestAttendancesRoutes);
 app.use("/api/debts", debtsRoutes);
 app.use("/api/shuttle-expenses", shuttleExpensesRoutes);
 app.use("/api/shuttle-settlements", shuttleSettlementsRoutes);

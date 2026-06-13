@@ -1,6 +1,13 @@
 import { supabase } from "../../config/supabase.js";
 
 export const balanceOffsetsRepository = {
+  async offsetPersonPeriod(personId, periodId) {
+    return await supabase.rpc("offset_person_period", {
+      p_person_id: personId,
+      p_period_id: periodId
+    });
+  },
+
   async getPersonBalance(personId) {
     return await supabase
       .from("person_balances")

@@ -1,9 +1,13 @@
 import { shuttleSettlementsRepository } from "./shuttleSettlements.repository.js";
 
+function isMissingRpc(error) {
+  return error?.code === "PGRST202" || /function .* does not exist/i.test(error?.message || "");
+}
+
 export const shuttleSettlementsService = {
   async preview(periodId) {
     if (!periodId) {
-      throw new Error("Period ID không được để trống");
+      throw new Error("Period ID khong duoc de trong");
     }
 
     const membersResult = await shuttleSettlementsRepository.getFixedMembers(periodId);
@@ -12,7 +16,7 @@ export const shuttleSettlementsService = {
     const fixedMembers = membersResult.data;
 
     if (fixedMembers.length === 0) {
-      throw new Error("Kỳ này chưa có fixed member");
+      throw new Error("Ky nay chua co fixed member");
     }
 
     const expensesResult = await shuttleSettlementsRepository.getShuttleExpenses(periodId);
@@ -75,6 +79,27 @@ export const shuttleSettlementsService = {
   },
 
   async settle(periodId) {
+    const rpcResult = await shuttleSettlementsRepository.settlePeriod(periodId);
+
+    if (!rpcResult.error) {
+      return rpcResult.data;
+    }
+
+    if (!isMissingRpc(rpcResult.error)) {
+      throw new Error(rpcResult.error.message);
+    }
+
+    const existingSettlementResult =
+      await shuttleSettlementsRepository.getSettlementTransactions(periodId);
+
+    if (existingSettlementResult.error) {
+      throw new Error(existingSettlementResult.error.message);
+    }
+
+    if ((existingSettlementResult.data || []).length > 0) {
+      throw new Error("Ky nay da chot tien cau roi");
+    }
+
     const preview = await this.preview(periodId);
 
     const results = [];
@@ -139,8 +164,8 @@ export const shuttleSettlementsService = {
           direction: netAmount > 0 ? "plus" : "minus",
           description:
             netAmount > 0
-              ? "Dương tiền do mua cầu nhiều hơn phần phải chịu"
-              : "Âm tiền do chưa đóng đủ phần cầu phải chịu"
+              ? "Duong tien do mua cau nhieu hon phan phai chiu"
+              : "Am tien do cha dong du phan cau phai chiu"
         });
 
       if (transactionResult.error) {
@@ -154,7 +179,7 @@ export const shuttleSettlementsService = {
           debt_type: "shuttle_extra",
           amount: Math.abs(netAmount),
           status: "unpaid",
-          description: "Tiền cầu cần đóng thêm"
+          description: "Tien cau can dong them"
         });
 
         if (debtResult.error) {
@@ -179,7 +204,7 @@ export const shuttleSettlementsService = {
     }
 
     return {
-      message: "Chốt tiền cầu thành công",
+      message: "Chat tien cau thanh cong",
       preview,
       results
     };

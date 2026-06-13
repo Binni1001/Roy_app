@@ -5,12 +5,16 @@ function generateOrderCode() {
   return Number(Date.now().toString().slice(-10));
 }
 
+function isMissingRpc(error) {
+  return error?.code === "PGRST202" || /function .* does not exist/i.test(error?.message || "");
+}
+
 export const paymentsService = {
   async createForPersonPeriod(payload = {}) {
     const { person_id, period_id } = payload;
 
-    if (!person_id) throw new Error("Person ID không được để trống");
-    if (!period_id) throw new Error("Period ID không được để trống");
+    if (!person_id) throw new Error("Person ID khong duoc de trong");
+    if (!period_id) throw new Error("Period ID khong duoc de trong");
 
     const debtsResult = await paymentsRepository.getUnpaidDebts(
       person_id,
@@ -22,7 +26,7 @@ export const paymentsService = {
     const debts = debtsResult.data;
 
     if (!debts.length) {
-      throw new Error("Người này không có công nợ unpaid trong kỳ này");
+      throw new Error("Nguoi nay khong co cong no unpaid trong ky nay");
     }
 
     const personResult = await paymentsRepository.getPerson(person_id);
@@ -39,16 +43,17 @@ export const paymentsService = {
       0
     );
 
-    const pendingPaymentResult =
-      await paymentsRepository.findPendingPayment(person_id);
+    const pendingPaymentsResult =
+      await paymentsRepository.getPendingPayments(person_id);
 
-    if (pendingPaymentResult.error) {
-      throw new Error(pendingPaymentResult.error.message);
+    if (pendingPaymentsResult.error) {
+      throw new Error(pendingPaymentsResult.error.message);
     }
 
-    const pendingPayment = pendingPaymentResult.data;
+    const pendingPayments = pendingPaymentsResult.data || [];
+    const currentDebtIds = debts.map((item) => item.id).sort();
 
-    if (pendingPayment) {
+    for (const pendingPayment of pendingPayments) {
       const paymentDebtsResult =
         await paymentsRepository.getPaymentDebts(pendingPayment.id);
 
@@ -59,7 +64,6 @@ export const paymentsService = {
       const paymentDebts = paymentDebtsResult.data || [];
 
       const oldDebtIds = paymentDebts.map((item) => item.debt_id).sort();
-      const currentDebtIds = debts.map((item) => item.id).sort();
 
       const sameDebts =
         oldDebtIds.length === currentDebtIds.length &&
@@ -70,7 +74,7 @@ export const paymentsService = {
 
       if (sameDebts && sameAmount) {
         return {
-          message: "Đã có payment pending, dùng lại QR cũ",
+          message: "Da co payment pending, dung lai QR cu",
           reused: true,
           payment: pendingPayment,
           debts,
@@ -79,7 +83,13 @@ export const paymentsService = {
         };
       }
 
-      await paymentsRepository.cancelPayment(pendingPayment.id);
+      const overlapsCurrentDebts = oldDebtIds.some((id) =>
+        currentDebtIds.includes(id)
+      );
+
+      if (overlapsCurrentDebts) {
+        await paymentsRepository.cancelPayment(pendingPayment.id);
+      }
     }
 
     const orderCode = generateOrderCode();
@@ -109,7 +119,7 @@ export const paymentsService = {
       payos_order_code: orderCode,
       payos_checkout_url: paymentLink.checkoutUrl,
       payos_qr_code: paymentLink.qrCode || null,
-      description: `Thanh toán công nợ ${period.name}`,
+      description: `Thanh toan cong no ${period.name}`,
       return_url: process.env.PAYOS_RETURN_URL,
       cancel_url: process.env.PAYOS_CANCEL_URL,
       raw_payload: paymentLink
@@ -141,11 +151,7 @@ export const paymentsService = {
   },
 
   async handlePayosWebhook(webhookBody = {}) {
-    console.log("WEBHOOK BODY", JSON.stringify(webhookBody, null, 2));
-
     const verifiedData = payOS.webhooks.verify(webhookBody);
-
-    console.log("VERIFIED DATA", JSON.stringify(verifiedData, null, 2));
 
     const orderCode =
       verifiedData?.data?.orderCode ||
@@ -178,22 +184,28 @@ export const paymentsService = {
 
     if (!payment) {
       return {
-        message: "Webhook hợp lệ nhưng orderCode chưa tồn tại trong hệ thống. Có thể là request test từ PayOS.",
+        message: "Webhook hop le nhung orderCode chua ton tai trong he thong. Co the la request test tu PayOS.",
         test_webhook: true,
         orderCode
-      };
-    }
-
-    if (payment.status === "paid") {
-      return {
-        message: "Payment đã paid trước đó",
-        payment
       };
     }
 
     const now = new Date().toISOString();
 
     if (code !== "00") {
+      const failedRpcResult = await paymentsRepository.markPaymentFailed(
+        Number(orderCode),
+        webhookBody
+      );
+
+      if (!failedRpcResult.error) {
+        return failedRpcResult.data;
+      }
+
+      if (!isMissingRpc(failedRpcResult.error)) {
+        throw new Error(failedRpcResult.error.message);
+      }
+
       const failedResult = await paymentsRepository.updatePayment(payment.id, {
         status: "failed",
         raw_payload: webhookBody,
@@ -205,20 +217,22 @@ export const paymentsService = {
       }
 
       return {
-        message: "Payment không thành công",
+        message: "Payment khong thanh cong",
         payment: failedResult.data
       };
     }
 
-    const updatedPaymentResult = await paymentsRepository.updatePayment(payment.id, {
-      status: "paid",
-      paid_at: now,
-      raw_payload: webhookBody,
-      updated_at: now
-    });
+    const paidRpcResult = await paymentsRepository.processPaidPayment(
+      Number(orderCode),
+      webhookBody
+    );
 
-    if (updatedPaymentResult.error) {
-      throw new Error(updatedPaymentResult.error.message);
+    if (!paidRpcResult.error) {
+      return paidRpcResult.data;
+    }
+
+    if (!isMissingRpc(paidRpcResult.error)) {
+      throw new Error(paidRpcResult.error.message);
     }
 
     const paymentDebtsResult =
@@ -249,13 +263,30 @@ export const paymentsService = {
 
       updatedDebts.push(debtResult.data);
 
+      const fundDescription = `Thu tien ${debt.debt_type}`;
+      const existingFundResult = await paymentsRepository.findFundTransaction(
+        payment.id,
+        debt.person_id,
+        Number(debt.amount),
+        fundDescription
+      );
+
+      if (existingFundResult.error) {
+        throw new Error(existingFundResult.error.message);
+      }
+
+      if (existingFundResult.data) {
+        fundTransactions.push(existingFundResult.data);
+        continue;
+      }
+
       const fundResult = await paymentsRepository.createFundTransaction({
         period_id: debt.period_id,
         person_id: debt.person_id,
         payment_id: payment.id,
         transaction_type: "income",
         amount: Number(debt.amount),
-        description: `Thu tiền ${debt.debt_type}`
+        description: fundDescription
       });
 
       if (fundResult.error) {
@@ -265,8 +296,19 @@ export const paymentsService = {
       fundTransactions.push(fundResult.data);
     }
 
+    const updatedPaymentResult = await paymentsRepository.updatePayment(payment.id, {
+      status: "paid",
+      paid_at: now,
+      raw_payload: webhookBody,
+      updated_at: now
+    });
+
+    if (updatedPaymentResult.error) {
+      throw new Error(updatedPaymentResult.error.message);
+    }
+
     return {
-      message: "Xử lý webhook PayOS thành công",
+      message: "PayOS webhook processed",
       payment: updatedPaymentResult.data,
       updated_debts: updatedDebts,
       fund_transactions: fundTransactions
@@ -275,7 +317,7 @@ export const paymentsService = {
 
   async cancelPayment(paymentId) {
     if (!paymentId) {
-      throw new Error("Payment ID không được để trống");
+      throw new Error("Payment ID khong duoc de trong");
     }
 
     const result = await paymentsRepository.cancelPayment(paymentId);
@@ -285,8 +327,10 @@ export const paymentsService = {
     }
 
     return {
-      message: "Đã hủy payment pending",
+      message: "Da huy payment pending",
       payment: result.data
     };
   }
 };
+
+

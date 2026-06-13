@@ -11,7 +11,7 @@ export const debtsService = {
   },
 
   async getDebtsByPeriod(periodId) {
-    if (!periodId) throw new Error("Period ID không được để trống");
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
 
     const { data, error } = await debtsRepository.getByPeriodId(periodId);
     if (error) throw new Error(error.message);
@@ -19,7 +19,7 @@ export const debtsService = {
   },
 
   async getDebtsByPerson(personId) {
-    if (!personId) throw new Error("Person ID không được để trống");
+    if (!personId) throw new Error("Person ID khong duoc de trong");
 
     const { data, error } = await debtsRepository.getByPersonId(personId);
     if (error) throw new Error(error.message);
@@ -27,15 +27,15 @@ export const debtsService = {
   },
 
   async createDebt(payload = {}) {
-    if (!payload.period_id) throw new Error("Period ID không được để trống");
-    if (!payload.person_id) throw new Error("Person ID không được để trống");
+    if (!payload.period_id) throw new Error("Period ID khong duoc de trong");
+    if (!payload.person_id) throw new Error("Person ID khong duoc de trong");
 
     if (!allowedDebtTypes.includes(payload.debt_type)) {
-      throw new Error("Loại công nợ không hợp lệ");
+      throw new Error("Loai cong no khong hop le");
     }
 
     if (Number(payload.amount) <= 0) {
-      throw new Error("Số tiền công nợ phải lớn hơn 0");
+      throw new Error("Sa tien cong no phai lon hon 0");
     }
 
     const { data, error } = await debtsRepository.create({
@@ -52,10 +52,10 @@ export const debtsService = {
   },
 
   async updateDebtStatus(id, payload = {}) {
-    if (!id) throw new Error("Debt ID không được để trống");
+    if (!id) throw new Error("Debt ID khong duoc de trong");
 
     if (!allowedStatuses.includes(payload.status)) {
-      throw new Error("Trạng thái công nợ không hợp lệ");
+      throw new Error("Trang thii cong no khong hop le");
     }
 
     const { data, error } = await debtsRepository.updateStatus(id, payload.status);

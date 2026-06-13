@@ -26,5 +26,26 @@ export const peopleController = {
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
+  },
+
+  async update(req, res) {
+    try {
+      const data = await peopleService.updatePerson(req.params.id, req.body);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async remove(req, res) {
+    try {
+      const data = await peopleService.deletePerson(req.params.id);
+      res.json({
+        message: "Xoa nguoi choi thanh cong",
+        data
+      });
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   }
 };

@@ -23,27 +23,27 @@ export const periodsService = {
 
   async createPeriod(payload) {
     if (!payload.name) {
-      throw new Error("Tên kỳ không được để trống");
+      throw new Error("Ten ky khong duoc de trong");
     }
 
     if (!payload.start_date) {
-      throw new Error("Ngày bắt đầu không được để trống");
+      throw new Error("Ngay bat dau khong duoc de trong");
     }
 
     if (!payload.end_date) {
-      throw new Error("Ngày kết thúc không được để trống");
+      throw new Error("Ngay ket thuc khong duoc de trong");
     }
 
     if (new Date(payload.end_date) < new Date(payload.start_date)) {
-      throw new Error("Ngày kết thúc không được nhỏ hơn ngày bắt đầu");
+      throw new Error("Ngay ket thuc khong duoc nho hon ngay bat dau");
     }
 
     if (Number(payload.fixed_member_fee) < 0) {
-      throw new Error("Tiền cố định không được nhỏ hơn 0");
+      throw new Error("Tien co dinh khong duoc nho hon 0");
     }
 
     if (Number(payload.guest_fee_per_session) < 0) {
-      throw new Error("Tiền khách vãng lai không được nhỏ hơn 0");
+      throw new Error("Tien khach vang lai khong duoc nho hon 0");
     }
 
     const { data, error } = await periodsRepository.create({
@@ -66,7 +66,7 @@ export const periodsService = {
   async updatePeriod(id, payload) {
     if (payload.start_date && payload.end_date) {
       if (new Date(payload.end_date) < new Date(payload.start_date)) {
-        throw new Error("Ngày kết thúc không được nhỏ hơn ngày bắt đầu");
+        throw new Error("Ngay ket thuc khong duoc nho hon ngay bat dau");
       }
     }
 

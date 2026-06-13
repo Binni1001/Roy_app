@@ -14,7 +14,7 @@ export const personBalancesService = {
 
   async getBalanceByPerson(personId) {
     if (!personId) {
-      throw new Error("Person ID không được để trống");
+      throw new Error("Person ID khong duoc de trong");
     }
 
     const { data, error } =
@@ -29,7 +29,7 @@ export const personBalancesService = {
 
   async getTransactions(personId) {
     if (!personId) {
-      throw new Error("Person ID không được để trống");
+      throw new Error("Person ID khong duoc de trong");
     }
 
     const { data, error } =

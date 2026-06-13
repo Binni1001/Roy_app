@@ -1,9 +1,26 @@
 import { balanceOffsetsRepository } from "./balanceOffsets.repository.js";
 
+function isMissingRpc(error) {
+  return error?.code === "PGRST202" || /function .* does not exist/i.test(error?.message || "");
+}
+
 export const balanceOffsetsService = {
   async offsetPersonPeriod(personId, periodId) {
-    if (!personId) throw new Error("Person ID không được để trống");
-    if (!periodId) throw new Error("Period ID không được để trống");
+    if (!personId) throw new Error("Person ID khong duoc de trong");
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
+
+    const rpcResult = await balanceOffsetsRepository.offsetPersonPeriod(
+      personId,
+      periodId
+    );
+
+    if (!rpcResult.error) {
+      return rpcResult.data;
+    }
+
+    if (!isMissingRpc(rpcResult.error)) {
+      throw new Error(rpcResult.error.message);
+    }
 
     const balanceResult = await balanceOffsetsRepository.getPersonBalance(personId);
     if (balanceResult.error) throw new Error(balanceResult.error.message);
@@ -12,7 +29,7 @@ export const balanceOffsetsService = {
 
     if (!balanceRow || Number(balanceRow.balance) <= 0) {
       return {
-        message: "Người này không có số dư dương để bù trừ",
+        message: "Nguoi nay khong co so du duong de bu tru",
         offset_amount: 0,
         remaining_balance: balanceRow ? Number(balanceRow.balance) : 0,
         updated_debts: []
@@ -28,7 +45,7 @@ export const balanceOffsetsService = {
 
     if (unpaidDebts.length === 0) {
       return {
-        message: "Không có công nợ unpaid để bù trừ",
+        message: "Khong co cong no unpaid de bu tru",
         offset_amount: 0,
         remaining_balance: availableBalance,
         updated_debts: []
@@ -48,16 +65,15 @@ export const balanceOffsetsService = {
       const updatePayload =
         remainingDebtAmount === 0
           ? {
-              amount: 0,
               status: "paid",
               paid_at: new Date().toISOString(),
               updated_at: new Date().toISOString(),
-              description: `${debt.description || ""} | Đã bù trừ bằng số dư cá nhân`
+              description: `${debt.description || ""} | Da bu tru bang so du ca nhan`
             }
           : {
               amount: remainingDebtAmount,
               updated_at: new Date().toISOString(),
-              description: `${debt.description || ""} | Đã bù trừ ${offsetAmount}`
+              description: `${debt.description || ""} | Da bu tru ${offsetAmount}`
             };
 
       const updateDebtResult = await balanceOffsetsRepository.updateDebt(
@@ -97,7 +113,7 @@ export const balanceOffsetsService = {
         transaction_type: "offset_next_period",
         amount: totalOffset,
         direction: "minus",
-        description: "Bù trừ số dư cá nhân vào công nợ"
+        description: "Bu tru so du ca nhan vao cong no"
       });
 
     if (transactionResult.error) {
@@ -105,7 +121,7 @@ export const balanceOffsetsService = {
     }
 
     return {
-      message: "Bù trừ số dư thành công",
+      message: "Bu tru so du thanh cong",
       offset_amount: totalOffset,
       remaining_balance: availableBalance,
       updated_debts: updatedDebts

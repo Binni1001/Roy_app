@@ -3,7 +3,7 @@ import { dashboardRepository } from "./dashboard.repository.js";
 export const dashboardService = {
   async getPeriodDashboard(periodId) {
     if (!periodId) {
-      throw new Error("Period ID không được để trống");
+      throw new Error("Period ID khong duoc de trong");
     }
 
     const periodResult = await dashboardRepository.getPeriod(periodId);
@@ -30,7 +30,9 @@ export const dashboardService = {
     const shuttleExpenses = shuttleResult.data;
     const balances = balancesResult.data;
 
-    const totalDebt = debts.reduce((sum, d) => sum + Number(d.amount), 0);
+    const totalDebt = debts
+      .filter((d) => d.status !== "cancelled")
+      .reduce((sum, d) => sum + Number(d.amount), 0);
 
     const paidDebt = debts
       .filter((d) => d.status === "paid")

@@ -1,6 +1,12 @@
 import { supabase } from "../../config/supabase.js";
 
 export const shuttleSettlementsRepository = {
+  async settlePeriod(periodId) {
+    return await supabase.rpc("settle_shuttle_period", {
+      p_period_id: periodId
+    });
+  },
+
   async getFixedMembers(periodId) {
     return await supabase
       .from("period_members")
@@ -69,5 +75,16 @@ export const shuttleSettlementsRepository = {
       .insert([payload])
       .select()
       .single();
+  },
+
+  async getSettlementTransactions(periodId) {
+    return await supabase
+      .from("balance_transactions")
+      .select("*")
+      .eq("period_id", periodId)
+      .in("transaction_type", [
+        "credit_from_shuttle_purchase",
+        "debit_shuttle_share"
+      ]);
   }
 };

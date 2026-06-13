@@ -41,7 +41,7 @@ export const shuttleExpensesController = {
     try {
       const data = await shuttleExpensesService.remove(req.params.id);
       res.json({
-        message: "Xóa khoản mua cầu thành công",
+        message: "Xoa khoan mua cau thanh cong",
         data
       });
     } catch (error) {

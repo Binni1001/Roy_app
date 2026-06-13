@@ -5,7 +5,7 @@ const allowedStatuses = ["fixed", "guest", "inactive"];
 export const periodMembersService = {
   async getMembersByPeriod(periodId) {
     if (!periodId) {
-      throw new Error("Period ID không được để trống");
+      throw new Error("Period ID khong duoc de trong");
     }
 
     const { data, error } = await periodMembersRepository.getByPeriodId(periodId);
@@ -19,7 +19,7 @@ export const periodMembersService = {
 
   async getPeriodMemberById(id) {
     if (!id) {
-      throw new Error("Period member ID không được để trống");
+      throw new Error("Period member ID khong duoc de trong");
     }
 
     const { data, error } = await periodMembersRepository.getById(id);
@@ -33,17 +33,17 @@ export const periodMembersService = {
 
   async createPeriodMember(payload = {}) {
     if (!payload.period_id) {
-      throw new Error("Period ID không được để trống");
+      throw new Error("Period ID khong duoc de trong");
     }
 
     if (!payload.person_id) {
-      throw new Error("Person ID không được để trống");
+      throw new Error("Person ID khong duoc de trong");
     }
 
     const status = payload.status || "fixed";
 
     if (!allowedStatuses.includes(status)) {
-      throw new Error("Status không hợp lệ. Chỉ được dùng: fixed, guest, inactive");
+      throw new Error("Status khong hop le. Chi duoc dung: fixed, guest, inactive");
     }
 
     const existing = await periodMembersRepository.findByPeriodAndPerson(
@@ -56,7 +56,7 @@ export const periodMembersService = {
     }
 
     if (existing.data) {
-      throw new Error("Người này đã tồn tại trong kỳ này");
+      throw new Error("Nguoi nay da ton tai trong ky nay");
     }
 
     const { data, error } = await periodMembersRepository.create({
@@ -106,7 +106,7 @@ export const periodMembersService = {
           debt_type: "monthly_fee",
           amount: Number(period.fixed_member_fee),
           status: "unpaid",
-          description: `Tiền cố định ${period.name}`
+          description: `Tien co dinh ${period.name}`
         });
 
         if (debtResult.error) {
@@ -128,7 +128,7 @@ export const periodMembersService = {
 
   async updatePeriodMember(id, payload = {}) {
     if (!id) {
-      throw new Error("Period member ID không được để trống");
+      throw new Error("Period member ID khong duoc de trong");
     }
 
     const currentResult = await periodMembersRepository.getById(id);
@@ -143,7 +143,7 @@ export const periodMembersService = {
     const newStatus = payload.status ?? oldStatus;
 
     if (!allowedStatuses.includes(newStatus)) {
-      throw new Error("Status không hợp lệ. Chỉ được dùng: fixed, guest, inactive");
+      throw new Error("Status khong hop le. Chi duoc dung: fixed, guest, inactive");
     }
 
     const updateData = {
@@ -197,7 +197,7 @@ export const periodMembersService = {
               debt_type: "monthly_fee",
               amount: Number(period.fixed_member_fee),
               status: "unpaid",
-              description: `Tiền cố định ${period.name}`
+              description: `Tien co dinh ${period.name}`
             });
 
             if (debtResult.error) {

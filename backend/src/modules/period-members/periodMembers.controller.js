@@ -45,7 +45,7 @@ export const periodMembersController = {
     try {
       const data = await periodMembersService.deletePeriodMember(req.params.id);
       res.json({
-        message: "Xóa member khỏi kỳ thành công",
+        message: "Xoa member khoi ky thanh cong",
         data
       });
     } catch (error) {

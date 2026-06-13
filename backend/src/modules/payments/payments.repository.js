@@ -1,6 +1,20 @@
 import { supabase } from "../../config/supabase.js";
 
 export const paymentsRepository = {
+  async processPaidPayment(orderCode, rawPayload) {
+    return await supabase.rpc("process_paid_payment", {
+      p_order_code: orderCode,
+      p_raw_payload: rawPayload
+    });
+  },
+
+  async markPaymentFailed(orderCode, rawPayload) {
+    return await supabase.rpc("mark_payment_failed", {
+      p_order_code: orderCode,
+      p_raw_payload: rawPayload
+    });
+  },
+
   async getUnpaidDebts(personId, periodId) {
     return await supabase
       .from("debts")
@@ -43,15 +57,13 @@ export const paymentsRepository = {
       .single();
   },
 
-  async findPendingPayment(personId) {
+  async getPendingPayments(personId) {
     return await supabase
       .from("payments")
       .select("*")
       .eq("person_id", personId)
       .eq("status", "pending")
-      .order("created_at", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .order("created_at", { ascending: false });
   },
 
   async getPaymentDebts(paymentId) {
@@ -120,47 +132,15 @@ export const paymentsRepository = {
       .single();
   },
 
-  async findPaymentByOrderCode(orderCode) {
-    return await supabase
-      .from("payments")
-      .select("*")
-      .eq("payos_order_code", orderCode)
-      .maybeSingle();
-  },
-
-  async updatePayment(id, payload) {
-    return await supabase
-      .from("payments")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-  },
-
-  async getPaymentDebtsWithDebt(paymentId) {
-    return await supabase
-      .from("payment_debts")
-      .select(`
-        *,
-        debt:debts(*)
-      `)
-      .eq("payment_id", paymentId);
-  },
-
-  async updateDebt(id, payload) {
-    return await supabase
-      .from("debts")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-  },
-
-  async createFundTransaction(payload) {
+  async findFundTransaction(paymentId, personId, amount) {
     return await supabase
       .from("club_fund_transactions")
-      .insert([payload])
-      .select()
-      .single();
+      .select("*")
+      .eq("payment_id", paymentId)
+      .eq("person_id", personId)
+      .eq("amount", amount)
+      .eq("transaction_type", "income")
+      .limit(1)
+      .maybeSingle();
   }
 };

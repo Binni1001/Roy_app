@@ -22,5 +22,23 @@ export const peopleRepository = {
       .insert([payload])
       .select()
       .single();
+  },
+
+  async update(id, payload) {
+    return await supabase
+      .from("people")
+      .update(payload)
+      .eq("id", id)
+      .select()
+      .single();
+  },
+
+  async remove(id) {
+    return await supabase
+      .from("people")
+      .delete()
+      .eq("id", id)
+      .select()
+      .single();
   }
 };

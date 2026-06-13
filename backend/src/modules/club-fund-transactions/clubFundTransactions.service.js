@@ -10,7 +10,7 @@ export const clubFundTransactionsService = {
   },
 
   async getByPeriod(periodId) {
-    if (!periodId) throw new Error("Period ID không được để trống");
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
 
     const { data, error } = await clubFundTransactionsRepository.getByPeriod(periodId);
     if (error) throw new Error(error.message);
@@ -19,11 +19,11 @@ export const clubFundTransactionsService = {
 
   async create(payload = {}) {
     if (!allowedTypes.includes(payload.transaction_type)) {
-      throw new Error("Loại giao dịch quỹ không hợp lệ");
+      throw new Error("Loai giao dich quy khong hop le");
     }
 
     if (Number(payload.amount) <= 0) {
-      throw new Error("Số tiền phải lớn hơn 0");
+      throw new Error("Sa tien phai lon hon 0");
     }
 
     const { data, error } = await clubFundTransactionsRepository.create({
