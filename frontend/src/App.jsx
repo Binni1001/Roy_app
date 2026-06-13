@@ -110,7 +110,7 @@ function RedirectTo({ to }) {
     window.history.replaceState({}, '', to)
   }, [to])
 
-  return <AuthLoading />
+  return null
 }
 
 function displayRole(role) {
@@ -164,19 +164,6 @@ function App() {
 
   if (!path.startsWith('/user')) return <RedirectTo to="/user" />
   return <UserPortal session={session} role={role} onSignOut={signOut} />
-}
-
-function AuthLoading() {
-  return (
-    <main className="login-page">
-      <section className="login-panel">
-        <BrandLogo />
-        <p className="eyebrow">Roy Badminton</p>
-        <h1>Đang kiểm tra đăng nhập</h1>
-        <p className="muted">Vui lòng chờ trong giây lát.</p>
-      </section>
-    </main>
-  )
 }
 
 function AdminPortal({ session, role, onSignOut }) {
