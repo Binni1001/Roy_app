@@ -18,15 +18,15 @@ const emptyPeriod = { name: '', start_date: '', end_date: '', status: 'active' }
 const adminTabs = [
   ['dashboard', 'Tổng quan', 'Bức tranh chung'],
   ['people', 'Nhân sự', 'Người trong câu lạc bộ'],
-  ['periods', 'K? qu?', 'K? sinh ho?t'],
+  ['periods', 'Kỳ quỹ', 'Kỳ sinh hoạt'],
   ['sessions', 'Buổi cầu', 'Lịch đã ghi nhận'],
-  ['shuttle', 'Chi c?u', 'Mua v? chia c?u'],
+  ['shuttle', 'Chi cầu', 'Mua và chia cầu'],
   ['debts', 'Công nợ', 'Khoản cần thu'],
   ['fund', 'Sổ quỹ', 'Thu chi câu lạc bộ'],
 ]
 
 const userTabs = [
-  ['home', 'Trang c? nh?n'],
+  ['home', 'Trang cá nhân'],
   ['debts', 'Công nợ'],
   ['history', 'Lịch sử'],
   ['payment', 'Thanh toán'],
@@ -41,9 +41,9 @@ const valueLabels = {
   closed: 'Đã chốt',
   income: 'Thu',
   expense: 'Chi',
-  monthly_fee: 'Ph? th?ng',
-  guest_fee: 'Ph? kh?ch',
-  shuttle_fee: 'Ph? c?u',
+  monthly_fee: 'Phí tháng',
+  guest_fee: 'Phí khách',
+  shuttle_fee: 'Phí cầu',
   other: 'Khác',
 }
 
@@ -112,8 +112,8 @@ function RedirectTo({ to }) {
 }
 
 function displayRole(role) {
-  if (role === 'owner') return 'ch? s? h?u'
-  if (role === 'admin') return 'qu?n tr? vi?n'
+  if (role === 'owner') return 'chủ sở hữu'
+  if (role === 'admin') return 'quản trị viên'
   return 'người dùng'
 }
 
@@ -210,7 +210,7 @@ function AdminPortal({ session, role, onSignOut }) {
     const dashboard = data.dashboard || {}
     return [
       {
-        label: 'N? ch?a thu',
+        label: 'Nợ chưa thu',
         value: formatMoney(
           readTotal(dashboard, ['total_unpaid_debt', 'unpaid_debt', 'total_debt']),
         ),
@@ -540,7 +540,7 @@ function UserPortal({ session, role, onSignOut }) {
             </small>
           </div>
           <div>
-            <p>N? c?n thanh to?n</p>
+            <p>Nợ cần thanh toán</p>
             <strong>{formatMoney(totalDebt)}</strong>
             <button onClick={createPayment} disabled={loading || !activePerson}>
               Thanh toán qua PayOS
@@ -609,7 +609,7 @@ function BrandLogo() {
 function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut }) {
   return (
     <aside className="sidebar">
-      <BrandBlock caption="Qu?n l? qu? c?u l?c b?" />
+      <BrandBlock caption="Quản lý quỹ câu lạc bộ" />
       <AccountBox session={session} role={role} onSignOut={onSignOut} />
       <nav>
         {adminTabs.map(([key, label, hint]) => (
@@ -716,7 +716,7 @@ function AdminContent(props) {
                 <button>Mời làm quản trị viên</button>
               </form>
             </Panel>
-            <Panel title="Danh s?ch qu?n tr? vi?n">
+            <Panel title="Danh sách quản trị viên">
               <SimpleTable
                 rows={adminUsers}
                 columns={[['email', 'Thư điện tử'], ['role', 'Quyền', displayRole], ['full_name', 'Tên hiển thị']]}
@@ -740,7 +740,7 @@ function AdminContent(props) {
               setForm('person', emptyPerson)
             }}
           >
-            <Input label="H? t?n" value={forms.person.full_name} onChange={(value) => setForm('person', { full_name: value })} required />
+            <Input label="Họ tên" value={forms.person.full_name} onChange={(value) => setForm('person', { full_name: value })} required />
             <Input label="Điện thoại" value={forms.person.phone} onChange={(value) => setForm('person', { phone: value })} />
             <Input label="Ghi chú" value={forms.person.note} onChange={(value) => setForm('person', { note: value })} />
             <button>Thêm người</button>
@@ -797,7 +797,7 @@ function AdminContent(props) {
             }}
           >
             <SelectPeople people={people} value={forms.member.person_id} onChange={(value) => setForm('member', { person_id: value })} />
-            <Input label="Ph? th?ng" type="number" value={forms.member.monthly_fee} onChange={(value) => setForm('member', { monthly_fee: value })} />
+            <Input label="Phí tháng" type="number" value={forms.member.monthly_fee} onChange={(value) => setForm('member', { monthly_fee: value })} />
             <button>Thêm vào kỳ</button>
           </form>
           <SimpleTable
@@ -962,7 +962,7 @@ function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, ch
   if (activeTab === 'history') {
     return (
       <section className="grid two">
-        <Panel title="L?ch s? s? d?">
+        <Panel title="Lịch sử số dư">
           <SimpleTable rows={transactions} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
         </Panel>
         <Panel title="Buổi cầu trong kỳ">
@@ -1114,7 +1114,7 @@ function editPeriod(period, submit) {
 }
 
 function editMember(member, submit) {
-  const monthlyFee = window.prompt('Ph? th?ng', member.monthly_fee || 0)
+  const monthlyFee = window.prompt('Phí tháng', member.monthly_fee || 0)
   if (monthlyFee === null) return
   const status = window.prompt('Trạng thái', member.status || 'active')
   if (status === null) return
@@ -1152,7 +1152,7 @@ function editShuttleExpense(expense, submit) {
 }
 
 function removeShuttleExpense(expense, submit) {
-  if (!askConfirm('X?a chi ph? c?u n?y?')) return
+  if (!askConfirm('Xóa chi phí cầu này?')) return
   submit(() => api.shuttleExpenses.remove(expense.id), 'Đã xóa chi phí cầu.')
 }
 
