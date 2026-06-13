@@ -121,19 +121,21 @@ function displayRole(role) {
 
 function App() {
   const [session, setSession] = useState(null)
-  const [checkingAuth, setCheckingAuth] = useState(true)
   const [recoveringPassword, setRecoveringPassword] = useState(false)
   const path = window.location.pathname
 
   useEffect(() => {
+    let mounted = true
+
     supabase.auth.getSession().then(({ data }) => {
+      if (!mounted) return
       setSession(data.session)
-      setCheckingAuth(false)
+    }).catch((error) => {
+      console.error(error)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       setSession(nextSession)
-      setCheckingAuth(false)
       if (event === 'PASSWORD_RECOVERY') {
         setRecoveringPassword(true)
         window.history.replaceState({}, '', '/reset-password')
@@ -141,11 +143,11 @@ function App() {
     })
 
     return () => {
+      mounted = false
       listener.subscription.unsubscribe()
     }
   }, [])
 
-  if (checkingAuth) return <AuthLoading />
   if (path.startsWith('/reset-password') || recoveringPassword) return <ResetPassword />
   if (!session) return <Login />
 
