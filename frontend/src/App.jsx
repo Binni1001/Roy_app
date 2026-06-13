@@ -19,10 +19,10 @@ const adminTabs = [
   ['dashboard', 'Tổng quan', 'Bức tranh chung'],
   ['people', 'Nhân sự', 'Người trong câu lạc bộ'],
   ['periods', 'K? qu?', 'K? sinh ho?t'],
-  ['sessions', 'Bu?i c?u', 'L?ch ?? ghi nh?n'],
+  ['sessions', 'Buổi cầu', 'Lịch đã ghi nhận'],
   ['shuttle', 'Chi c?u', 'Mua v? chia c?u'],
   ['debts', 'Công nợ', 'Khoản cần thu'],
-  ['fund', 'S? qu?', 'Thu chi c?u l?c b?'],
+  ['fund', 'Sổ quỹ', 'Thu chi câu lạc bộ'],
 ]
 
 const userTabs = [
@@ -33,12 +33,12 @@ const userTabs = [
 ]
 
 const valueLabels = {
-  paid: '?? thanh to?n',
+  paid: 'Đã thanh toán',
   unpaid: 'Chưa thanh toán',
   pending: 'Đang chờ',
-  cancelled: '?? h?y',
+  cancelled: 'Đã hủy',
   active: 'Đang hoạt động',
-  closed: '?? ch?t',
+  closed: 'Đã chốt',
   income: 'Thu',
   expense: 'Chi',
   monthly_fee: 'Ph? th?ng',
@@ -76,7 +76,7 @@ function displayValue(value) {
 
 function errorText(error) {
   console.error(error)
-  return '?? x?y ra l?i khi x? l? d? li?u. Vui l?ng ki?m tra m?y ch? ho?c m? b?ng ?i?u khi?n tr?nh duy?t ?? xem chi ti?t.'
+  return 'Đã xảy ra lỗi khi xử lý dữ liệu. Vui lòng kiểm tra máy chủ hoặc mở bảng điều khiển trình duyệt để xem chi tiết.'
 }
 
 function askConfirm(message) {
@@ -101,6 +101,14 @@ function getSessionRole(session) {
 
 function canOpenAdmin(role) {
   return role === 'owner' || role === 'admin'
+}
+
+function RedirectTo({ to }) {
+  useEffect(() => {
+    window.history.replaceState({}, '', to)
+  }, [to])
+
+  return <AuthLoading />
 }
 
 function displayRole(role) {
@@ -176,8 +184,8 @@ function App() {
         <p className="eyebrow">Roy Badminton</p>
         <h1>Chọn không gian làm việc</h1>
         <p className="muted">
-          Qu?n tr? vi?n v? ng??i d?ng ?? ???c t?ch th?nh hai khu v?c ri?ng ?? sau n?y
-          g?n ??ng nh?p, ph?n quy?n v? phi?n l?m vi?c ??c l?p.
+          Quản trị viên và người dùng đã được tách thành hai khu vực riêng để sau này
+          gắn đăng nhập, phân quyền và phiên làm việc độc lập.
         </p>
         <div className="gateway-actions">
           {canOpenAdmin(role) && <a href="/admin">Vào khu quản trị</a>}
@@ -195,7 +203,7 @@ function AuthLoading() {
         <BrandLogo />
         <p className="eyebrow">Roy Badminton</p>
         <h1>Đang kiểm tra đăng nhập</h1>
-        <p className="muted">Vui l?ng ch? trong gi?y l?t.</p>
+        <p className="muted">Vui lòng chờ trong giây lát.</p>
       </section>
     </main>
   )
@@ -206,13 +214,13 @@ function AccessDenied({ session, role, onSignOut }) {
     <main className="gateway">
       <section className="gateway-panel access-panel">
         <BrandLogo />
-        <p className="eyebrow">Kh?ng c? quy?n truy c?p</p>
+        <p className="eyebrow">Không có quyền truy cập</p>
         <h1>Khu qu?n tr? ch? d?nh cho qu?n tr? vi?n</h1>
         <p className="muted">
-          T?i kho?n {session?.user?.email} hi?n c? quy?n {displayRole(role)}.
+          Tài khoản {session?.user?.email} hiện có quyền {displayRole(role)}.
         </p>
         <div className="gateway-actions">
-          <a href="/user">V? khu ng??i d?ng</a>
+          <a href="/user">Về khu người dùng</a>
           <button onClick={onSignOut}>Đăng xuất</button>
         </div>
       </section>
@@ -244,11 +252,11 @@ function AdminPortal({ session, role, onSignOut }) {
         ),
       },
       {
-        label: 'Qu? hi?n t?i',
+        label: 'Quỹ hiện tại',
         value: formatMoney(readTotal(dashboard, ['fund_balance', 'club_fund_balance'])),
       },
       { label: 'Thành viên kỳ', value: data.members.length || people.length },
-      { label: 'Bu?i ?? ghi', value: data.sessions.length },
+      { label: 'Buổi đã ghi', value: data.sessions.length },
     ]
   }, [data.dashboard, data.members.length, data.sessions.length, people.length])
 
@@ -283,7 +291,7 @@ function AdminPortal({ session, role, onSignOut }) {
         '',
       )
       setSelectedPersonId((current) => current || nextPeople[0]?.id || '')
-      setToast('?? k?t n?i m?y ch?.')
+      setToast('Đã kết nối máy chủ.')
     } catch (error) {
       setToast(errorText(error))
     } finally {
@@ -353,12 +361,12 @@ function AdminPortal({ session, role, onSignOut }) {
 
   async function createPayment(personId = selectedPersonId) {
     if (!personId || !selectedPeriodId) {
-      setToast('C?n ch?n k? v? ng??i thanh to?n.')
+      setToast('Cần chọn kỳ và người thanh toán.')
       return
     }
     const result = await submit(
       () => api.payments.createForPersonPeriod({ person_id: personId, period_id: selectedPeriodId }),
-      '?? t?o l?nh thanh to?n.',
+      'Đã tạo lệnh thanh toán.',
     )
     if (result) setCheckout(result)
   }
@@ -375,7 +383,7 @@ function AdminPortal({ session, role, onSignOut }) {
       <main className="workspace admin-workspace">
         <Topbar
           eyebrow="Khu quản trị"
-          title={activePeriod?.name || 'Ch?a c? k?'}
+          title={activePeriod?.name || 'Chưa có kỳ'}
           loading={loading}
           onRefresh={boot}
           periodValue={selectedPeriodId}
@@ -451,7 +459,7 @@ function UserPortal({ session, role, onSignOut }) {
         nextPeriods[0]?.id ||
         '',
       )
-      setToast('?? s?n s?ng ??ng b? d? li?u c? nh?n.')
+      setToast('Đã sẵn sàng đồng bộ dữ liệu cá nhân.')
     } catch (error) {
       setToast(errorText(error))
     } finally {
@@ -484,7 +492,7 @@ function UserPortal({ session, role, onSignOut }) {
 
   async function createPayment() {
     if (!activePerson?.id || !selectedPeriodId) {
-      setToast('T?i kho?n n?y ch?a ???c li?n k?t v?i h? s? ng??i ch?i.')
+      setToast('Tài khoản này chưa được liên kết với hồ sơ người chơi.')
       return
     }
     setLoading(true)
@@ -495,7 +503,7 @@ function UserPortal({ session, role, onSignOut }) {
       })
       setCheckout(result)
       setActiveTab('payment')
-      setToast('?? t?o l?nh thanh to?n qua PayOS.')
+      setToast('Đã tạo lệnh thanh toán qua PayOS.')
       await loadPersonData(activePerson.id)
     } catch (error) {
       setToast(errorText(error))
@@ -511,8 +519,8 @@ function UserPortal({ session, role, onSignOut }) {
         <AccountBox session={session} role={role} onSignOut={onSignOut} />
         <div className="profile-card">
           <span className="avatar">{initials(activePerson?.full_name)}</span>
-          <strong>{activePerson?.full_name || 'Ch?n ng??i d?ng'}</strong>
-          <small>{activePerson?.phone || 'Ch?a c? s? ?i?n tho?i'}</small>
+          <strong>{activePerson?.full_name || 'Chọn người dùng'}</strong>
+          <small>{activePerson?.phone || 'Chưa có số điện thoại'}</small>
         </div>
         <nav>
           {userTabs.map(([key, label]) => (
@@ -529,7 +537,7 @@ function UserPortal({ session, role, onSignOut }) {
       <main className="workspace user-workspace">
         <Topbar
           eyebrow="Khu người dùng"
-          title={activePerson?.full_name || 'T?i kho?n c?u l?ng'}
+          title={activePerson?.full_name || 'Tài khoản cầu lông'}
           loading={loading}
           onRefresh={boot}
           periodValue={selectedPeriodId}
@@ -539,7 +547,7 @@ function UserPortal({ session, role, onSignOut }) {
         <StatusLine text={toast} />
         {!activePerson && (
           <div className="toast inline-alert" role="alert">
-            T?i kho?n n?y ch?a ???c li?n k?t v?i h? s? ng??i ch?i.
+            Tài khoản này chưa được liên kết với hồ sơ người chơi.
           </div>
         )}
         <section className="member-hero">
@@ -550,7 +558,7 @@ function UserPortal({ session, role, onSignOut }) {
                 className={attendanceType === 'fixed' ? 'active' : ''}
                 onClick={() => setAttendanceType('fixed')}
               >
-                ??nh c? ??nh
+                Đánh cố định
               </button>
               <button
                 className={attendanceType === 'guest' ? 'active' : ''}
@@ -559,11 +567,11 @@ function UserPortal({ session, role, onSignOut }) {
                 Đánh vãng lai
               </button>
             </div>
-            <p className="eyebrow">S? d? hi?n t?i</p>
+            <p className="eyebrow">Số dư hiện tại</p>
             <strong>{formatMoney(data.balance?.balance || 0)}</strong>
             <small>
               {attendanceType === 'fixed'
-                ? 'B?n ?ang xem theo di?n c? ??nh th?ng n?y.'
+                ? 'Bạn đang xem theo diện cố định tháng này.'
                 : 'Bạn đang xem theo diện vãng lai tháng này.'}
             </small>
           </div>
@@ -658,7 +666,7 @@ function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut }) {
 function AccountBox({ session, role, onSignOut }) {
   return (
     <div className="account-box">
-      <span>{session?.user?.email || 'T?i kho?n Google'}</span>
+      <span>{session?.user?.email || 'Tài khoản Google'}</span>
       <small>Quyền: {displayRole(role)}</small>
       <button onClick={onSignOut}>Đăng xuất</button>
     </div>
@@ -722,26 +730,26 @@ function AdminContent(props) {
           ))}
         </section>
         <section className="grid two">
-          <Panel title="C?ng n? g?n ??y"><DebtTable debts={data.debts.slice(0, 8)} /></Panel>
+          <Panel title="Công nợ gần đây"><DebtTable debts={data.debts.slice(0, 8)} /></Panel>
           <Panel title="Giao dịch quỹ"><FundTable rows={data.fund.slice(0, 8)} /></Panel>
         </section>
         {role === 'owner' && (
           <section className="grid two owner-tools">
-            <Panel title="M?i qu?n tr? vi?n">
+            <Panel title="Mời quản trị viên">
               <form
                 className="form"
                 onSubmit={(event) => {
                   event.preventDefault()
                   submit(
                     () => api.adminUsers.invite(forms.adminUser),
-                    '?? g?i l?i m?i ho?c g?n quy?n qu?n tr? vi?n.',
+                    'Đã gửi lời mời hoặc gắn quyền quản trị viên.',
                   )
                   setForm('adminUser', { email: '', full_name: '' })
                 }}
               >
-                <Input label="Email qu?n tr? vi?n" value={forms.adminUser.email} onChange={(value) => setForm('adminUser', { email: value })} required />
+                <Input label="Thư điện tử quản trị viên" value={forms.adminUser.email} onChange={(value) => setForm('adminUser', { email: value })} required />
                 <Input label="Tên hiển thị" value={forms.adminUser.full_name} onChange={(value) => setForm('adminUser', { full_name: value })} />
-                <button>M?i l?m qu?n tr? vi?n</button>
+                <button>Mời làm quản trị viên</button>
               </form>
             </Panel>
             <Panel title="Danh s?ch qu?n tr? vi?n">
@@ -764,7 +772,7 @@ function AdminContent(props) {
             className="form"
             onSubmit={(event) => {
               event.preventDefault()
-              submit(() => api.people.create(forms.person), '?? th?m ng??i m?i.')
+              submit(() => api.people.create(forms.person), 'Đã thêm người mới.')
               setForm('person', emptyPerson)
             }}
           >
@@ -777,7 +785,7 @@ function AdminContent(props) {
         <Panel title="Danh sách người">
           <SimpleTable
             rows={people}
-            columns={[['full_name', 'H? t?n'], ['phone', '?i?n tho?i'], ['note', 'Ghi ch?']]}
+            columns={[['full_name', 'Họ tên'], ['phone', 'Điện thoại'], ['note', 'Ghi chú']]}
             actions={(person) => (
               <ActionGroup>
                 <button onClick={() => editPerson(person, submit)}>Sửa</button>
@@ -798,7 +806,7 @@ function AdminContent(props) {
             className="form"
             onSubmit={(event) => {
               event.preventDefault()
-              submit(() => api.periods.create(forms.period), '?? t?o k? m?i.')
+              submit(() => api.periods.create(forms.period), 'Đã tạo kỳ mới.')
               setForm('period', emptyPeriod)
             }}
           >
@@ -820,7 +828,7 @@ function AdminContent(props) {
                     person_id: forms.member.person_id,
                     monthly_fee: Number(forms.member.monthly_fee || 0),
                   }),
-                '?? th?m th?nh vi?n v?o k?.',
+                'Đã thêm thành viên vào kỳ.',
               )
             }}
           >
@@ -830,7 +838,7 @@ function AdminContent(props) {
           </form>
           <SimpleTable
             rows={data.members}
-            columns={[['person_name', 'Ng??i'], ['monthly_fee', 'Ph? th?ng', formatMoney], ['status', 'Tr?ng th?i', displayValue]]}
+            columns={[['person_name', 'Người'], ['monthly_fee', 'Phí tháng', formatMoney], ['status', 'Trạng thái', displayValue]]}
             actions={(member) => (
               <ActionGroup>
                 <button onClick={() => editMember(member, submit)}>Sửa</button>
@@ -965,15 +973,15 @@ function AdminContent(props) {
       <Panel title="Số dư từng người">
         <SimpleTable
           rows={data.balances}
-          columns={[['person_name', 'Ng??i'], ['balance', 'S? d?', formatMoney], ['updated_at', 'C?p nh?t', formatDate]]}
+          columns={[['person_name', 'Người'], ['balance', 'Số dư', formatMoney], ['updated_at', 'Cập nhật', formatDate]]}
           actions={(balance) => (
             <ActionGroup>
-              <button onClick={() => offsetBalance(balance, selectedPeriodId, submit)}>B? tr?</button>
+              <button onClick={() => offsetBalance(balance, selectedPeriodId, submit)}>Bù trừ</button>
             </ActionGroup>
           )}
         />
       </Panel>
-      <Panel title="S? qu? c?u l?c b?" wide><FundTable rows={data.fund} /></Panel>
+      <Panel title="Sổ quỹ câu lạc bộ" wide><FundTable rows={data.fund} /></Panel>
     </section>
   )
 }
@@ -983,7 +991,7 @@ function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, ch
     return (
       <section className="grid two">
         <Panel title="Cần thanh toán"><DebtTable debts={unpaidDebts} /></Panel>
-        <Panel title="T?t c? c?ng n?"><DebtTable debts={debts} /></Panel>
+        <Panel title="Tất cả công nợ"><DebtTable debts={debts} /></Panel>
       </section>
     )
   }
@@ -991,7 +999,7 @@ function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, ch
     return (
       <section className="grid two">
         <Panel title="L?ch s? s? d?">
-          <SimpleTable rows={transactions} columns={[['created_at', 'Ng?y', formatDate], ['amount', 'S? ti?n', formatMoney], ['description', 'N?i dung']]} />
+          <SimpleTable rows={transactions} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
         </Panel>
         <Panel title="Buổi cầu trong kỳ">
           <SimpleTable rows={sessions} columns={[['session_date', 'Ngày', formatDate], ['guest_count', 'Khách'], ['note', 'Ghi chú']]} />
@@ -1004,9 +1012,9 @@ function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, ch
   }
   return (
     <section className="grid three">
-      <Panel title="C?ng n? g?n nh?t"><DebtTable debts={debts.slice(0, 5)} /></Panel>
-      <Panel title="L?ch s? g?n ??y">
-        <SimpleTable rows={transactions.slice(0, 5)} columns={[['created_at', 'Ng?y', formatDate], ['amount', 'S? ti?n', formatMoney], ['description', 'N?i dung']]} />
+      <Panel title="Công nợ gần nhất"><DebtTable debts={debts.slice(0, 5)} /></Panel>
+      <Panel title="Lịch sử gần đây">
+        <SimpleTable rows={transactions.slice(0, 5)} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
       </Panel>
       <Panel title="Lịch chơi">
         <SimpleTable rows={sessions.slice(0, 5)} columns={[['session_date', 'Ngày', formatDate], ['guest_count', 'Khách'], ['note', 'Ghi chú']]} />
@@ -1040,7 +1048,7 @@ function ActionGroup({ children }) {
 }
 
 function SimpleTable({ rows, columns, actions }) {
-  if (!rows.length) return <p className="empty">Ch?a c? d? li?u</p>
+  if (!rows.length) return <p className="empty">Chưa có dữ liệu</p>
   return (
     <div className="table-wrap">
       <table>
@@ -1072,13 +1080,13 @@ function DebtTable({ debts, admin = false, submit }) {
       columns={[
         ['person_name', 'Người'],
         ['debt_type', 'Loại', displayValue],
-        ['amount', 'S? ti?n', formatMoney],
+        ['amount', 'Số tiền', formatMoney],
         ['status', 'Trạng thái', displayValue],
       ]}
       actions={admin ? (debt) => (
         <ActionGroup>
-          <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'paid'), '?? ??nh d?u ?? thanh to?n.')}>?? thu</button>
-          <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'unpaid'), '?? chuy?n v? ch?a thanh to?n.')}>Ch?a thu</button>
+          <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'paid'), 'Đã đánh dấu đã thanh toán.')}>Đã thu</button>
+          <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'unpaid'), 'Đã chuyển về chưa thanh toán.')}>Chưa thu</button>
         </ActionGroup>
       ) : null}
     />
@@ -1092,7 +1100,7 @@ function FundTable({ rows }) {
       columns={[
         ['created_at', 'Ngày', formatDate],
         ['transaction_type', 'Loại', displayValue],
-        ['amount', 'S? ti?n', formatMoney],
+        ['amount', 'Số tiền', formatMoney],
         ['description', 'Nội dung'],
       ]}
     />
@@ -1105,28 +1113,28 @@ function CheckoutBox({ checkout, submit }) {
   const paymentId = checkout.id || checkout.payment?.id
   return (
     <div className="checkout">
-      <strong>?? s?n s?ng thanh to?n qua PayOS</strong>
+      <strong>Đã sẵn sàng thanh toán qua PayOS</strong>
       {url ? <a href={url} target="_blank" rel="noreferrer">{url}</a> : <code>{JSON.stringify(checkout)}</code>}
       {submit && paymentId && (
-        <button className="danger" onClick={() => submit(() => api.payments.cancel(paymentId), '?? h?y l?nh thanh to?n.')}>H?y l?nh thanh to?n</button>
+        <button className="danger" onClick={() => submit(() => api.payments.cancel(paymentId), 'Đã hủy lệnh thanh toán.')}>Hủy lệnh thanh toán</button>
       )}
     </div>
   )
 }
 
 function editPerson(person, submit) {
-  const fullName = window.prompt('H? t?n', person.full_name || '')
+  const fullName = window.prompt('Họ tên', person.full_name || '')
   if (fullName === null) return
   const phone = window.prompt('Điện thoại', person.phone || '')
   if (phone === null) return
   const note = window.prompt('Ghi chú', person.note || '')
   if (note === null) return
-  submit(() => api.people.update(person.id, { full_name: fullName, phone, note }), '?? c?p nh?t ng??i.')
+  submit(() => api.people.update(person.id, { full_name: fullName, phone, note }), 'Đã cập nhật người.')
 }
 
 function removePerson(person, submit) {
   if (!askConfirm('Xóa người này?')) return
-  submit(() => api.people.remove(person.id), '?? x?a ng??i.')
+  submit(() => api.people.remove(person.id), 'Đã xóa người.')
 }
 
 function editPeriod(period, submit) {
@@ -1138,7 +1146,7 @@ function editPeriod(period, submit) {
   if (endDate === null) return
   const status = window.prompt('Trạng thái', period.status || 'active')
   if (status === null) return
-  submit(() => api.periods.update(period.id, { name, start_date: startDate, end_date: endDate, status }), '?? c?p nh?t k?.')
+  submit(() => api.periods.update(period.id, { name, start_date: startDate, end_date: endDate, status }), 'Đã cập nhật kỳ.')
 }
 
 function editMember(member, submit) {
@@ -1146,49 +1154,49 @@ function editMember(member, submit) {
   if (monthlyFee === null) return
   const status = window.prompt('Trạng thái', member.status || 'active')
   if (status === null) return
-  submit(() => api.periodMembers.update(member.id, { monthly_fee: Number(monthlyFee || 0), status }), '?? c?p nh?t th?nh vi?n trong k?.')
+  submit(() => api.periodMembers.update(member.id, { monthly_fee: Number(monthlyFee || 0), status }), 'Đã cập nhật thành viên trong kỳ.')
 }
 
 function removeMember(member, submit) {
-  if (!askConfirm('X?a th?nh vi?n kh?i k? n?y?')) return
-  submit(() => api.periodMembers.remove(member.id), '?? x?a th?nh vi?n kh?i k?.')
+  if (!askConfirm('Xóa thành viên khỏi kỳ này?')) return
+  submit(() => api.periodMembers.remove(member.id), 'Đã xóa thành viên khỏi kỳ.')
 }
 
 function editSession(session, submit) {
   const sessionDate = window.prompt('Ngày chơi', session.session_date || '')
   if (sessionDate === null) return
-  const guestCount = window.prompt('S? kh?ch', session.guest_count || 0)
+  const guestCount = window.prompt('Số khách', session.guest_count || 0)
   if (guestCount === null) return
   const note = window.prompt('Ghi chú', session.note || '')
   if (note === null) return
-  submit(() => api.sessions.update(session.id, { session_date: sessionDate, guest_count: Number(guestCount || 0), note }), '?? c?p nh?t bu?i c?u.')
+  submit(() => api.sessions.update(session.id, { session_date: sessionDate, guest_count: Number(guestCount || 0), note }), 'Đã cập nhật buổi cầu.')
 }
 
 function removeSession(session, submit) {
   if (!askConfirm('Xóa buổi cầu này?')) return
-  submit(() => api.sessions.remove(session.id), '?? x?a bu?i c?u.')
+  submit(() => api.sessions.remove(session.id), 'Đã xóa buổi cầu.')
 }
 
 function editShuttleExpense(expense, submit) {
-  const quantity = window.prompt('S? l??ng', expense.quantity || 0)
+  const quantity = window.prompt('Số lượng', expense.quantity || 0)
   if (quantity === null) return
   const totalAmount = window.prompt('Tổng tiền', expense.total_amount || 0)
   if (totalAmount === null) return
   const note = window.prompt('Ghi chú', expense.note || '')
   if (note === null) return
-  submit(() => api.shuttleExpenses.update(expense.id, { quantity: Number(quantity || 0), total_amount: Number(totalAmount || 0), note }), '?? c?p nh?t chi ph? c?u.')
+  submit(() => api.shuttleExpenses.update(expense.id, { quantity: Number(quantity || 0), total_amount: Number(totalAmount || 0), note }), 'Đã cập nhật chi phí cầu.')
 }
 
 function removeShuttleExpense(expense, submit) {
   if (!askConfirm('X?a chi ph? c?u n?y?')) return
-  submit(() => api.shuttleExpenses.remove(expense.id), '?? x?a chi ph? c?u.')
+  submit(() => api.shuttleExpenses.remove(expense.id), 'Đã xóa chi phí cầu.')
 }
 
 function offsetBalance(balance, selectedPeriodId, submit) {
   const personId = balance.person_id || balance.person?.id
   if (!personId || !selectedPeriodId) return
-  if (!askConfirm('B? tr? s? d? c?a ng??i n?y v?o k? ?ang ch?n?')) return
-  submit(() => api.balances.offset(personId, selectedPeriodId), '?? b? tr? s? d?.')
+  if (!askConfirm('Bù trừ số dư của người này vào kỳ đang chọn?')) return
+  submit(() => api.balances.offset(personId, selectedPeriodId), 'Đã bù trừ số dư.')
 }
 
 function initials(name = '') {

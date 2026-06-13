@@ -202,7 +202,7 @@ export default function Login() {
             )}
 
             <label>
-              {mode === 'login' ? 'Tên đăng nhập hoặc email' : 'Email'}
+              {mode === 'login' ? 'Tên đăng nhập hoặc thư điện tử' : 'Thư điện tử'}
               <input
                 type="text"
                 value={form.email}
