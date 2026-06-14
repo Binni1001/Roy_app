@@ -7,6 +7,7 @@ import { useAdminPortalData } from './useAdminPortalData'
 
 export function AdminPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState('dashboard')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const {
     activePeriod,
     adminUsers,
@@ -32,10 +33,12 @@ export function AdminPortal({ session, role, onSignOut }) {
     <div className="admin-shell">
       <AdminSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false) }}
         session={session}
         role={role}
         onSignOut={onSignOut}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <main className="workspace admin-workspace">
         <Topbar
@@ -46,6 +49,7 @@ export function AdminPortal({ session, role, onSignOut }) {
           periodValue={selectedPeriodId}
           periods={periods}
           onPeriodChange={setSelectedPeriodId}
+          onMenuToggle={() => setSidebarOpen((v) => !v)}
         />
         <StatusLine text={toast} />
         <AdminContent

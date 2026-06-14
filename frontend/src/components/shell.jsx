@@ -31,12 +31,19 @@ export function AccountBox({ session, role, onSignOut }) {
   )
 }
 
-export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, children }) {
+export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, onMenuToggle, children }) {
   return (
     <header className="topbar">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h1>{title}</h1>
+      <div className="topbar-title">
+        {onMenuToggle && (
+          <button className="hamburger" onClick={onMenuToggle} aria-label="Mở menu">
+            <span /><span /><span />
+          </button>
+        )}
+        <div>
+          <p className="eyebrow">{eyebrow}</p>
+          <h1>{title}</h1>
+        </div>
       </div>
       <div className="toolbar">
         {children}

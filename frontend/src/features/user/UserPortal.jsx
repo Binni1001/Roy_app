@@ -9,6 +9,7 @@ import { useUserPortalData } from './useUserPortalData'
 
 export function UserPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState('home')
+  const [sidebarOpen, setSidebarOpen] = useState(false)
   const {
     activePerson,
     attendanceType,
@@ -33,11 +34,13 @@ export function UserPortal({ session, role, onSignOut }) {
     <div className="user-shell">
       <UserSidebar
         activeTab={activeTab}
-        setActiveTab={setActiveTab}
+        setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false) }}
         activePerson={activePerson}
         session={session}
         role={role}
         onSignOut={onSignOut}
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
       />
       <main className="workspace user-workspace">
         <Topbar
@@ -48,6 +51,7 @@ export function UserPortal({ session, role, onSignOut }) {
           periodValue={selectedPeriodId}
           periods={periods}
           onPeriodChange={setSelectedPeriodId}
+          onMenuToggle={() => setSidebarOpen((v) => !v)}
         />
         <StatusLine text={toast} />
         {!activePerson ? (
