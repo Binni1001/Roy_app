@@ -102,6 +102,211 @@
   border: 2px solid rgba(216, 174, 82, 0.22);
 }
 
+/* ════════════════════════════════
+   BADMINTON IMAGES — DECORATIONS
+   ════════════════════════════════ */
+
+/* MemberHero — background ảnh trái tim cầu */
+.member-hero {
+  background-size: cover;
+  background-position: center;
+}
+
+.member-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 8px;
+  background: linear-gradient(
+    135deg,
+    rgba(12, 16, 22, 0.88) 0%,
+    rgba(20, 30, 28, 0.80) 100%
+  );
+  pointer-events: none;
+}
+
+.member-hero {
+  position: relative;
+}
+
+.member-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Admin workspace — subtle background */
+.admin-workspace {
+  background-size: cover;
+  background-position: center top;
+  background-attachment: fixed;
+  position: relative;
+}
+
+.admin-workspace::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, rgba(16, 20, 27, 0.93) 0%, rgba(16, 20, 27, 0.97) 400px),
+    rgba(16, 20, 27, 0.97);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.admin-workspace > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Tab banner — dải ảnh mỗi tab */
+.tab-banner {
+  position: relative;
+  height: 110px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.tab-banner-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 30%;
+  filter: blur(1px) brightness(0.55);
+  transform: scale(1.04);
+}
+
+.tab-banner-overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 0 22px;
+  gap: 4px;
+}
+
+.tab-banner-overlay h2 {
+  margin: 0;
+  color: #fff8e6;
+  font-size: 20px;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.5);
+}
+
+.tab-banner-overlay .eyebrow {
+  color: #d8ae52;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+}
+
+/* Profile setup banner */
+.profile-setup-banner {
+  position: relative;
+  height: 160px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+
+.profile-setup-banner img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 40%;
+  filter: blur(2px) brightness(0.45);
+  transform: scale(1.04);
+}
+
+.profile-setup-banner-overlay {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 0 24px;
+  gap: 6px;
+  color: #efe7d2;
+}
+
+.profile-setup-banner-overlay p {
+  text-shadow: 0 1px 6px rgba(0,0,0,0.6);
+}
+
+/* Sidebar decoration image */
+.sidebar-deco {
+  position: relative;
+  margin-top: auto;
+  margin-top: 20px;
+  border-radius: 8px;
+  overflow: hidden;
+  height: 160px;
+  flex-shrink: 0;
+}
+
+.sidebar-deco img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  filter: brightness(0.45) saturate(0.8);
+  transition: filter 0.3s;
+}
+
+.sidebar-deco:hover img {
+  filter: brightness(0.62) saturate(1);
+}
+
+.sidebar-deco::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(12, 16, 22, 0.85) 0%, transparent 60%);
+  border-radius: 8px;
+}
+
+/* Mobile: ẩn tab banner nhỏ hơn */
+@media (max-width: 860px) {
+  .tab-banner {
+    height: 80px;
+  }
+
+  .tab-banner-overlay h2 {
+    font-size: 15px;
+  }
+
+  .profile-setup-banner {
+    height: 110px;
+  }
+
+  .sidebar-deco {
+    height: 120px;
+  }
+
+  .admin-workspace {
+    background-attachment: scroll;
+  }
+}
+
+@media (max-width: 480px) {
+  .tab-banner {
+    height: 64px;
+    margin-bottom: 10px;
+  }
+
+  .tab-banner-overlay {
+    padding: 0 14px;
+  }
+
+  .tab-banner-overlay h2 {
+    font-size: 13px;
+  }
+}
+
 .gateway {
   display: grid;
   place-items: center;

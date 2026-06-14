@@ -20,6 +20,9 @@ export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut
             </button>
           ))}
         </nav>
+        <div className="sidebar-deco">
+          <img src="/images/player-spotlight.jpg" alt="" />
+        </div>
       </aside>
     </>
   )

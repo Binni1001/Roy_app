@@ -7,6 +7,13 @@ export function ProfileSetup({ form, setForm, loading, email, onSubmit }) {
 
   return (
     <section className="grid one">
+      <div className="profile-setup-banner">
+        <img src="/images/racket-sky.jpg" alt="" />
+        <div className="profile-setup-banner-overlay">
+          <p className="eyebrow">Chào mừng bạn đến với Roy Badminton</p>
+          <p>Hãy tạo hồ sơ để bắt đầu theo dõi công nợ và lịch chơi của bạn.</p>
+        </div>
+      </div>
       <Panel title="Hoàn thiện hồ sơ người chơi">
         <form className="form profile-setup" onSubmit={onSubmit}>
           <p className="muted">

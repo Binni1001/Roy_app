@@ -40,7 +40,7 @@ export function AdminPortal({ session, role, onSignOut }) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
-      <main className="workspace admin-workspace">
+      <main className="workspace admin-workspace" style={{ backgroundImage: 'url(/images/player-jump2.jpg)' }}>
         <Topbar
           eyebrow="Khu quản trị"
           title={activePeriod?.name || 'Chưa có kỳ'}

@@ -10,7 +10,7 @@ export function MemberHero({
   onUpdateAttendanceType,
 }) {
   return (
-    <section className="member-hero">
+    <section className="member-hero" style={{ backgroundImage: 'url(/images/heart-shuttle.jpg)' }}>
       <div>
         <span className="avatar large">{initials(activePerson?.full_name)}</span>
         <div className="membership-toggle">

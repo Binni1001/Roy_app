@@ -25,6 +25,9 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
             </button>
           ))}
         </nav>
+        <div className="sidebar-deco">
+          <img src="/images/rackets-court.jpg" alt="" />
+        </div>
       </aside>
     </>
   )
