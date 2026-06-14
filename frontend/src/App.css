@@ -213,6 +213,12 @@
     rgba(12, 16, 22, 0.96);
 }
 
+@media (max-width: 900px) {
+  .user-sidebar {
+    background: rgba(12, 16, 22, 0.97);
+  }
+}
+
 .brand {
   display: flex;
   align-items: center;
@@ -743,37 +749,143 @@ button.danger:hover {
   background: #ff9b9b;
 }
 
+/* ── Tablet rộng: thu hẹp sidebar ── */
+@media (max-width: 1280px) {
+  .admin-shell,
+  .user-shell {
+    grid-template-columns: 220px minmax(0, 1fr);
+  }
+
+  .brand-mark {
+    width: 60px;
+    height: 60px;
+    flex: 0 0 60px;
+  }
+}
+
+/* ── Tablet vừa: collapse grid sớm ── */
 @media (max-width: 1120px) {
+  .grid.two,
   .grid.three,
   .metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 920px) {
+/* ── Tablet nhỏ: sidebar thành top-bar ngang ── */
+@media (max-width: 900px) {
   .admin-shell,
   .user-shell {
     grid-template-columns: 1fr;
+    grid-template-rows: auto 1fr;
   }
 
+  /* Sidebar → sticky top bar */
   .sidebar,
   .user-sidebar {
-    position: static;
+    position: sticky;
+    top: 0;
+    z-index: 20;
     height: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    border-right: none;
+    border-bottom: 1px solid rgba(239, 231, 210, 0.14);
+    overflow: hidden;
+    background: rgba(12, 16, 22, 0.97);
+    backdrop-filter: blur(10px);
   }
 
+  /* Logo nhỏ lại */
+  .brand {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    gap: 0;
+  }
+
+  .brand div {
+    display: none;
+  }
+
+  .brand-mark {
+    width: 34px;
+    height: 34px;
+    flex: 0 0 34px;
+  }
+
+  /* Nav → hàng ngang cuộn */
   nav {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    flex: 1;
+    display: flex;
+    gap: 6px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
   }
 
-  .topbar,
-  .member-hero {
-    align-items: stretch;
+  nav::-webkit-scrollbar {
+    display: none;
+  }
+
+  nav button {
+    flex: 0 0 auto;
+    width: auto;
+    min-height: 34px;
+    padding: 6px 12px;
+    white-space: nowrap;
+  }
+
+  nav button small {
+    display: none;
+  }
+
+  /* AccountBox → chỉ giữ nút đăng xuất */
+  .account-box {
+    flex: 0 0 auto;
+    margin-bottom: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 0;
+  }
+
+  .account-box > span,
+  .account-box > small {
+    display: none;
+  }
+
+  .account-box button {
+    min-height: 32px;
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
+  /* Profile card user → ẩn (có MemberHero thay thế) */
+  .profile-card {
+    display: none;
+  }
+
+  /* Grid collapse */
+  .grid.two,
+  .grid.three,
+  .metrics {
     grid-template-columns: 1fr;
   }
 
   .topbar {
     flex-direction: column;
+  }
+
+  .member-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .form.compact {
+    grid-template-columns: 1fr;
   }
 
   .login-panel {
@@ -783,34 +895,54 @@ button.danger:hover {
   }
 
   .login-logo {
-    width: 148px;
-    height: 148px;
-  }
-
-  .grid.two,
-  .grid.three,
-  .metrics {
-    grid-template-columns: 1fr;
-  }
-
-  .form.compact {
-    grid-template-columns: 1fr;
+    width: 130px;
+    height: 130px;
   }
 }
 
+/* ── Mobile nhỏ ── */
 @media (max-width: 560px) {
   .workspace {
-    padding: 16px;
-  }
-
-  .toolbar select,
-  .toolbar button,
-  .gateway-actions {
-    width: 100%;
-    grid-template-columns: 1fr;
+    padding: 12px;
   }
 
   h1 {
-    font-size: 24px;
+    font-size: 22px;
+  }
+
+  .toolbar {
+    width: 100%;
+  }
+
+  .toolbar select {
+    flex: 1;
+  }
+
+  .gateway-actions {
+    grid-template-columns: 1fr;
+  }
+
+  /* Bảng: ẩn bớt cột ít quan trọng trên màn rất nhỏ */
+  .actions {
+    min-width: unset;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .actions button {
+    width: 100%;
+  }
+
+  td, th {
+    padding: 8px 7px;
+    font-size: 13px;
+  }
+
+  th {
+    font-size: 11px;
+  }
+
+  .metric strong {
+    font-size: 20px;
   }
 }
