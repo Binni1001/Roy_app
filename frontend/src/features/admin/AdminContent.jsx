@@ -25,6 +25,9 @@ export function AdminContent(props) {
     adminUsers,
   } = props
 
+  // Dùng cho các action thay đổi danh sách người / kỳ / admin users
+  const submitGlobal = (action, msg) => submit(action, msg, 'global')
+
   if (activeTab === 'dashboard') {
     return (
       <DashboardPanel
@@ -35,7 +38,7 @@ export function AdminContent(props) {
         adminUsers={adminUsers}
         adminUserForm={forms.adminUser}
         setForm={setForm}
-        submit={submit}
+        submit={submitGlobal}
       />
     )
   }
@@ -46,7 +49,7 @@ export function AdminContent(props) {
         people={people}
         form={forms.person}
         setForm={setForm}
-        submit={submit}
+        submit={submitGlobal}
       />
     )
   }
@@ -61,7 +64,7 @@ export function AdminContent(props) {
         memberForm={forms.member}
         selectedPeriodId={selectedPeriodId}
         setForm={setForm}
-        submit={submit}
+        submit={submitGlobal}
       />
     )
   }

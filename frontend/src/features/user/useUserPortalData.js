@@ -93,7 +93,7 @@ export function useUserPortalData(session, setActiveTab) {
     if (!selectedPeriodId) return undefined
     const timer = window.setTimeout(() => {
       void loadSessions(selectedPeriodId)
-    }, 0)
+    }, 120)
     return () => window.clearTimeout(timer)
   }, [loadSessions, selectedPeriodId])
 

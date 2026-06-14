@@ -7,34 +7,26 @@ import ResetPassword from './pages/ResetPassword'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
 import './App.css'
 
-function RedirectTo({ to }) {
-  useEffect(() => {
-    window.history.replaceState({}, '', to)
-  }, [to])
-
-  return null
-}
-
 function App() {
-  const [session, setSession] = useState(null)
+  // undefined = đang khởi tạo, null = chưa đăng nhập, object = đã đăng nhập
+  const [session, setSession] = useState(undefined)
   const [recoveringPassword, setRecoveringPassword] = useState(false)
-  const path = window.location.pathname
 
   useEffect(() => {
     let mounted = true
 
     supabase.auth.getSession().then(({ data }) => {
       if (!mounted) return
-      setSession(data.session)
-    }).catch((error) => {
-      console.error(error)
+      setSession(data.session ?? null)
+    }).catch(() => {
+      if (mounted) setSession(null)
     })
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
-      setSession(nextSession)
+      if (!mounted) return
+      setSession(nextSession ?? null)
       if (event === 'PASSWORD_RECOVERY') {
         setRecoveringPassword(true)
-        window.history.replaceState({}, '', '/reset-password')
       }
     })
 
@@ -44,7 +36,24 @@ function App() {
     }
   }, [])
 
-  if (path.startsWith('/reset-password') || recoveringPassword) return <ResetPassword />
+  // Đang tải session → màn hình chờ, không flash Login hay portal
+  if (session === undefined) {
+    return (
+      <div className="app-loading">
+        <img src="/images/cat-loading.png" alt="Đang tải" className="app-loading-img" />
+        <div className="app-loading-dots">
+          <span className="app-loading-dot" />
+          <span className="app-loading-dot" />
+          <span className="app-loading-dot" />
+        </div>
+      </div>
+    )
+  }
+
+  if (recoveringPassword || window.location.pathname.startsWith('/reset-password')) {
+    return <ResetPassword />
+  }
+
   if (!session) return <Login />
 
   const role = getSessionRole(session)
@@ -53,14 +62,12 @@ function App() {
     await supabase.auth.signOut()
   }
 
+  // Không dùng path-based routing để tránh blank screen từ replaceState
   if (canOpenAdmin(role)) {
-    if (!path.startsWith('/admin')) return <RedirectTo to="/admin" />
     return <AdminPortal session={session} role={role} onSignOut={signOut} />
   }
 
-  if (!path.startsWith('/user')) return <RedirectTo to="/user" />
   return <UserPortal session={session} role={role} onSignOut={signOut} />
 }
-
 
 export default App

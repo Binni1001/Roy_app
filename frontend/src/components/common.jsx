@@ -70,7 +70,12 @@ export function ConfirmModal({
 }
 
 export function SimpleTable({ rows, columns, actions }) {
-  if (!rows.length) return <p className="empty">Chưa có dữ liệu</p>
+  if (!rows.length) return (
+    <div className="empty-state">
+      <img src="/images/cat-shuttle.jpg" alt="Chưa có dữ liệu" className="empty-state-img" />
+      <p className="empty">Chưa có dữ liệu</p>
+    </div>
+  )
   return (
     <div className="table-wrap">
       <table>

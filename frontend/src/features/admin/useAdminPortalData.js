@@ -115,9 +115,10 @@ export function useAdminPortalData(role) {
 
   useEffect(() => {
     if (!selectedPeriodId) return undefined
+    // Debounce 120ms: tránh gọi liên tiếp khi period thay đổi nhanh
     const timer = window.setTimeout(() => {
       void loadPeriodData(selectedPeriodId)
-    }, 0)
+    }, 120)
     return () => window.clearTimeout(timer)
   }, [loadPeriodData, selectedPeriodId])
 
@@ -125,12 +126,16 @@ export function useAdminPortalData(role) {
     setForms((current) => ({ ...current, [name]: { ...current[name], ...patch } }))
   }
 
-  async function submit(action, successMessage) {
+  // scope: 'period' (mặc định) chỉ reload dữ liệu kỳ hiện tại
+  //        'global' reload cả people + periods (dùng khi tạo/xóa người, kỳ)
+  async function submit(action, successMessage, scope = 'period') {
     setLoading(true)
     try {
       const result = await action()
       setToast(successMessage)
-      await boot()
+      if (scope === 'global') {
+        await boot()
+      }
       if (selectedPeriodId) await loadPeriodData(selectedPeriodId)
       return result
     } catch (error) {

@@ -163,14 +163,19 @@ export default function Login() {
     <main className="login-page">
       <section className="login-panel">
         <div className="login-brand">
-          <div className="login-logo">
-            <img src={logoUrl} alt="Biểu trưng Roy Badminton" />
+          <div className="login-brand-img">
+            <img src="/images/court.jpg" alt="Sân cầu lông" />
+            <div className="login-brand-overlay">
+              <div className="login-logo">
+                <img src={logoUrl} alt="Biểu trưng Roy Badminton" />
+              </div>
+              <p className="eyebrow">Roy Badminton</p>
+              <h1>Chào mừng trở lại</h1>
+              <p className="muted">
+                Đăng nhập để theo dõi công nợ, thanh toán và quản lý quỹ câu lạc bộ.
+              </p>
+            </div>
           </div>
-          <p className="eyebrow">Roy Badminton</p>
-          <h1>Chào mừng trở lại</h1>
-          <p className="muted">
-            Đăng nhập để theo dõi công nợ, thanh toán và quản lý quỹ câu lạc bộ.
-          </p>
         </div>
 
         <div className="login-card">
