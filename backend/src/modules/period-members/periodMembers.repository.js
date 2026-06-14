@@ -126,6 +126,14 @@ export const periodMembersRepository = {
       .single();
   },
 
+  async getPersonById(personId) {
+    return await supabase
+      .from("people")
+      .select("id, status, attendance_type")
+      .eq("id", personId)
+      .single();
+  },
+
   async createDebt(payload) {
     return await supabase
       .from("debts")

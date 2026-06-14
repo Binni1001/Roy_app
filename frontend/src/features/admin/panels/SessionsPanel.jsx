@@ -1,79 +1,152 @@
+import { useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, Input, Panel, SelectPeople, SimpleTable } from '../../../components/common'
-import { askConfirm, formatDate } from '../../../utils/appUtils'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
+import { formatDate, formatMoney } from '../../../utils/appUtils'
 
 export function SessionsPanel({ people, sessions, sessionForm, guestForm, selectedPeriodId, setForm, submit }) {
+  const [editingSession, setEditingSession] = useState(null)
+  const [deletingSession, setDeletingSession] = useState(null)
+  const [viewingGuests, setViewingGuests] = useState(null)
+  const [guests, setGuests] = useState([])
+
   return (
-    <section className="grid two">
-      <Panel title="Tạo buổi cầu">
-        <form className="form" onSubmit={(event) => {
-          event.preventDefault()
-          submit(
-            () => api.sessions.create({
-              ...sessionForm,
-              period_id: selectedPeriodId,
-              shuttle_used_count: Number(sessionForm.shuttle_used_count || 0),
-            }),
-            'Đã tạo buổi cầu.',
-          )
-        }}>
-          <Input label="Ngày chơi" type="date" value={sessionForm.play_date} onChange={(value) => setForm('session', { play_date: value })} required />
-          <Input label="Số cầu đã dùng" type="number" value={sessionForm.shuttle_used_count} onChange={(value) => setForm('session', { shuttle_used_count: value })} />
-          <Input label="Ghi chú" value={sessionForm.note} onChange={(value) => setForm('session', { note: value })} />
-          <button>Tạo buổi</button>
-        </form>
-      </Panel>
-      <Panel title="Ghi nhận khách">
-        <form className="form" onSubmit={(event) => {
-          event.preventDefault()
-          submit(() => api.guests.create({ ...guestForm, amount: Number(guestForm.amount || 0) }), 'Đã ghi nhận khách.')
-        }}>
-          <label>
-            Buổi cầu
-            <select value={guestForm.session_id} onChange={(event) => setForm('guest', { session_id: event.target.value })}>
-              <option value="">Chọn buổi</option>
-              {sessions.map((session) => <option key={session.id} value={session.id}>{formatDate(session.play_date)}</option>)}
-            </select>
-          </label>
-          <SelectPeople people={people} value={guestForm.person_id} onChange={(value) => setForm('guest', { person_id: value })} />
-          <Input label="Số tiền" type="number" value={guestForm.amount} onChange={(value) => setForm('guest', { amount: value })} />
-          <button>Ghi nhận</button>
-        </form>
-      </Panel>
-      <Panel title="Danh sách buổi cầu" wide>
-        <SimpleTable
-          rows={sessions}
-          columns={[['play_date', 'Ngày', formatDate], ['shuttle_used_count', 'Số cầu'], ['note', 'Ghi chú']]}
-          actions={(session) => (
-            <ActionGroup>
-              <button onClick={() => editSession(session, submit)}>Sửa</button>
-              <button className="danger" onClick={() => removeSession(session, submit)}>Xóa</button>
-            </ActionGroup>
+    <>
+      <section className="grid two">
+        <Panel title="Tạo buổi cầu">
+          <form className="form" onSubmit={(event) => {
+            event.preventDefault()
+            submit(
+              () => api.sessions.create({
+                ...sessionForm,
+                period_id: selectedPeriodId,
+                shuttle_used_count: Number(sessionForm.shuttle_used_count || 0),
+              }),
+              'Đã tạo buổi cầu.',
+            )
+          }}>
+            <Input label="Ngày chơi" type="date" value={sessionForm.play_date} onChange={(value) => setForm('session', { play_date: value })} required />
+            <Input label="Số cầu đã dùng" type="number" value={sessionForm.shuttle_used_count} onChange={(value) => setForm('session', { shuttle_used_count: value })} />
+            <Input label="Ghi chú" value={sessionForm.note} onChange={(value) => setForm('session', { note: value })} />
+            <button>Tạo buổi</button>
+          </form>
+        </Panel>
+        <Panel title="Ghi nhận khách">
+          <form className="form" onSubmit={(event) => {
+            event.preventDefault()
+            submit(() => api.guests.create({ ...guestForm, amount: Number(guestForm.amount || 0) }), 'Đã ghi nhận khách.')
+          }}>
+            <label>
+              Buổi cầu
+              <select value={guestForm.session_id} onChange={(event) => setForm('guest', { session_id: event.target.value })}>
+                <option value="">Chọn buổi</option>
+                {sessions.map((session) => <option key={session.id} value={session.id}>{formatDate(session.play_date)}</option>)}
+              </select>
+            </label>
+            <SelectPeople people={people} value={guestForm.person_id} onChange={(value) => setForm('guest', { person_id: value })} />
+            <Input label="Số tiền" type="number" value={guestForm.amount} onChange={(value) => setForm('guest', { amount: value })} />
+            <button>Ghi nhận</button>
+          </form>
+        </Panel>
+        <Panel title="Danh sách buổi cầu" wide>
+          <SimpleTable
+            rows={sessions}
+            columns={[['play_date', 'Ngày', formatDate], ['shuttle_used_count', 'Số cầu'], ['note', 'Ghi chú']]}
+            actions={(session) => (
+              <ActionGroup>
+                <button onClick={() => {
+                  api.guests.bySession(session.id).then((result) => {
+                    setGuests(Array.isArray(result) ? result : [])
+                    setViewingGuests(session)
+                  }).catch(() => {
+                    setGuests([])
+                    setViewingGuests(session)
+                  })
+                }}>Khách</button>
+                <button onClick={() => setEditingSession(session)}>Sửa</button>
+                <button className="danger" onClick={() => setDeletingSession(session)}>Xóa</button>
+              </ActionGroup>
+            )}
+          />
+        </Panel>
+      </section>
+      {viewingGuests && (
+        <Modal title={`Khách vãng lai — ${formatDate(viewingGuests.play_date)}`} onClose={() => setViewingGuests(null)}>
+          {guests.length === 0 ? (
+            <p>Buổi này không có khách vãng lai.</p>
+          ) : (
+            <SimpleTable
+              rows={guests}
+              columns={[
+                ['person.full_name', 'Họ tên'],
+                ['amount', 'Tiền khách', formatMoney],
+                ['note', 'Ghi chú'],
+              ]}
+            />
           )}
+          <footer className="modal-actions">
+            <button type="button" onClick={() => setViewingGuests(null)}>Đóng</button>
+          </footer>
+        </Modal>
+      )}
+      {editingSession && (
+        <SessionEditModal
+          session={editingSession}
+          onClose={() => setEditingSession(null)}
+          onSubmit={(payload) => {
+            submit(() => api.sessions.update(editingSession.id, payload), 'Đã cập nhật buổi cầu.')
+            setEditingSession(null)
+          }}
         />
-      </Panel>
-    </section>
+      )}
+      {deletingSession && (
+        <ConfirmModal
+          title="Xóa buổi cầu"
+          message={`Bạn chắc chắn muốn xóa buổi ngày ${formatDate(deletingSession.play_date)}?`}
+          confirmText="Xóa"
+          danger
+          onClose={() => setDeletingSession(null)}
+          onConfirm={() => {
+            submit(() => api.sessions.remove(deletingSession.id), 'Đã xóa buổi cầu.')
+            setDeletingSession(null)
+          }}
+        />
+      )}
+    </>
   )
 }
 
-function editSession(session, submit) {
-  const sessionDate = window.prompt('Ngày chơi', session.play_date || '')
-  if (sessionDate === null) return
-  const shuttleUsedCount = window.prompt('Số cầu đã dùng', session.shuttle_used_count || 0)
-  if (shuttleUsedCount === null) return
-  const note = window.prompt('Ghi chú', session.note || '')
-  if (note === null) return
-  submit(
-    () => api.sessions.update(session.id, {
-      play_date: sessionDate,
-      shuttle_used_count: Number(shuttleUsedCount || 0),
-      note,
-    }),
-    'Đã cập nhật buổi cầu.',
-  )
-}
+function SessionEditModal({ session, onClose, onSubmit }) {
+  const [draft, setDraft] = useState({
+    play_date: session.play_date || '',
+    shuttle_used_count: session.shuttle_used_count || 0,
+    note: session.note || '',
+  })
 
-function removeSession(session, submit) {
-  if (!askConfirm('Xóa buổi cầu này?')) return
-  submit(() => api.sessions.remove(session.id), 'Đã xóa buổi cầu.')
+  function update(field, value) {
+    setDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  return (
+    <Modal title="Sửa buổi cầu" onClose={onClose}>
+      <form
+        className="form"
+        onSubmit={(event) => {
+          event.preventDefault()
+          onSubmit({
+            play_date: draft.play_date,
+            shuttle_used_count: Number(draft.shuttle_used_count || 0),
+            note: draft.note,
+          })
+        }}
+      >
+        <Input label="Ngày chơi" type="date" value={draft.play_date} onChange={(value) => update('play_date', value)} required />
+        <Input label="Số cầu đã dùng" type="number" value={draft.shuttle_used_count} onChange={(value) => update('shuttle_used_count', value)} />
+        <Input label="Ghi chú" value={draft.note} onChange={(value) => update('note', value)} />
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Lưu thay đổi</button>
+        </footer>
+      </form>
+    </Modal>
+  )
 }

@@ -1,4 +1,5 @@
 import { badmintonSessionsRepository } from "./badmintonSessions.repository.js";
+import { validateDateNotFuture, validateText, assertValid } from "../../utils/validators.js";
 
 export const badmintonSessionsService = {
   async getAll() {
@@ -29,6 +30,20 @@ export const badmintonSessionsService = {
     if (!payload.period_id) throw new Error("Period ID khong duoc de trong");
     if (!payload.play_date) throw new Error("Ngay danh khong duoc de trong");
 
+    // FIX #5: check period status trước khi tạo buổi tập
+    const { data: period, error: periodError } = await badmintonSessionsRepository.getPeriodById(payload.period_id);
+    if (periodError) throw new Error(periodError.message);
+    if (period.status === "closed") {
+      throw new Error("Ky nay da dong, khong the them buoi tap moi");
+    }
+    if (period.status === "draft") {
+      throw new Error("Ky nay chua mo, khong the them buoi tap");
+    }
+
+    // Ngày đánh không được ở tương lai
+    assertValid(validateDateNotFuture(payload.play_date, "Ngay danh"));
+    assertValid(validateText(payload.note, "Ghi chu", 500));
+
     const shuttleUsedCount = Number(payload.shuttle_used_count || 0);
 
     if (shuttleUsedCount < 0) {
@@ -54,6 +69,7 @@ export const badmintonSessionsService = {
     };
 
     if (payload.play_date !== undefined) {
+      assertValid(validateDateNotFuture(payload.play_date, "Ngay danh"));
       updateData.play_date = payload.play_date;
     }
 
@@ -66,6 +82,7 @@ export const badmintonSessionsService = {
     }
 
     if (payload.note !== undefined) {
+      assertValid(validateText(payload.note, "Ghi chu", 500));
       updateData.note = payload.note;
     }
 

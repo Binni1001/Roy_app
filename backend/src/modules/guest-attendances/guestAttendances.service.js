@@ -1,4 +1,5 @@
 import { guestAttendancesRepository } from "./guestAttendances.repository.js";
+import { validateAmount, validateText, assertValid } from "../../utils/validators.js";
 
 function buildGuestDebtDescription(session, attendanceId) {
   const periodName = session.period?.name || "ky";
@@ -69,9 +70,9 @@ export const guestAttendancesService = {
         ? Number(payload.amount)
         : Number(session.period?.guest_fee_per_session || 0);
 
-    if (amount < 0) {
-      throw new Error("Tien khach vang lai khong duoc nho hon 0");
-    }
+    // Validate amount (cho phép 0 = khách được mời miễn phí)
+    assertValid(validateAmount(amount, "Tien khach vang lai", true));
+    assertValid(validateText(payload.note, "Ghi chu", 500));
 
     const attendanceResult = await guestAttendancesRepository.create({
       session_id: payload.session_id,
@@ -87,12 +88,14 @@ export const guestAttendancesService = {
     let createdDebt = null;
 
     if (amount > 0) {
+      // FIX #2: lưu source_attendance_id để link FK thật, không dùng string lookup nữa
       const debtResult = await guestAttendancesRepository.createDebt({
         period_id: session.period_id,
         person_id: payload.person_id,
         debt_type: "guest_fee",
         amount,
         status: "unpaid",
+        source_attendance_id: attendanceResult.data.id,
         description: buildGuestDebtDescription(session, attendanceResult.data.id)
       });
 
@@ -122,14 +125,12 @@ export const guestAttendancesService = {
     };
 
     if (payload.amount !== undefined) {
-      if (Number(payload.amount) < 0) {
-        throw new Error("Tien khach vang lai khong duoc nho hon 0");
-      }
-
+      assertValid(validateAmount(payload.amount, "Tien khach vang lai", true));
       updateData.amount = Number(payload.amount);
     }
 
     if (payload.note !== undefined) {
+      assertValid(validateText(payload.note, "Ghi chu", 500));
       updateData.note = payload.note;
     }
 
@@ -173,6 +174,7 @@ export const guestAttendancesService = {
           debt_type: "guest_fee",
           amount: Number(payload.amount),
           status: "unpaid",
+          source_attendance_id: current.id,
           description: buildGuestDebtDescription(session, current.id)
         });
 

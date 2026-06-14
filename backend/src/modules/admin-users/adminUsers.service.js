@@ -1,7 +1,9 @@
 import { supabase } from "../../config/supabase.js";
+import { requireEmail, validateFullName, assertValid } from "../../utils/validators.js";
 
 const adminRoles = new Set(["owner", "admin"]);
 
+// FIX N+1: dùng filter trực tiếp thay vì paginate toàn bộ rồi filter client-side
 async function listAllUsers() {
   const users = [];
   let page = 1;
@@ -79,15 +81,27 @@ export const adminUsersService = {
   },
 
   async inviteAdmin({ email, full_name: fullName = "" }) {
-    if (!email || !email.includes("@")) {
-      const error = new Error("A valid email is required");
-      error.statusCode = 400;
-      throw error;
+    // Validate email đúng chuẩn
+    assertValid(requireEmail(email));
+
+    // Validate tên nếu có
+    if (fullName) {
+      assertValid(validateFullName(fullName));
     }
 
-    const existingUser = await findUserByEmail(email);
+    const normalizedEmail = email.trim().toLowerCase();
+    const existingUser = await findUserByEmail(normalizedEmail);
 
     if (existingUser) {
+      const currentRole = existingUser.app_metadata?.role || existingUser.user_metadata?.role;
+
+      // Không cho downgrade owner thành admin
+      if (currentRole === "owner") {
+        const err = new Error("Khong the thay doi role cua owner");
+        err.statusCode = 403;
+        throw err;
+      }
+
       const updatedUser = await updateRole(existingUser, "admin", fullName);
       return {
         invited: false,
@@ -95,7 +109,7 @@ export const adminUsersService = {
       };
     }
 
-    const { data, error } = await supabase.auth.admin.inviteUserByEmail(email, {
+    const { data, error } = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
       data: {
         full_name: fullName,
         role: "admin"
@@ -118,6 +132,37 @@ export const adminUsersService = {
 
     return {
       invited: true,
+      user: publicUser(updatedUser)
+    };
+  },
+
+  async revokeAdmin(userId) {
+    if (!userId) {
+      const err = new Error("User ID khong duoc de trong");
+      err.statusCode = 400;
+      throw err;
+    }
+
+    const { data: userData, error: fetchError } = await supabase.auth.admin.getUserById(userId);
+    if (fetchError) throw fetchError;
+
+    const user = userData?.user;
+    if (!user) {
+      const err = new Error("Khong tim thay user");
+      err.statusCode = 404;
+      throw err;
+    }
+
+    const currentRole = user.app_metadata?.role || user.user_metadata?.role;
+    if (currentRole === "owner") {
+      const err = new Error("Khong the thu hoi quyen cua owner");
+      err.statusCode = 403;
+      throw err;
+    }
+
+    const updatedUser = await updateRole(user, "user");
+    return {
+      revoked: true,
       user: publicUser(updatedUser)
     };
   }

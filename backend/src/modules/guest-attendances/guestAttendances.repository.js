@@ -146,6 +146,7 @@ export const guestAttendancesRepository = {
       .single();
   },
 
+  // FIX #2: dùng source_attendance_id (FK thật) thay vì ilike description
   async findGuestDebt(periodId, personId, attendanceId) {
     return await supabase
       .from("debts")
@@ -153,10 +154,8 @@ export const guestAttendancesRepository = {
       .eq("period_id", periodId)
       .eq("person_id", personId)
       .eq("debt_type", "guest_fee")
-      .eq("status", "unpaid")
-      .ilike("description", `%[guest_attendance:${attendanceId}]%`)
-      .order("created_at", { ascending: false })
-      .limit(1)
+      .eq("source_attendance_id", attendanceId)
+      .neq("status", "cancelled")
       .maybeSingle();
   },
 

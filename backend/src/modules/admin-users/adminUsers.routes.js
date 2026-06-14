@@ -9,5 +9,6 @@ router.use(requireOwner);
 
 router.get("/", adminUsersController.list);
 router.post("/", adminUsersController.invite);
+router.delete("/:id", adminUsersController.revoke);
 
 export default router;

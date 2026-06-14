@@ -63,5 +63,13 @@ export const badmintonSessionsRepository = {
       .eq("id", id)
       .select()
       .single();
+  },
+
+  async getPeriodById(periodId) {
+    return await supabase
+      .from("periods")
+      .select("id, status, name")
+      .eq("id", periodId)
+      .single();
   }
 };

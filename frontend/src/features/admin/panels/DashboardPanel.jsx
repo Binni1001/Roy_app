@@ -1,5 +1,5 @@
 import { api } from '../../../api/client'
-import { Input, Panel, SimpleTable } from '../../../components/common'
+import { ActionGroup, Input, Panel, SimpleTable } from '../../../components/common'
 import { DebtTable, FundTable } from '../../../components/finance'
 import { displayRole } from '../../../utils/appUtils'
 
@@ -41,6 +41,18 @@ export function DashboardPanel({ summary, debts, fund, role, adminUsers, adminUs
             <SimpleTable
               rows={adminUsers}
               columns={[['email', 'Thư điện tử'], ['role', 'Quyền', displayRole], ['full_name', 'Tên hiển thị']]}
+              actions={(user) =>
+                user.role !== 'owner' ? (
+                  <ActionGroup>
+                    <button
+                      className="danger"
+                      onClick={() => submit(() => api.adminUsers.revoke(user.id), 'Đã thu hồi quyền quản trị viên.')}
+                    >
+                      Thu hồi
+                    </button>
+                  </ActionGroup>
+                ) : null
+              }
             />
           </Panel>
         </section>

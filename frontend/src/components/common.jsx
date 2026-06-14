@@ -27,6 +27,48 @@ export function StatusLine({ text }) {
   return <div className="toast" role="alert">{text}</div>
 }
 
+export function Modal({ title, children, onClose }) {
+  return (
+    <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
+      <section
+        className="modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="modal-title"
+        onMouseDown={(event) => event.stopPropagation()}
+      >
+        <header className="modal-header">
+          <h2 id="modal-title">{title}</h2>
+          <button type="button" className="icon-button" onClick={onClose} aria-label="Đóng">×</button>
+        </header>
+        {children}
+      </section>
+    </div>
+  )
+}
+
+export function ConfirmModal({
+  title = 'Xác nhận thao tác',
+  message,
+  confirmText = 'Xác nhận',
+  cancelText = 'Hủy',
+  danger = false,
+  onConfirm,
+  onClose,
+}) {
+  return (
+    <Modal title={title} onClose={onClose}>
+      <div className="modal-body">
+        <p>{message}</p>
+      </div>
+      <footer className="modal-actions">
+        <button type="button" onClick={onClose}>{cancelText}</button>
+        <button type="button" className={danger ? 'danger' : ''} onClick={onConfirm}>{confirmText}</button>
+      </footer>
+    </Modal>
+  )
+}
+
 export function SimpleTable({ rows, columns, actions }) {
   if (!rows.length) return <p className="empty">Chưa có dữ liệu</p>
   return (

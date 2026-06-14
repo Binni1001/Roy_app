@@ -92,6 +92,7 @@ export function useAdminPortalData(role) {
       setAdminUsers(asArray(adminUsersResult))
       setSelectedPeriodId((current) =>
         current ||
+        nextPeriods.find((period) => period.status === 'open')?.id ||
         nextPeriods.find((period) => period.status === 'draft')?.id ||
         nextPeriods[0]?.id ||
         '',
@@ -202,6 +203,7 @@ function defaultForms() {
       shuttle_per_tube: 12,
       single_count: 0,
       total_amount: '',
+      buy_date: '',
       note: '',
     },
     fund: { transaction_type: 'income', amount: '', description: '' },

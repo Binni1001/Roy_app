@@ -264,11 +264,10 @@ export const paymentsService = {
       updatedDebts.push(debtResult.data);
 
       const fundDescription = `Thu tien ${debt.debt_type}`;
+      // FIX #1: dùng debt_id để check duplicate (không dùng amount nữa)
       const existingFundResult = await paymentsRepository.findFundTransaction(
         payment.id,
-        debt.person_id,
-        Number(debt.amount),
-        fundDescription
+        debt.id
       );
 
       if (existingFundResult.error) {
@@ -284,6 +283,7 @@ export const paymentsService = {
         period_id: debt.period_id,
         person_id: debt.person_id,
         payment_id: payment.id,
+        debt_id: debt.id,
         transaction_type: "income",
         amount: Number(debt.amount),
         description: fundDescription

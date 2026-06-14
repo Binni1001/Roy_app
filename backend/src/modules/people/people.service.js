@@ -1,7 +1,17 @@
 import { peopleRepository } from "./people.repository.js";
+import {
+  validateFullName,
+  validateNickname,
+  validatePhone,
+  validateEmail,
+  validateDate,
+  validateText,
+  assertValid
+} from "../../utils/validators.js";
 
 const allowedStatuses = ["active", "inactive"];
 const allowedAttendanceTypes = ["fixed", "guest"];
+const allowedGenders = ["male", "female", "other"];
 
 export const peopleService = {
   async getAllPeople() {
@@ -75,9 +85,17 @@ export const peopleService = {
   },
 
   async createPerson(payload) {
-    if (!payload.full_name) {
-      throw new Error("Full name is required");
-    }
+    // Validate bắt buộc
+    assertValid(validateFullName(payload.full_name));
+
+    // Validate optional fields
+    assertValid(validateNickname(payload.nickname));
+    assertValid(validatePhone(payload.phone));
+    assertValid(validateEmail(payload.email));
+    assertValid(validateDate(payload.birthday, "Ngay sinh"));
+    assertValid(validateDate(payload.joined_at, "Ngay tham gia"));
+    assertValid(validateText(payload.bio, "Bio", 500));
+    assertValid(validateText(payload.note, "Ghi chu", 500));
 
     const status = payload.status || "active";
     const attendanceType = payload.attendance_type || "guest";
@@ -90,11 +108,17 @@ export const peopleService = {
       throw new Error("Attendance type khong hop le. Chi duoc dung: fixed, guest");
     }
 
+    if (payload.gender !== undefined && payload.gender !== null && payload.gender !== "") {
+      if (!allowedGenders.includes(payload.gender)) {
+        throw new Error("Gender khong hop le. Chi duoc dung: male, female, other");
+      }
+    }
+
     const { data, error } = await peopleRepository.create({
-      full_name: payload.full_name,
-      nickname: payload.nickname || null,
-      phone: payload.phone || null,
-      email: payload.email || null,
+      full_name: payload.full_name.trim(),
+      nickname: payload.nickname?.trim() || null,
+      phone: payload.phone?.replace(/\s|-/g, "") || null,
+      email: payload.email?.trim().toLowerCase() || null,
       avatar_url: payload.avatar_url || null,
       bio: payload.bio || null,
       birthday: payload.birthday || null,
@@ -123,31 +147,66 @@ export const peopleService = {
     };
 
     if (payload.full_name !== undefined) {
-      if (!payload.full_name) {
-        throw new Error("Full name is required");
-      }
-
-      updateData.full_name = payload.full_name;
+      assertValid(validateFullName(payload.full_name));
+      updateData.full_name = payload.full_name.trim();
     }
 
-    if (payload.nickname !== undefined) updateData.nickname = payload.nickname;
-    if (payload.phone !== undefined) updateData.phone = payload.phone;
-    if (payload.email !== undefined) updateData.email = payload.email || null;
+    if (payload.nickname !== undefined) {
+      assertValid(validateNickname(payload.nickname));
+      updateData.nickname = payload.nickname?.trim() || null;
+    }
+
+    if (payload.phone !== undefined) {
+      assertValid(validatePhone(payload.phone));
+      updateData.phone = payload.phone ? payload.phone.replace(/\s|-/g, "") : null;
+    }
+
+    if (payload.email !== undefined) {
+      if (payload.email) {
+        assertValid(validateEmail(payload.email));
+        updateData.email = payload.email.trim().toLowerCase();
+      } else {
+        updateData.email = null;
+      }
+    }
+
     if (payload.avatar_url !== undefined) updateData.avatar_url = payload.avatar_url;
-    if (payload.bio !== undefined) updateData.bio = payload.bio;
-    if (payload.birthday !== undefined) updateData.birthday = payload.birthday;
-    if (payload.gender !== undefined) updateData.gender = payload.gender;
-    if (payload.joined_at !== undefined) updateData.joined_at = payload.joined_at;
+
+    if (payload.bio !== undefined) {
+      assertValid(validateText(payload.bio, "Bio", 500));
+      updateData.bio = payload.bio;
+    }
+
+    if (payload.birthday !== undefined) {
+      assertValid(validateDate(payload.birthday, "Ngay sinh"));
+      updateData.birthday = payload.birthday;
+    }
+
+    if (payload.gender !== undefined) {
+      if (payload.gender && !allowedGenders.includes(payload.gender)) {
+        throw new Error("Gender khong hop le. Chi duoc dung: male, female, other");
+      }
+      updateData.gender = payload.gender || null;
+    }
+
+    if (payload.joined_at !== undefined) {
+      assertValid(validateDate(payload.joined_at, "Ngay tham gia"));
+      updateData.joined_at = payload.joined_at;
+    }
+
     if (payload.last_play_date !== undefined) {
       updateData.last_play_date = payload.last_play_date;
     }
-    if (payload.note !== undefined) updateData.note = payload.note;
+
+    if (payload.note !== undefined) {
+      assertValid(validateText(payload.note, "Ghi chu", 500));
+      updateData.note = payload.note;
+    }
 
     if (payload.status !== undefined) {
       if (!allowedStatuses.includes(payload.status)) {
         throw new Error("Status khong hop le. Chi duoc dung: active, inactive");
       }
-
       updateData.status = payload.status;
     }
 
@@ -155,7 +214,6 @@ export const peopleService = {
       if (!allowedAttendanceTypes.includes(payload.attendance_type)) {
         throw new Error("Attendance type khong hop le. Chi duoc dung: fixed, guest");
       }
-
       updateData.attendance_type = payload.attendance_type;
     }
 

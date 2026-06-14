@@ -86,5 +86,13 @@ export const shuttleSettlementsRepository = {
         "credit_from_shuttle_purchase",
         "debit_shuttle_share"
       ]);
+  },
+
+  async getPeriodById(periodId) {
+    return await supabase
+      .from("periods")
+      .select("id, name, status")
+      .eq("id", periodId)
+      .maybeSingle();
   }
 };

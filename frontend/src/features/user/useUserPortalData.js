@@ -18,7 +18,7 @@ export function useUserPortalData(session, setActiveTab) {
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(false)
 
-  const unpaidDebts = data.debts.filter((debt) => debt.status !== 'paid')
+  const unpaidDebts = data.debts.filter((debt) => debt.status === 'unpaid')
   const totalDebt = unpaidDebts.reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
 
   useAutoDismissToast(toast, setToast)
@@ -61,6 +61,7 @@ export function useUserPortalData(session, setActiveTab) {
       setPeriods(nextPeriods)
       setSelectedPeriodId((current) =>
         current ||
+        nextPeriods.find((period) => period.status === 'open')?.id ||
         nextPeriods.find((period) => period.status === 'draft')?.id ||
         nextPeriods[0]?.id ||
         '',

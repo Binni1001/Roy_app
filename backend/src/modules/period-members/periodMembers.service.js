@@ -40,7 +40,24 @@ export const periodMembersService = {
       throw new Error("Person ID khong duoc de trong");
     }
 
-    const status = payload.status || "fixed";
+    // FIX #5: check period tồn tại và không phải closed/draft không cho thêm member
+    const periodResult = await periodMembersRepository.getPeriodById(payload.period_id);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    const period = periodResult.data;
+    if (period.status === "closed") {
+      throw new Error("Ky nay da dong, khong the them thanh vien");
+    }
+
+    // FIX #3: check person phải active mới được enroll vào kỳ
+    const personResult = await periodMembersRepository.getPersonById(payload.person_id);
+    if (personResult.error) throw new Error(personResult.error.message);
+    const person = personResult.data;
+    if (person.status !== "active") {
+      throw new Error("Chi co the them thanh vien dang hoat dong vao ky");
+    }
+
+    // FIX #3: dùng attendance_type của người đó làm default status nếu không truyền vào
+    const status = payload.status || person.attendance_type || "guest";
 
     if (!allowedStatuses.includes(status)) {
       throw new Error("Status khong hop le. Chi duoc dung: fixed, guest, inactive");
@@ -71,14 +88,7 @@ export const periodMembersService = {
     }
 
     if (status === "fixed") {
-      const periodResult = await periodMembersRepository.getPeriodById(payload.period_id);
-
-      if (periodResult.error) {
-        throw new Error(periodResult.error.message);
-      }
-
-      const period = periodResult.data;
-
+      // period đã được fetch ở trên (dùng lại biến period)
       const existingDebtResult = await periodMembersRepository.findAnyMonthlyDebt(
         payload.period_id,
         payload.person_id

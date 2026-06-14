@@ -1,4 +1,7 @@
 import { periodsRepository } from "./periods.repository.js";
+import { validateText, validateAmount, requireDate, assertValid } from "../../utils/validators.js";
+
+const allowedStatuses = ["draft", "open", "closed"];
 
 export const periodsService = {
   async getAllPeriods() {
@@ -22,37 +25,39 @@ export const periodsService = {
   },
 
   async createPeriod(payload) {
-    if (!payload.name) {
+    if (!payload.name || !payload.name.trim()) {
       throw new Error("Ten ky khong duoc de trong");
     }
 
-    if (!payload.start_date) {
-      throw new Error("Ngay bat dau khong duoc de trong");
+    if (payload.name.trim().length > 100) {
+      throw new Error("Ten ky qua dai (toi da 100 ky tu)");
     }
 
-    if (!payload.end_date) {
-      throw new Error("Ngay ket thuc khong duoc de trong");
-    }
+    assertValid(requireDate(payload.start_date, "Ngay bat dau"));
+    assertValid(requireDate(payload.end_date, "Ngay ket thuc"));
 
     if (new Date(payload.end_date) < new Date(payload.start_date)) {
       throw new Error("Ngay ket thuc khong duoc nho hon ngay bat dau");
     }
 
-    if (Number(payload.fixed_member_fee) < 0) {
-      throw new Error("Tien co dinh khong duoc nho hon 0");
-    }
+    // Validate phí (cho phép 0 nhưng không âm)
+    assertValid(validateAmount(payload.fixed_member_fee ?? 0, "Tien co dinh", true));
+    assertValid(validateAmount(payload.guest_fee_per_session ?? 0, "Tien khach vang lai", true));
 
-    if (Number(payload.guest_fee_per_session) < 0) {
-      throw new Error("Tien khach vang lai khong duoc nho hon 0");
+    assertValid(validateText(payload.note, "Ghi chu", 500));
+
+    const status = payload.status || "draft";
+    if (!allowedStatuses.includes(status)) {
+      throw new Error(`Trang thai ky khong hop le. Chi duoc dung: ${allowedStatuses.join(", ")}`);
     }
 
     const { data, error } = await periodsRepository.create({
-      name: payload.name,
+      name: payload.name.trim(),
       start_date: payload.start_date,
       end_date: payload.end_date,
       fixed_member_fee: Number(payload.fixed_member_fee || 0),
       guest_fee_per_session: Number(payload.guest_fee_per_session || 0),
-      status: payload.status || "draft",
+      status,
       note: payload.note || null
     });
 
@@ -64,16 +69,57 @@ export const periodsService = {
   },
 
   async updatePeriod(id, payload) {
+    if (!id) throw new Error("Period ID khong duoc de trong");
+
+    // Validate tên nếu có cập nhật
+    if (payload.name !== undefined) {
+      if (!payload.name || !payload.name.trim()) {
+        throw new Error("Ten ky khong duoc de trong");
+      }
+      if (payload.name.trim().length > 100) {
+        throw new Error("Ten ky qua dai (toi da 100 ky tu)");
+      }
+    }
+
+    // Validate ngày nếu cả hai đều truyền vào
+    if (payload.start_date !== undefined) {
+      assertValid(requireDate(payload.start_date, "Ngay bat dau"));
+    }
+
+    if (payload.end_date !== undefined) {
+      assertValid(requireDate(payload.end_date, "Ngay ket thuc"));
+    }
+
     if (payload.start_date && payload.end_date) {
       if (new Date(payload.end_date) < new Date(payload.start_date)) {
         throw new Error("Ngay ket thuc khong duoc nho hon ngay bat dau");
       }
     }
 
+    // FIX: validate fee không âm khi update
+    if (payload.fixed_member_fee !== undefined) {
+      assertValid(validateAmount(payload.fixed_member_fee, "Tien co dinh", true));
+    }
+
+    if (payload.guest_fee_per_session !== undefined) {
+      assertValid(validateAmount(payload.guest_fee_per_session, "Tien khach vang lai", true));
+    }
+
+    if (payload.status !== undefined && !allowedStatuses.includes(payload.status)) {
+      throw new Error(`Trang thai ky khong hop le. Chi duoc dung: ${allowedStatuses.join(", ")}`);
+    }
+
+    assertValid(validateText(payload.note, "Ghi chu", 500));
+
     const updateData = {
-      ...payload,
       updated_at: new Date().toISOString()
     };
+
+    if (payload.name !== undefined) updateData.name = payload.name.trim();
+    if (payload.start_date !== undefined) updateData.start_date = payload.start_date;
+    if (payload.end_date !== undefined) updateData.end_date = payload.end_date;
+    if (payload.status !== undefined) updateData.status = payload.status;
+    if (payload.note !== undefined) updateData.note = payload.note;
 
     if (payload.fixed_member_fee !== undefined) {
       updateData.fixed_member_fee = Number(payload.fixed_member_fee);

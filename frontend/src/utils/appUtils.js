@@ -35,11 +35,7 @@ export function displayValue(value) {
 
 export function errorText(error) {
   console.error(error)
-  return 'Đã xảy ra lỗi khi xử lý dữ liệu. Vui lòng kiểm tra máy chủ hoặc mở bảng điều khiển trình duyệt để xem chi tiết.'
-}
-
-export function askConfirm(message) {
-  return window.confirm(message)
+  return error?.message || 'Đã xảy ra lỗi. Vui lòng thử lại.'
 }
 
 export function getSessionRole(session) {

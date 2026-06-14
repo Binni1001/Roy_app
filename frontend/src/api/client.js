@@ -157,6 +157,7 @@ export const api = {
     list: () => request({ url: '/api/admin-users' }),
     invite: (payload) =>
       request({ url: '/api/admin-users', method: 'POST', data: payload }),
+    revoke: (id) => request({ url: `/api/admin-users/${id}`, method: 'DELETE' }),
   },
 }
 

@@ -1,4 +1,5 @@
 import { shuttleExpensesRepository } from "./shuttleExpenses.repository.js";
+import { validateDateNotFuture, validateAmount, validateText, assertValid } from "../../utils/validators.js";
 
 const allowedBuyTypes = ["tube", "single", "mixed"];
 
@@ -21,6 +22,26 @@ export const shuttleExpensesService = {
     if (!payload.period_id) throw new Error("Period ID khong duoc de trong");
     if (!payload.buyer_id) throw new Error("Buyer ID khong duoc de trong");
 
+    // FIX #5: check period status
+    const { data: period, error: periodError } = await shuttleExpensesRepository.getPeriodById(payload.period_id);
+    if (periodError) throw new Error(periodError.message);
+    if (period.status === "closed") {
+      throw new Error("Ky nay da dong, khong the them chi phi cau");
+    }
+    if (period.status === "draft") {
+      throw new Error("Ky nay chua mo, khong the them chi phi cau");
+    }
+
+    // FIX #6: check buyer phải là fixed member của kỳ này
+    const { data: membership, error: memberError } = await shuttleExpensesRepository.getFixedMember(
+      payload.period_id,
+      payload.buyer_id
+    );
+    if (memberError) throw new Error(memberError.message);
+    if (!membership) {
+      throw new Error("Nguoi mua cau phai la fixed member cua ky nay");
+    }
+
     const buyType = payload.buy_type || "tube";
 
     if (!allowedBuyTypes.includes(buyType)) {
@@ -35,7 +56,10 @@ export const shuttleExpensesService = {
     if (tubeCount < 0) throw new Error("So ong khong duoc nho hon 0");
     if (shuttlePerTube <= 0) throw new Error("So qua moi ong phai lon hon 0");
     if (singleCount < 0) throw new Error("So qua le khong duoc nho hon 0");
-    if (totalAmount <= 0) throw new Error("Tong tien mua cau phai lon hon 0");
+    assertValid(validateAmount(totalAmount, "Tong tien mua cau"));
+
+    // Validate buy_date: không được ở tương lai
+    assertValid(validateDateNotFuture(payload.buy_date, "Ngay mua cau"));
 
     if (buyType === "tube" && tubeCount <= 0) {
       throw new Error("Mua theo ong thi so ong phai lon hon 0");
@@ -104,6 +128,7 @@ export const shuttleExpensesService = {
     }
 
     if (payload.note !== undefined) {
+      assertValid(validateText(payload.note, "Ghi chu", 500));
       updateData.note = payload.note;
     }
 

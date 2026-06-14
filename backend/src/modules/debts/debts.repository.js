@@ -55,5 +55,21 @@ export const debtsRepository = {
       .eq("id", id)
       .select()
       .single();
+  },
+
+  async getPeriodById(periodId) {
+    return await supabase
+      .from("periods")
+      .select("id, name, status")
+      .eq("id", periodId)
+      .maybeSingle();
+  },
+
+  async getPersonById(personId) {
+    return await supabase
+      .from("people")
+      .select("id, full_name, status")
+      .eq("id", personId)
+      .maybeSingle();
   }
 };

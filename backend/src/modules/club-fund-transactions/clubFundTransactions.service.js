@@ -1,4 +1,5 @@
 import { clubFundTransactionsRepository } from "./clubFundTransactions.repository.js";
+import { validateAmount, validateText, assertValid } from "../../utils/validators.js";
 
 const allowedTypes = ["income", "expense", "refund", "adjustment"];
 
@@ -18,13 +19,16 @@ export const clubFundTransactionsService = {
   },
 
   async create(payload = {}) {
-    if (!allowedTypes.includes(payload.transaction_type)) {
-      throw new Error("Loai giao dich quy khong hop le");
+    if (!payload.transaction_type) {
+      throw new Error("Loai giao dich quy khong duoc de trong");
     }
 
-    if (Number(payload.amount) <= 0) {
-      throw new Error("Sa tien phai lon hon 0");
+    if (!allowedTypes.includes(payload.transaction_type)) {
+      throw new Error(`Loai giao dich quy khong hop le. Chi duoc dung: ${allowedTypes.join(", ")}`);
     }
+
+    assertValid(validateAmount(payload.amount, "So tien giao dich quy"));
+    assertValid(validateText(payload.description, "Mo ta giao dich", 500));
 
     const { data, error } = await clubFundTransactionsRepository.create({
       period_id: payload.period_id || null,

@@ -56,5 +56,23 @@ export const shuttleExpensesRepository = {
       .eq("id", id)
       .select()
       .single();
+  },
+
+  async getPeriodById(periodId) {
+    return await supabase
+      .from("periods")
+      .select("id, status, name")
+      .eq("id", periodId)
+      .single();
+  },
+
+  async getFixedMember(periodId, personId) {
+    return await supabase
+      .from("period_members")
+      .select("id")
+      .eq("period_id", periodId)
+      .eq("person_id", personId)
+      .eq("status", "fixed")
+      .maybeSingle();
   }
 };

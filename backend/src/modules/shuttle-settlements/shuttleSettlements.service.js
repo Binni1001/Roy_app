@@ -10,6 +10,14 @@ export const shuttleSettlementsService = {
       throw new Error("Period ID khong duoc de trong");
     }
 
+    // Check period tồn tại và đã open (không preview trên draft)
+    const periodResult = await shuttleSettlementsRepository.getPeriodById(periodId);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    if (!periodResult.data) throw new Error("Period khong ton tai");
+    if (periodResult.data.status === "draft") {
+      throw new Error("Ky nay chua mo, khong the xem preview chot cau");
+    }
+
     const membersResult = await shuttleSettlementsRepository.getFixedMembers(periodId);
     if (membersResult.error) throw new Error(membersResult.error.message);
 
@@ -79,16 +87,23 @@ export const shuttleSettlementsService = {
   },
 
   async settle(periodId) {
+    if (!periodId) {
+      throw new Error("Period ID khong duoc de trong");
+    }
+
+    // Ưu tiên RPC (atomic, có idempotency check + period status check bên trong)
     const rpcResult = await shuttleSettlementsRepository.settlePeriod(periodId);
 
     if (!rpcResult.error) {
       return rpcResult.data;
     }
 
+    // Fallback JS path (chỉ chạy nếu RPC chưa tồn tại trong DB)
     if (!isMissingRpc(rpcResult.error)) {
       throw new Error(rpcResult.error.message);
     }
 
+    // Idempotency check
     const existingSettlementResult =
       await shuttleSettlementsRepository.getSettlementTransactions(periodId);
 
@@ -165,7 +180,7 @@ export const shuttleSettlementsService = {
           description:
             netAmount > 0
               ? "Duong tien do mua cau nhieu hon phan phai chiu"
-              : "Am tien do cha dong du phan cau phai chiu"
+              : "Am tien do chua dong du phan cau phai chiu"
         });
 
       if (transactionResult.error) {
@@ -204,7 +219,7 @@ export const shuttleSettlementsService = {
     }
 
     return {
-      message: "Chat tien cau thanh cong",
+      message: "Chot tien cau thanh cong",
       preview,
       results
     };

@@ -23,5 +23,14 @@ export const adminUsersController = {
     } catch (error) {
       handleError(error, res);
     }
+  },
+
+  async revoke(req, res) {
+    try {
+      const result = await adminUsersService.revokeAdmin(req.params.id);
+      res.json(result);
+    } catch (error) {
+      handleError(error, res);
+    }
   }
 };

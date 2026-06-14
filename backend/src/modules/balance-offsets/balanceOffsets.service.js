@@ -9,6 +9,7 @@ export const balanceOffsetsService = {
     if (!personId) throw new Error("Person ID khong duoc de trong");
     if (!periodId) throw new Error("Period ID khong duoc de trong");
 
+    // Ưu tiên RPC (atomic, có FOR UPDATE lock)
     const rpcResult = await balanceOffsetsRepository.offsetPersonPeriod(
       personId,
       periodId
@@ -18,6 +19,7 @@ export const balanceOffsetsService = {
       return rpcResult.data;
     }
 
+    // Fallback JS path (chỉ chạy nếu RPC chưa tồn tại trong DB)
     if (!isMissingRpc(rpcResult.error)) {
       throw new Error(rpcResult.error.message);
     }
@@ -97,6 +99,15 @@ export const balanceOffsetsService = {
       });
     }
 
+    if (totalOffset === 0) {
+      return {
+        message: "Khong co cong no unpaid de bu tru",
+        offset_amount: 0,
+        remaining_balance: availableBalance,
+        updated_debts: []
+      };
+    }
+
     const updateBalanceResult = await balanceOffsetsRepository.updateBalance(
       personId,
       availableBalance
@@ -106,18 +117,21 @@ export const balanceOffsetsService = {
       throw new Error(updateBalanceResult.error.message);
     }
 
-    const transactionResult =
-      await balanceOffsetsRepository.createBalanceTransaction({
+    // FIX #4: ghi balance_transaction riêng cho từng khoản bù trừ (có related_debt_id)
+    for (const item of updatedDebts) {
+      const transactionResult = await balanceOffsetsRepository.createBalanceTransaction({
         person_id: personId,
         period_id: periodId,
+        related_debt_id: item.debt_id,
         transaction_type: "offset_next_period",
-        amount: totalOffset,
+        amount: item.offset_amount,
         direction: "minus",
         description: "Bu tru so du ca nhan vao cong no"
       });
 
-    if (transactionResult.error) {
-      throw new Error(transactionResult.error.message);
+      if (transactionResult.error) {
+        throw new Error(transactionResult.error.message);
+      }
     }
 
     return {

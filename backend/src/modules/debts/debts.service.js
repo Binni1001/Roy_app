@@ -1,4 +1,5 @@
 import { debtsRepository } from "./debts.repository.js";
+import { validateText, validateAmount, assertValid } from "../../utils/validators.js";
 
 const allowedDebtTypes = ["monthly_fee", "guest_fee", "shuttle_extra", "other"];
 const allowedStatuses = ["unpaid", "paid", "cancelled"];
@@ -31,12 +32,20 @@ export const debtsService = {
     if (!payload.person_id) throw new Error("Person ID khong duoc de trong");
 
     if (!allowedDebtTypes.includes(payload.debt_type)) {
-      throw new Error("Loai cong no khong hop le");
+      throw new Error(`Loai cong no khong hop le. Chi duoc dung: ${allowedDebtTypes.join(", ")}`);
     }
 
-    if (Number(payload.amount) <= 0) {
-      throw new Error("Sa tien cong no phai lon hon 0");
-    }
+    assertValid(validateAmount(payload.amount, "So tien cong no"));
+    assertValid(validateText(payload.description, "Mo ta", 500));
+
+    // Kiểm tra period và person tồn tại
+    const periodResult = await debtsRepository.getPeriodById(payload.period_id);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    if (!periodResult.data) throw new Error("Period khong ton tai");
+
+    const personResult = await debtsRepository.getPersonById(payload.person_id);
+    if (personResult.error) throw new Error(personResult.error.message);
+    if (!personResult.data) throw new Error("Person khong ton tai");
 
     const { data, error } = await debtsRepository.create({
       period_id: payload.period_id,
@@ -54,8 +63,10 @@ export const debtsService = {
   async updateDebtStatus(id, payload = {}) {
     if (!id) throw new Error("Debt ID khong duoc de trong");
 
+    if (!payload.status) throw new Error("Trang thai cong no khong duoc de trong");
+
     if (!allowedStatuses.includes(payload.status)) {
-      throw new Error("Trang thii cong no khong hop le");
+      throw new Error(`Trang thai cong no khong hop le. Chi duoc dung: ${allowedStatuses.join(", ")}`);
     }
 
     const { data, error } = await debtsRepository.updateStatus(id, payload.status);

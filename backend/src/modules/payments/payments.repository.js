@@ -132,15 +132,13 @@ export const paymentsRepository = {
       .single();
   },
 
-  async findFundTransaction(paymentId, personId, amount) {
+  // FIX #1: dùng debt_id để check duplicate thay vì amount (tránh false-negative khi 2 debt cùng amount)
+  async findFundTransaction(paymentId, debtId) {
     return await supabase
       .from("club_fund_transactions")
       .select("*")
       .eq("payment_id", paymentId)
-      .eq("person_id", personId)
-      .eq("amount", amount)
-      .eq("transaction_type", "income")
-      .limit(1)
+      .eq("debt_id", debtId)
       .maybeSingle();
   }
 };
