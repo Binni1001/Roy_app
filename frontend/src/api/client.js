@@ -166,6 +166,7 @@ export const api = {
     byPerson: (personId) => request({ url: `/api/pk-matches/person/${personId}` }),
     create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
     update: (id, payload) => request({ url: `/api/pk-matches/${id}`, method: 'PUT', data: payload }),
+    remove: (id) => request({ url: `/api/pk-matches/${id}`, method: 'DELETE' }),
     leaderboard: () => request({ url: '/api/pk-matches/leaderboard' }),
     people: () => request({ url: '/api/pk-matches/people' }),
   },

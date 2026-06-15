@@ -55,6 +55,15 @@ export const pkMatchesController = {
     }
   },
 
+  async remove(req, res) {
+    try {
+      const data = await pkMatchesService.remove(req.params.id)
+      res.json(data)
+    } catch (error) {
+      res.status(400).json({ message: error.message })
+    }
+  },
+
   async getLeaderboard(req, res) {
     try {
       const data = await pkMatchesService.getLeaderboard();

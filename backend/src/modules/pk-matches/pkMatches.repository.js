@@ -53,6 +53,10 @@ export const pkMatchesRepository = {
       .single();
   },
 
+  async remove(id) {
+    return supabase.from('pk_matches').delete().eq('id', id).select('id').single()
+  },
+
   async getLeaderboard() {
     return supabase
       .from("pk_leaderboard")

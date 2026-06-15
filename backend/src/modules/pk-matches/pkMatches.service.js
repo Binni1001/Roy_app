@@ -83,6 +83,13 @@ export const pkMatchesService = {
     return data;
   },
 
+  async remove(id) {
+    if (!id) throw new Error('Match ID là bắt buộc')
+    const { error } = await pkMatchesRepository.remove(id)
+    if (error) throw new Error(error.message)
+    return { id }
+  },
+
   async getLeaderboard() {
     const { data, error } = await pkMatchesRepository.getLeaderboard();
     if (error) throw new Error(error.message);

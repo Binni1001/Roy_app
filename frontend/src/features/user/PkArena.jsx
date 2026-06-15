@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
-import { Panel } from '../../components/common'
+import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
 
 const STATUS_LABEL = {
@@ -10,17 +10,77 @@ const STATUS_LABEL = {
   cancelled: 'Đã hủy',
 }
 
-const WINNER_LABEL = { challenger: 'Bên thách đấu thắng', opponent: 'Bên đối thủ thắng' }
+function sortByDate(arr) {
+  return [...arr].sort((a, b) => {
+    const da = a.played_at || a.created_at
+    const db = b.played_at || b.created_at
+    return new Date(db) - new Date(da)
+  })
+}
+
+function MatchCard({ m, activePerson, onSetResult, onCancel }) {
+  const iAmChallenger = m.challenger?.id === activePerson?.id || m.challenger_partner?.id === activePerson?.id
+  const mySide    = iAmChallenger ? m.challenger       : m.opponent
+  const theirSide = iAmChallenger ? m.opponent         : m.challenger
+  const myPartner    = iAmChallenger ? m.challenger_partner : m.opponent_partner
+  const theirPartner = iAmChallenger ? m.opponent_partner   : m.challenger_partner
+  const iWon = m.winner_side && (
+    (iAmChallenger && m.winner_side === 'challenger') ||
+    (!iAmChallenger && m.winner_side === 'opponent')
+  )
+
+  return (
+    <div className={`pk-match-card${m.status === 'completed' ? (iWon ? ' pk-won' : ' pk-lost') : ''}`}>
+      <div className="pk-match-header">
+        <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
+        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? 'Đơn' : 'Đôi'}</span>
+        {m.played_at && <small className="muted">{formatDate(m.played_at)}</small>}
+      </div>
+
+      <div className="pk-match-vs">
+        <div className="pk-team">
+          <strong>{mySide?.full_name || 'Tôi'}</strong>
+          {myPartner && <small>& {myPartner.full_name}</small>}
+          <span className="muted">Bên tôi</span>
+        </div>
+        <span className="pk-vs">VS</span>
+        <div className="pk-team">
+          <strong>{theirSide?.full_name || '?'}</strong>
+          {theirPartner && <small>& {theirPartner.full_name}</small>}
+          <span className="muted">Đối thủ</span>
+        </div>
+      </div>
+
+      {m.bet_items && <p className="pk-bet">🎁 Cược: {m.bet_items}</p>}
+      {m.note && <p className="pk-note muted">{m.note}</p>}
+
+      {m.status === 'completed' && m.winner_side && (
+        <p className={`pk-result ${iWon ? 'pk-win-text' : 'pk-loss-text'}`}>
+          {iWon ? '🏆 Bạn đã thắng!' : '😔 Bạn đã thua'}
+        </p>
+      )}
+
+      {(m.status === 'pending' || m.status === 'active') && (
+        <div className="pk-match-actions">
+          <button onClick={() => onSetResult(m)}>Ghi kết quả</button>
+          <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
+        </div>
+      )}
+    </div>
+  )
+}
 
 export function PkArena({ activePerson }) {
-  const [tab, setTab] = useState('leaderboard')
+  const [tab, setTab]             = useState('leaderboard')
+  const [matchFilter, setMatchFilter] = useState('upcoming')
   const [leaderboard, setLeaderboard] = useState([])
-  const [matches, setMatches] = useState([])
-  const [people, setPeople] = useState([])
-  const [loading, setLoading] = useState(false)
-  const [toast, setToast] = useState('')
+  const [matches, setMatches]     = useState([])
+  const [people, setPeople]       = useState([])
+  const [loading, setLoading]     = useState(false)
+  const [toast, setToast]         = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [showResult, setShowResult] = useState(null)
+  const [cancelId, setCancelId]   = useState(null)
   const [form, setForm] = useState({
     match_type: 'singles',
     opponent_id: '',
@@ -31,15 +91,11 @@ export function PkArena({ activePerson }) {
     note: '',
   })
 
+  useEffect(() => { loadAll() }, [])
   useEffect(() => {
-    loadAll()
-  }, [])
-
-  useEffect(() => {
-    if (toast) {
-      const t = setTimeout(() => setToast(''), 3000)
-      return () => clearTimeout(t)
-    }
+    if (!toast) return
+    const t = setTimeout(() => setToast(''), 3000)
+    return () => clearTimeout(t)
   }, [toast])
 
   async function loadAll() {
@@ -71,7 +127,7 @@ export function PkArena({ activePerson }) {
         ...form,
         challenger_id: activePerson.id,
         challenger_partner_id: form.match_type === 'doubles' ? form.challenger_partner_id : undefined,
-        opponent_partner_id: form.match_type === 'doubles' ? form.opponent_partner_id : undefined,
+        opponent_partner_id:   form.match_type === 'doubles' ? form.opponent_partner_id   : undefined,
       })
       setToast('Đã tạo kèo thách đấu!')
       setShowCreate(false)
@@ -88,23 +144,23 @@ export function PkArena({ activePerson }) {
       setToast('Đã ghi nhận kết quả!')
       setShowResult(null)
       void loadAll()
-    } catch (err) {
-      setToast(err.message)
-    }
+    } catch (err) { setToast(err.message) }
   }
 
   async function handleCancel(matchId) {
     try {
       await api.pk.update(matchId, { status: 'cancelled' })
       setToast('Đã hủy kèo.')
+      setCancelId(null)
       void loadAll()
-    } catch (err) {
-      setToast(err.message)
-    }
+    } catch (err) { setToast(err.message) }
   }
 
-  // Server đã lọc kèo theo người dùng hiện tại qua /api/pk-matches/me
-  const myMatches = matches
+  const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
+  const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
+  const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
+
+  const filteredMatches = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
 
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
@@ -112,11 +168,10 @@ export function PkArena({ activePerson }) {
     <div className="tab-scene" style={{ '--tab-img': 'url(/images/player-fist.jpg)' }}>
       {toast && <div className="toast" role="alert">{toast}</div>}
 
-      {/* Sub-tabs */}
       <div className="pk-tabs">
         <button className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>Bảng xếp hạng</button>
-        <button className={tab === 'matches' ? 'active' : ''} onClick={() => setTab('matches')}>Kèo của tôi</button>
-        <button className={tab === 'players' ? 'active' : ''} onClick={() => setTab('players')}>Thành viên</button>
+        <button className={tab === 'matches'     ? 'active' : ''} onClick={() => setTab('matches')}>Kèo của tôi</button>
+        <button className={tab === 'players'     ? 'active' : ''} onClick={() => setTab('players')}>Thành viên</button>
       </div>
 
       {/* ── LEADERBOARD ── */}
@@ -128,14 +183,7 @@ export function PkArena({ activePerson }) {
             <div className="table-wrap">
               <table>
                 <thead>
-                  <tr>
-                    <th>#</th>
-                    <th>Người chơi</th>
-                    <th>Thắng</th>
-                    <th>Thua</th>
-                    <th>Tổng</th>
-                    <th>Tỉ lệ</th>
-                  </tr>
+                  <tr><th>#</th><th>Người chơi</th><th>Thắng</th><th>Thua</th><th>Tổng</th><th>Tỉ lệ</th></tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((row) => (
@@ -145,8 +193,7 @@ export function PkArena({ activePerson }) {
                         <div className="pk-person-cell">
                           {row.avatar_url
                             ? <img src={row.avatar_url} className="avatar avatar-img pk-avatar" alt={row.full_name} />
-                            : <span className="avatar pk-avatar">{initials(row.full_name)}</span>
-                          }
+                            : <span className="avatar pk-avatar">{initials(row.full_name)}</span>}
                           <span>{row.full_name}{row.nickname ? <small className="muted"> · {row.nickname}</small> : null}</span>
                         </div>
                       </td>
@@ -168,154 +215,36 @@ export function PkArena({ activePerson }) {
         <Panel title="Kèo của tôi">
           <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
 
-          {showCreate && (
-            <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowCreate(false)}>
-              <section className="modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
-                <header className="modal-header">
-                  <h2>Tạo kèo thách đấu</h2>
-                  <button className="icon-button" onClick={() => setShowCreate(false)}>×</button>
-                </header>
-                <form className="form" onSubmit={handleCreate}>
-                  <label>
-                    Hình thức
-                    <select value={form.match_type} onChange={(e) => updateForm('match_type', e.target.value)}>
-                      <option value="singles">Đánh đơn</option>
-                      <option value="doubles">Đánh đôi</option>
-                    </select>
-                  </label>
-                  <label>
-                    Đối thủ *
-                    <select value={form.opponent_id} onChange={(e) => updateForm('opponent_id', e.target.value)} required>
-                      <option value="">Chọn đối thủ</option>
-                      {otherPeople.map((p) => (
-                        <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>
-                      ))}
-                    </select>
-                  </label>
-                  {form.match_type === 'doubles' && (
-                    <>
-                      <label>
-                        Đồng đội của tôi *
-                        <select value={form.challenger_partner_id} onChange={(e) => updateForm('challenger_partner_id', e.target.value)} required>
-                          <option value="">Chọn đồng đội</option>
-                          {otherPeople.map((p) => (
-                            <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Đồng đội đối thủ *
-                        <select value={form.opponent_partner_id} onChange={(e) => updateForm('opponent_partner_id', e.target.value)} required>
-                          <option value="">Chọn đồng đội đối thủ</option>
-                          {otherPeople.map((p) => (
-                            <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>
-                          ))}
-                        </select>
-                      </label>
-                    </>
-                  )}
-                  <label>
-                    Vật phẩm cược (nước, bánh mì, ...)
-                    <input
-                      type="text"
-                      value={form.bet_items}
-                      onChange={(e) => updateForm('bet_items', e.target.value)}
-                      placeholder="VD: 2 chai nước, 1 ổ bánh mì"
-                    />
-                  </label>
-                  <label>
-                    Ngày đấu
-                    <input type="date" value={form.played_at} onChange={(e) => updateForm('played_at', e.target.value)} />
-                  </label>
-                  <label>
-                    Ghi chú
-                    <input type="text" value={form.note} onChange={(e) => updateForm('note', e.target.value)} placeholder="Tuỳ chọn" />
-                  </label>
-                  <button type="submit">Tạo kèo</button>
-                </form>
-              </section>
-            </div>
-          )}
+          {/* Filter tabs */}
+          <div className="pk-filter-tabs">
+            <button className={matchFilter === 'upcoming'  ? 'active' : ''} onClick={() => setMatchFilter('upcoming')}>
+              Sắp tới {upcoming.length > 0 && <span className="pk-count">{upcoming.length}</span>}
+            </button>
+            <button className={matchFilter === 'completed' ? 'active' : ''} onClick={() => setMatchFilter('completed')}>
+              Đã diễn ra {completed.length > 0 && <span className="pk-count">{completed.length}</span>}
+            </button>
+            <button className={matchFilter === 'cancelled' ? 'active' : ''} onClick={() => setMatchFilter('cancelled')}>
+              Đã hủy {cancelled.length > 0 && <span className="pk-count">{cancelled.length}</span>}
+            </button>
+          </div>
 
-          {showResult && (
-            <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowResult(null)}>
-              <section className="modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
-                <header className="modal-header">
-                  <h2>Ghi nhận kết quả</h2>
-                  <button className="icon-button" onClick={() => setShowResult(null)}>×</button>
-                </header>
-                <div className="form">
-                  <p>Ai thắng?</p>
-                  <div className="pk-winner-choice">
-                    <button onClick={() => handleSetWinner(showResult.id, 'challenger')}>
-                      {showResult.challenger?.full_name}
-                      {showResult.challenger_partner ? ` & ${showResult.challenger_partner.full_name}` : ''}
-                      <small> (bên thách đấu)</small>
-                    </button>
-                    <button onClick={() => handleSetWinner(showResult.id, 'opponent')}>
-                      {showResult.opponent?.full_name}
-                      {showResult.opponent_partner ? ` & ${showResult.opponent_partner.full_name}` : ''}
-                      <small> (bên đối thủ)</small>
-                    </button>
-                  </div>
-                </div>
-              </section>
-            </div>
-          )}
-
-          {loading ? <p className="muted">Đang tải...</p> : myMatches.length === 0 ? (
-            <p className="muted">Chưa có kèo nào. Nhấn "+ Thách đấu mới" để bắt đầu!</p>
+          {loading ? <p className="muted">Đang tải...</p> : filteredMatches.length === 0 ? (
+            <p className="muted">
+              {matchFilter === 'upcoming'  && 'Không có kèo nào đang chờ.'}
+              {matchFilter === 'completed' && 'Chưa có trận đấu nào kết thúc.'}
+              {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
+            </p>
           ) : (
             <div className="pk-match-list">
-              {myMatches.map((m) => {
-                const iAmChallenger = m.challenger?.id === activePerson?.id || m.challenger_partner?.id === activePerson?.id
-                const mySide = iAmChallenger ? m.challenger : m.opponent
-                const theirSide = iAmChallenger ? m.opponent : m.challenger
-                const myPartner = iAmChallenger ? m.challenger_partner : m.opponent_partner
-                const theirPartner = iAmChallenger ? m.opponent_partner : m.challenger_partner
-                const iWon = m.winner_side && ((iAmChallenger && m.winner_side === 'challenger') || (!iAmChallenger && m.winner_side === 'opponent'))
-
-                return (
-                  <div key={m.id} className={`pk-match-card${m.status === 'completed' ? (iWon ? ' pk-won' : ' pk-lost') : ''}`}>
-                    <div className="pk-match-header">
-                      <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
-                      <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? 'Đơn' : 'Đôi'}</span>
-                      {m.played_at && <small className="muted">{formatDate(m.played_at)}</small>}
-                    </div>
-
-                    <div className="pk-match-vs">
-                      <div className="pk-team">
-                        <strong>{mySide?.full_name || 'Tôi'}</strong>
-                        {myPartner && <small>& {myPartner.full_name}</small>}
-                        <span className="muted">Bên tôi</span>
-                      </div>
-                      <span className="pk-vs">VS</span>
-                      <div className="pk-team">
-                        <strong>{theirSide?.full_name || '?'}</strong>
-                        {theirPartner && <small>& {theirPartner.full_name}</small>}
-                        <span className="muted">Đối thủ</span>
-                      </div>
-                    </div>
-
-                    {m.bet_items && (
-                      <p className="pk-bet">🎁 Cược: {m.bet_items}</p>
-                    )}
-
-                    {m.status === 'completed' && m.winner_side && (
-                      <p className={`pk-result ${iWon ? 'pk-win-text' : 'pk-loss-text'}`}>
-                        {iWon ? '🏆 Bạn đã thắng!' : '😔 Bạn đã thua'}
-                      </p>
-                    )}
-
-                    {m.status === 'pending' && (
-                      <div className="pk-match-actions">
-                        <button onClick={() => setShowResult(m)}>Ghi kết quả</button>
-                        <button className="danger" onClick={() => handleCancel(m.id)}>Hủy kèo</button>
-                      </div>
-                    )}
-                  </div>
-                )
-              })}
+              {filteredMatches.map((m) => (
+                <MatchCard
+                  key={m.id}
+                  m={m}
+                  activePerson={activePerson}
+                  onSetResult={setShowResult}
+                  onCancel={(id) => setCancelId(id)}
+                />
+              ))}
             </div>
           )}
         </Panel>
@@ -330,31 +259,108 @@ export function PkArena({ activePerson }) {
                 <div key={p.id} className={`pk-player-card${p.id === activePerson?.id ? ' pk-player-me' : ''}`}>
                   {p.avatar_url
                     ? <img src={p.avatar_url} alt={p.full_name} className="avatar large avatar-img pk-player-avatar" />
-                    : <span className="avatar large pk-player-avatar">{initials(p.full_name)}</span>
-                  }
+                    : <span className="avatar large pk-player-avatar">{initials(p.full_name)}</span>}
                   <strong>{p.full_name}</strong>
                   {p.nickname && <small className="muted">"{p.nickname}"</small>}
-                  {p.phone && <small className="muted">{p.phone}</small>}
-                  {p.gender && <small className="muted">{p.gender === 'male' ? 'Nam' : p.gender === 'female' ? 'Nữ' : 'Khác'}</small>}
-                  {p.bio && <p className="pk-player-bio">{p.bio}</p>}
-                  {p.id !== activePerson?.id && (
-                    <button
-                      className="pk-challenge-btn"
-                      onClick={() => {
-                        setForm((f) => ({ ...f, opponent_id: p.id }))
-                        setTab('matches')
-                        setShowCreate(true)
-                      }}
-                    >
-                      Thách đấu
-                    </button>
+                  {p.phone    && <small className="muted">{p.phone}</small>}
+                  {p.gender   && <small className="muted">{p.gender === 'male' ? 'Nam' : p.gender === 'female' ? 'Nữ' : 'Khác'}</small>}
+                  {p.bio      && <p className="pk-player-bio">{p.bio}</p>}
+                  {p.id !== activePerson?.id ? (
+                    <button className="pk-challenge-btn" onClick={() => {
+                      setForm((f) => ({ ...f, opponent_id: p.id }))
+                      setTab('matches')
+                      setShowCreate(true)
+                    }}>Thách đấu</button>
+                  ) : (
+                    <span className="muted pk-you-tag">Bạn</span>
                   )}
-                  {p.id === activePerson?.id && <span className="muted pk-you-tag">Bạn</span>}
                 </div>
               ))}
             </div>
           )}
         </Panel>
+      )}
+
+      {/* ── MODALS ── */}
+      {showCreate && (
+        <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowCreate(false)}>
+          <section className="modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
+            <header className="modal-header">
+              <h2>Tạo kèo thách đấu</h2>
+              <button className="icon-button" onClick={() => setShowCreate(false)}>×</button>
+            </header>
+            <form className="form" onSubmit={handleCreate}>
+              <label>Hình thức
+                <select value={form.match_type} onChange={(e) => updateForm('match_type', e.target.value)}>
+                  <option value="singles">Đánh đơn</option>
+                  <option value="doubles">Đánh đôi</option>
+                </select>
+              </label>
+              <label>Đối thủ *
+                <select value={form.opponent_id} onChange={(e) => updateForm('opponent_id', e.target.value)} required>
+                  <option value="">Chọn đối thủ</option>
+                  {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+                </select>
+              </label>
+              {form.match_type === 'doubles' && (<>
+                <label>Đồng đội của tôi *
+                  <select value={form.challenger_partner_id} onChange={(e) => updateForm('challenger_partner_id', e.target.value)} required>
+                    <option value="">Chọn đồng đội</option>
+                    {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+                  </select>
+                </label>
+                <label>Đồng đội đối thủ *
+                  <select value={form.opponent_partner_id} onChange={(e) => updateForm('opponent_partner_id', e.target.value)} required>
+                    <option value="">Chọn đồng đội đối thủ</option>
+                    {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+                  </select>
+                </label>
+              </>)}
+              <label>Vật phẩm cược
+                <input type="text" value={form.bet_items} onChange={(e) => updateForm('bet_items', e.target.value)} placeholder="VD: 2 chai nước, 1 ổ bánh mì" />
+              </label>
+              <label>Ngày đấu
+                <input type="date" value={form.played_at} onChange={(e) => updateForm('played_at', e.target.value)} />
+              </label>
+              <label>Ghi chú
+                <input type="text" value={form.note} onChange={(e) => updateForm('note', e.target.value)} placeholder="Tuỳ chọn" />
+              </label>
+              <footer className="modal-actions">
+                <button type="button" onClick={() => setShowCreate(false)}>Hủy</button>
+                <button type="submit">Tạo kèo</button>
+              </footer>
+            </form>
+          </section>
+        </div>
+      )}
+
+      {showResult && (
+        <Modal title="Ghi nhận kết quả" onClose={() => setShowResult(null)}>
+          <div className="form">
+            <p>Ai thắng?</p>
+            <div className="pk-winner-choice">
+              <button onClick={() => handleSetWinner(showResult.id, 'challenger')}>
+                {showResult.challenger?.full_name}{showResult.challenger_partner ? ` & ${showResult.challenger_partner.full_name}` : ''}
+                <small> (bên thách đấu)</small>
+              </button>
+              <button onClick={() => handleSetWinner(showResult.id, 'opponent')}>
+                {showResult.opponent?.full_name}{showResult.opponent_partner ? ` & ${showResult.opponent_partner.full_name}` : ''}
+                <small> (bên đối thủ)</small>
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {cancelId && (
+        <ConfirmModal
+          title="Hủy kèo"
+          message="Bạn chắc chắn muốn hủy kèo này?"
+          confirmText="Hủy kèo"
+          danger
+          onClose={() => setCancelId(null)}
+          onConfirm={() => handleCancel(cancelId)}
+        />
       )}
     </div>
   )

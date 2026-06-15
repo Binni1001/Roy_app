@@ -1531,6 +1531,52 @@ button.danger:hover {
   margin-bottom: 16px;
 }
 
+.pk-filter-tabs {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  margin-bottom: 16px;
+}
+
+.pk-filter-tabs button {
+  padding: 5px 14px;
+  border-radius: 16px;
+  border: 1px solid rgba(239, 231, 210, 0.15);
+  background: rgba(255,255,255,0.03);
+  color: #efe7d2;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.15s;
+}
+
+.pk-filter-tabs button.active,
+.pk-filter-tabs button:hover {
+  background: rgba(216, 174, 82, 0.18);
+  border-color: rgba(216, 174, 82, 0.5);
+  color: #d8ae52;
+  font-weight: 600;
+}
+
+.pk-count {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  border-radius: 8px;
+  background: rgba(216,174,82,0.25);
+  color: #d8ae52;
+  font-size: 10px;
+  font-weight: 700;
+  margin-left: 5px;
+}
+
+.pk-note {
+  font-size: 12px;
+  margin: 4px 0 0;
+}
+
 /* Leaderboard */
 .pk-rank-top { color: #d8ae52; font-size: 16px; }
 .pk-row-me td { background: rgba(216, 174, 82, 0.07); }

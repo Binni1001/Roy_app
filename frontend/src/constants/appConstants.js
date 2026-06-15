@@ -23,6 +23,7 @@ export const adminTabs = [
   ['shuttle', 'Chi cầu', 'Mua và chia cầu'],
   ['debts', 'Công nợ', 'Khoản cần thu'],
   ['fund', 'Sổ quỹ', 'Thu chi câu lạc bộ'],
+  ['pk', 'Đấu trường', 'Quản lý kèo PK'],
 ]
 
 export const userTabs = [

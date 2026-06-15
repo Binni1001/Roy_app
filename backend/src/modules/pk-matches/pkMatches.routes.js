@@ -1,5 +1,5 @@
 import express from "express";
-import { requireAuth } from "../../middleware/auth.js";
+import { requireAdmin, requireAuth } from "../../middleware/auth.js";
 import { pkMatchesController } from "./pkMatches.controller.js";
 
 const router = express.Router();
@@ -15,5 +15,6 @@ router.get("/:id", requireAuth, pkMatchesController.getById);
 // Write (any authenticated user can challenge / update their own)
 router.post("/", requireAuth, pkMatchesController.create);
 router.put("/:id", requireAuth, pkMatchesController.update);
+router.delete("/:id", requireAuth, requireAdmin, pkMatchesController.remove);
 
 export default router;

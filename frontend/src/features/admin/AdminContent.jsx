@@ -1,4 +1,5 @@
 import { DashboardPanel } from './panels/DashboardPanel'
+import { PkPanel } from './panels/PkPanel'
 import { DebtsPanel } from './panels/DebtsPanel'
 import { FundPanel } from './panels/FundPanel'
 import { PeoplePanel } from './panels/PeoplePanel'
@@ -109,6 +110,10 @@ export function AdminContent(props) {
         submit={submit}
       />
     )
+  }
+
+  if (activeTab === 'pk') {
+    return <PkPanel />
   }
 
   return (
