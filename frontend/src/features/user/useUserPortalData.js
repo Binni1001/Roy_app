@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react'
 import { api } from '../../api/client'
+import { supabase } from '../../lib/supabase'
 import { useAutoDismissToast } from '../../hooks/useAutoDismissToast'
 import { asArray, errorText } from '../../utils/appUtils'
 
@@ -17,6 +18,7 @@ export function useUserPortalData(session, setActiveTab) {
   const [checkout, setCheckout] = useState(null)
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
 
   const unpaidDebts = data.debts.filter((debt) => debt.status === 'unpaid')
   const totalDebt = unpaidDebts.reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
@@ -102,7 +104,7 @@ export function useUserPortalData(session, setActiveTab) {
       setToast('Tài khoản này chưa được liên kết với hồ sơ người chơi.')
       return null
     }
-    setLoading(true)
+    setSubmitting(true)
     try {
       const result = await api.payments.createForPersonPeriod({
         person_id: activePerson.id,
@@ -111,13 +113,13 @@ export function useUserPortalData(session, setActiveTab) {
       setCheckout(result)
       setActiveTab('payment')
       setToast('Đã tạo lệnh thanh toán qua PayOS.')
-      await loadPersonData(activePerson.id)
+      void loadPersonData(activePerson.id)
       return result
     } catch (error) {
       setToast(errorText(error))
       return null
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
@@ -128,7 +130,7 @@ export function useUserPortalData(session, setActiveTab) {
       return
     }
 
-    setLoading(true)
+    setSubmitting(true)
     try {
       await api.people.createMe({
         full_name: profileForm.full_name.trim(),
@@ -140,11 +142,47 @@ export function useUserPortalData(session, setActiveTab) {
       })
       setAttendanceType(profileForm.attendance_type)
       setToast('Đã tạo hồ sơ người chơi.')
-      await boot()
+      void boot()
     } catch (error) {
       setToast(errorText(error))
     } finally {
-      setLoading(false)
+      setSubmitting(false)
+    }
+  }
+
+  async function updateProfile(formData, avatarFile) {
+    setSubmitting(true)
+    try {
+      let avatar_url = activePerson?.avatar_url || null
+
+      if (avatarFile) {
+        const ext = avatarFile.name.split('.').pop()
+        const path = `${activePerson.id}.${ext}`
+        const { error: uploadError } = await supabase.storage
+          .from('avatars')
+          .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type })
+        if (uploadError) throw new Error(uploadError.message)
+        const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+        avatar_url = urlData.publicUrl
+      }
+
+      const updated = await api.people.updateMe({
+        full_name: formData.full_name.trim(),
+        nickname: formData.nickname.trim() || null,
+        phone: formData.phone.trim() || null,
+        bio: formData.bio.trim() || null,
+        birthday: formData.birthday || null,
+        gender: formData.gender || null,
+        attendance_type: formData.attendance_type,
+        avatar_url,
+      })
+      setActivePerson(updated)
+      setAttendanceType(updated.attendance_type)
+      setToast('Đã cập nhật hồ sơ thành công.')
+    } catch (error) {
+      setToast(errorText(error))
+    } finally {
+      setSubmitting(false)
     }
   }
 
@@ -152,7 +190,7 @@ export function useUserPortalData(session, setActiveTab) {
     if (!activePerson || nextType === attendanceType) return
 
     setAttendanceType(nextType)
-    setLoading(true)
+    setSubmitting(true)
     try {
       const updatedPerson = await api.people.updateMe({ attendance_type: nextType })
       setActivePerson(updatedPerson)
@@ -161,7 +199,7 @@ export function useUserPortalData(session, setActiveTab) {
       setAttendanceType(activePerson.attendance_type || 'fixed')
       setToast(errorText(error))
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
@@ -172,8 +210,10 @@ export function useUserPortalData(session, setActiveTab) {
     checkout,
     createPayment,
     createProfile,
+    updateProfile,
     data,
     loading,
+    submitting,
     periods,
     profileForm,
     selectedPeriodId,

@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { StatusLine } from '../../components/common'
 import { Topbar } from '../../components/shell'
 import { MemberHero } from './MemberHero'
+import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserContent } from './UserContent'
 import { UserSidebar } from './UserSidebar'
@@ -9,7 +10,7 @@ import { useUserPortalData } from './useUserPortalData'
 
 export function UserPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState('home')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
   const {
     activePerson,
     attendanceType,
@@ -17,8 +18,10 @@ export function UserPortal({ session, role, onSignOut }) {
     checkout,
     createPayment,
     createProfile,
+    updateProfile,
     data,
     loading,
+    submitting,
     periods,
     profileForm,
     selectedPeriodId,
@@ -31,10 +34,10 @@ export function UserPortal({ session, role, onSignOut }) {
   } = useUserPortalData(session, setActiveTab)
 
   return (
-    <div className="user-shell">
+    <div className={`user-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <UserSidebar
         activeTab={activeTab}
-        setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false) }}
+        setActiveTab={(tab) => { setActiveTab(tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
         activePerson={activePerson}
         session={session}
         role={role}
@@ -54,13 +57,19 @@ export function UserPortal({ session, role, onSignOut }) {
           onMenuToggle={() => setSidebarOpen((v) => !v)}
         />
         <StatusLine text={toast} />
-        {!activePerson ? (
+        {loading && !activePerson ? null : !activePerson ? (
           <ProfileSetup
             form={profileForm}
             setForm={setProfileForm}
-            loading={loading}
+            loading={submitting}
             email={session.user.email}
             onSubmit={createProfile}
+          />
+        ) : activeTab === 'profile' ? (
+          <ProfileEdit
+            activePerson={activePerson}
+            submitting={submitting}
+            onSave={updateProfile}
           />
         ) : (
           <>
@@ -68,7 +77,7 @@ export function UserPortal({ session, role, onSignOut }) {
               activePerson={activePerson}
               attendanceType={attendanceType}
               balance={data.balance?.balance}
-              loading={loading}
+              loading={submitting}
               totalDebt={totalDebt}
               onCreatePayment={createPayment}
               onUpdateAttendanceType={updateAttendanceType}

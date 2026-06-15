@@ -7,7 +7,7 @@ import { useAdminPortalData } from './useAdminPortalData'
 
 export function AdminPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState('dashboard')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
   const {
     activePeriod,
     adminUsers,
@@ -17,6 +17,7 @@ export function AdminPortal({ session, role, onSignOut }) {
     data,
     forms,
     loading,
+    submitting,
     people,
     periods,
     selectedPeriodId,
@@ -30,10 +31,10 @@ export function AdminPortal({ session, role, onSignOut }) {
   } = useAdminPortalData(role)
 
   return (
-    <div className="admin-shell">
+    <div className={`admin-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <AdminSidebar
         activeTab={activeTab}
-        setActiveTab={(tab) => { setActiveTab(tab); setSidebarOpen(false) }}
+        setActiveTab={(tab) => { setActiveTab(tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
         session={session}
         role={role}
         onSignOut={onSignOut}
@@ -64,6 +65,7 @@ export function AdminPortal({ session, role, onSignOut }) {
           selectedPersonId={selectedPersonId}
           setSelectedPersonId={setSelectedPersonId}
           submit={submit}
+          submitting={submitting}
           createPayment={createPayment}
           checkout={checkout}
           role={role}

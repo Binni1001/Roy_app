@@ -14,6 +14,7 @@ export function useAdminPortalData(role) {
   const [adminUsers, setAdminUsers] = useState([])
   const [toast, setToast] = useState('')
   const [loading, setLoading] = useState(false)
+  const [submitting, setSubmitting] = useState(false)
   const [checkout, setCheckout] = useState(null)
 
   const activePeriod = periods.find((period) => period.id === selectedPeriodId)
@@ -38,7 +39,6 @@ export function useAdminPortalData(role) {
   useAutoDismissToast(toast, setToast)
 
   const loadPeriodData = useCallback(async (periodId) => {
-    setLoading(true)
     try {
       const [
         dashboard,
@@ -72,8 +72,6 @@ export function useAdminPortalData(role) {
       }))
     } catch (error) {
       setToast(errorText(error))
-    } finally {
-      setLoading(false)
     }
   }, [])
 
@@ -129,20 +127,22 @@ export function useAdminPortalData(role) {
   // scope: 'period' (mặc định) chỉ reload dữ liệu kỳ hiện tại
   //        'global' reload cả people + periods (dùng khi tạo/xóa người, kỳ)
   async function submit(action, successMessage, scope = 'period') {
-    setLoading(true)
+    setSubmitting(true)
     try {
       const result = await action()
       setToast(successMessage)
+      // Refresh data in background — không block UI
       if (scope === 'global') {
-        await boot()
+        void boot()
+      } else if (selectedPeriodId) {
+        void loadPeriodData(selectedPeriodId)
       }
-      if (selectedPeriodId) await loadPeriodData(selectedPeriodId)
       return result
     } catch (error) {
       setToast(errorText(error))
       return null
     } finally {
-      setLoading(false)
+      setSubmitting(false)
     }
   }
 
@@ -168,6 +168,7 @@ export function useAdminPortalData(role) {
     data,
     forms,
     loading,
+    submitting,
     people,
     periods,
     selectedPeriodId,

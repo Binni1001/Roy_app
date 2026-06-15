@@ -76,10 +76,13 @@ export const peopleService = {
     const allowedPayload = {};
 
     if (payload.full_name !== undefined) allowedPayload.full_name = payload.full_name;
+    if (payload.nickname !== undefined) allowedPayload.nickname = payload.nickname;
     if (payload.phone !== undefined) allowedPayload.phone = payload.phone;
-    if (payload.attendance_type !== undefined) {
-      allowedPayload.attendance_type = payload.attendance_type;
-    }
+    if (payload.attendance_type !== undefined) allowedPayload.attendance_type = payload.attendance_type;
+    if (payload.bio !== undefined) allowedPayload.bio = payload.bio;
+    if (payload.birthday !== undefined) allowedPayload.birthday = payload.birthday;
+    if (payload.gender !== undefined) allowedPayload.gender = payload.gender;
+    if (payload.avatar_url !== undefined) allowedPayload.avatar_url = payload.avatar_url;
 
     return await this.updatePerson(person.id, allowedPayload);
   },
