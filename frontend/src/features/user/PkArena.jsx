@@ -47,7 +47,7 @@ export function PkArena({ activePerson }) {
     try {
       const [lb, ms, pp] = await Promise.all([
         api.pk.leaderboard().catch(() => []),
-        api.pk.matches().catch(() => []),
+        api.pk.myMatches().catch(() => []),
         api.pk.people().catch(() => []),
       ])
       setLeaderboard(lb)
@@ -103,14 +103,8 @@ export function PkArena({ activePerson }) {
     }
   }
 
-  const myMatches = matches.filter((m) =>
-    activePerson && (
-      m.challenger?.id === activePerson.id ||
-      m.opponent?.id === activePerson.id ||
-      m.challenger_partner?.id === activePerson.id ||
-      m.opponent_partner?.id === activePerson.id
-    )
-  )
+  // Server đã lọc kèo theo người dùng hiện tại qua /api/pk-matches/me
+  const myMatches = matches
 
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 

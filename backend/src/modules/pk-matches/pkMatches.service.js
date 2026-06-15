@@ -7,6 +7,13 @@ export const pkMatchesService = {
     return data;
   },
 
+  async getMyMatches(user) {
+    const { data: person, error: personError } = await import('../../config/supabase.js')
+      .then(({ supabase }) => supabase.from('people').select('id').ilike('email', user.email).maybeSingle())
+    if (personError || !person) return []
+    return this.getByPerson(person.id)
+  },
+
   async getByPerson(personId) {
     const { data, error } = await pkMatchesRepository.getByPerson(personId);
     if (error) throw new Error(error.message);

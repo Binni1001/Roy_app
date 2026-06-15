@@ -2,10 +2,11 @@ import { supabase } from "../../config/supabase.js";
 
 const MATCH_SELECT = `
   id, match_type, status, bet_items, winner_side, played_at, note, created_at, updated_at,
-  challenger:people!pk_matches_challenger_id_fkey(id, full_name, nickname, avatar_url),
-  challenger_partner:people!pk_matches_challenger_partner_id_fkey(id, full_name, nickname, avatar_url),
-  opponent:people!pk_matches_opponent_id_fkey(id, full_name, nickname, avatar_url),
-  opponent_partner:people!pk_matches_opponent_partner_id_fkey(id, full_name, nickname, avatar_url)
+  challenger_id, challenger_partner_id, opponent_id, opponent_partner_id,
+  challenger:people!challenger_id(id, full_name, nickname, avatar_url),
+  challenger_partner:people!challenger_partner_id(id, full_name, nickname, avatar_url),
+  opponent:people!opponent_id(id, full_name, nickname, avatar_url),
+  opponent_partner:people!opponent_partner_id(id, full_name, nickname, avatar_url)
 `;
 
 export const pkMatchesRepository = {

@@ -10,6 +10,15 @@ export const pkMatchesController = {
     }
   },
 
+  async getMyMatches(req, res) {
+    try {
+      const data = await pkMatchesService.getMyMatches(req.authUser)
+      res.json(data)
+    } catch (error) {
+      res.status(500).json({ message: error.message })
+    }
+  },
+
   async getByPerson(req, res) {
     try {
       const data = await pkMatchesService.getByPerson(req.params.personId);

@@ -162,6 +162,7 @@ export const api = {
 
   pk: {
     matches: () => request({ url: '/api/pk-matches' }),
+    myMatches: () => request({ url: '/api/pk-matches/me' }),
     byPerson: (personId) => request({ url: `/api/pk-matches/person/${personId}` }),
     create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
     update: (id, payload) => request({ url: `/api/pk-matches/${id}`, method: 'PUT', data: payload }),
