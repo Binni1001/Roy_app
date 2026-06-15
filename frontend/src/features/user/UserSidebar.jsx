@@ -2,7 +2,7 @@ import { AccountBox, BrandBlock } from '../../components/shell'
 import { userTabs } from '../../constants/appConstants'
 import { initials } from '../../utils/appUtils'
 
-export function UserSidebar({ activeTab, setActiveTab, activePerson, session, role, onSignOut, isOpen, onClose }) {
+export function UserSidebar({ activeTab, setActiveTab, activePerson, session, role, onSignOut, isOpen, onClose, pkBadge = 0 }) {
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
@@ -25,6 +25,9 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
               onClick={() => setActiveTab(key)}
             >
               {label}
+              {key === 'pk' && pkBadge > 0 && (
+                <span className="pk-nav-badge">{pkBadge}</span>
+              )}
             </button>
           ))}
         </nav>

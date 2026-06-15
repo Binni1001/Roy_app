@@ -12,10 +12,6 @@ export function MemberHero({
   return (
     <section className="member-hero" style={{ backgroundImage: 'url(/images/heart-shuttle.jpg)' }}>
       <div>
-        {activePerson?.avatar_url
-          ? <img src={activePerson.avatar_url} alt={activePerson.full_name} className="avatar large avatar-img" />
-          : <span className="avatar large">{initials(activePerson?.full_name)}</span>
-        }
         <div className="membership-toggle">
           <button
             className={attendanceType === 'fixed' ? 'active' : ''}

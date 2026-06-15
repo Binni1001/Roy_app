@@ -1,8 +1,10 @@
 import { useState } from 'react'
 import { StatusLine } from '../../components/common'
 import { Topbar } from '../../components/shell'
+import { usePkNotifications } from '../../hooks/usePkNotifications'
 import { MemberHero } from './MemberHero'
 import { PkArena } from './PkArena'
+import { PkNotificationToast } from './PkNotificationToast'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserContent } from './UserContent'
@@ -12,6 +14,7 @@ import { useUserPortalData } from './useUserPortalData'
 export function UserPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState('home')
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
+
   const {
     activePerson,
     attendanceType,
@@ -34,6 +37,8 @@ export function UserPortal({ session, role, onSignOut }) {
     updateAttendanceType,
   } = useUserPortalData(session, setActiveTab)
 
+  const { notifications, dismiss, dismissAll } = usePkNotifications(activePerson)
+
   return (
     <div className={`user-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <UserSidebar
@@ -45,6 +50,7 @@ export function UserPortal({ session, role, onSignOut }) {
         onSignOut={onSignOut}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        pkBadge={notifications.length}
       />
       <main className="workspace user-workspace">
         <Topbar
@@ -59,6 +65,18 @@ export function UserPortal({ session, role, onSignOut }) {
           avatarPerson={activePerson}
         />
         <StatusLine text={toast} />
+
+        <PkNotificationToast
+          notifications={notifications}
+          onDismiss={dismiss}
+          onDismissAll={dismissAll}
+          onGoToPk={() => {
+            setActiveTab('pk')
+            dismissAll()
+            if (window.innerWidth <= 860) setSidebarOpen(false)
+          }}
+        />
+
         {loading && !activePerson ? null : !activePerson ? (
           <ProfileSetup
             form={profileForm}
