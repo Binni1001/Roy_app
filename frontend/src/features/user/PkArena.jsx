@@ -18,6 +18,25 @@ function sortByDate(arr) {
   })
 }
 
+function startOfDay(date) {
+  const d = new Date(date);
+  d.setHours(0, 0, 0, 0);
+  return d;
+}
+
+function getResultLock(m) {
+  const now = new Date();
+  const today = startOfDay(now);
+  if (!m.played_at) return { canRecord: false, reason: 'Kèo chưa có ngày đấu' };
+  const matchDay = startOfDay(new Date(m.played_at));
+  if (matchDay > today) return { canRecord: false, reason: `Chưa đến ngày đấu (${formatDate(m.played_at)})` };
+  if (m.status === 'completed' && m.updated_at) {
+    const diffHours = (now - new Date(m.updated_at)) / (1000 * 60 * 60);
+    if (diffHours > 24) return { canRecord: false, reason: 'Kết quả đã khoá sau 24 giờ' };
+  }
+  return { canRecord: true, reason: null };
+}
+
 function MatchCard({ m, activePerson, onSetResult, onCancel }) {
   const iAmChallenger = m.challenger?.id === activePerson?.id || m.challenger_partner?.id === activePerson?.id
   const mySide    = iAmChallenger ? m.challenger       : m.opponent
@@ -28,6 +47,7 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
     (iAmChallenger && m.winner_side === 'challenger') ||
     (!iAmChallenger && m.winner_side === 'opponent')
   )
+  const { canRecord, reason } = getResultLock(m);
 
   return (
     <div className={`pk-match-card${m.status === 'completed' ? (iWon ? ' pk-won' : ' pk-lost') : ''}`}>
@@ -62,7 +82,10 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
 
       {(m.status === 'pending' || m.status === 'active') && (
         <div className="pk-match-actions">
-          <button onClick={() => onSetResult(m)}>Ghi kết quả</button>
+          <span title={!canRecord ? reason : undefined} style={{ display: 'inline-block' }}>
+            <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
+          </span>
+          {!canRecord && reason && <small className="muted pk-lock-hint">{reason}</small>}
           <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
         </div>
       )}

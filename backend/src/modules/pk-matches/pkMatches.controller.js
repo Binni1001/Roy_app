@@ -48,7 +48,8 @@ export const pkMatchesController = {
 
   async update(req, res) {
     try {
-      const data = await pkMatchesService.update(req.params.id, req.body);
+      const isAdmin = req.authUser?.role === 'admin' || req.authUser?.role === 'owner';
+      const data = await pkMatchesService.update(req.params.id, req.body, isAdmin);
       res.json(data);
     } catch (error) {
       res.status(400).json({ message: error.message });

@@ -1672,6 +1672,12 @@ button.danger:hover {
   gap: 8px;
   margin-top: 12px;
   flex-wrap: wrap;
+  align-items: center;
+}
+.pk-lock-hint {
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  width: 100%;
 }
 
 .pk-winner-choice {
