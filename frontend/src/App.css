@@ -1065,6 +1065,26 @@ button.danger:hover {
   transition: opacity 0.2s;
 }
 
+.hamburger-avatar {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.hamburger-initials {
+  font-size: 13px;
+  font-weight: 700;
+  color: #10141b;
+  background: #d8ae52;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+}
+
 .topbar-title {
   display: flex;
   align-items: center;
@@ -1355,6 +1375,210 @@ button.danger:hover {
   /* Modal */
   .modal {
     padding: 14px;
+  }
+}
+
+/* ════════════════════════════════
+   PK ARENA
+   ════════════════════════════════ */
+.pk-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.pk-tabs button {
+  padding: 8px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(239, 231, 210, 0.2);
+  background: rgba(255,255,255,0.04);
+  color: #efe7d2;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.18s;
+}
+
+.pk-tabs button.active,
+.pk-tabs button:hover {
+  background: #d8ae52;
+  color: #10141b;
+  border-color: #d8ae52;
+  font-weight: 600;
+}
+
+.pk-create-btn {
+  margin-bottom: 16px;
+}
+
+/* Leaderboard */
+.pk-rank-top { color: #d8ae52; font-size: 16px; }
+.pk-row-me td { background: rgba(216, 174, 82, 0.07); }
+.pk-win { color: #4caf7d; font-weight: 700; }
+.pk-loss { color: #e57373; font-weight: 700; }
+
+.pk-person-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.pk-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 12px !important;
+  margin: 0 !important;
+  flex-shrink: 0;
+}
+
+/* Match cards */
+.pk-match-list {
+  display: grid;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.pk-match-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 210, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+  transition: border-color 0.2s;
+}
+
+.pk-match-card.pk-won { border-color: rgba(76, 175, 125, 0.4); background: rgba(76, 175, 125, 0.06); }
+.pk-match-card.pk-lost { border-color: rgba(229, 115, 115, 0.3); background: rgba(229, 115, 115, 0.04); }
+
+.pk-match-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+.pk-badge {
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 600;
+}
+
+.pk-badge-pending  { background: rgba(255,193,7,0.15); color: #ffc107; }
+.pk-badge-active   { background: rgba(33,150,243,0.15); color: #64b5f6; }
+.pk-badge-completed{ background: rgba(76,175,125,0.15); color: #4caf7d; }
+.pk-badge-cancelled{ background: rgba(158,158,158,0.15); color: #9e9e9e; }
+.pk-badge-type     { background: rgba(216,174,82,0.12); color: #d8ae52; }
+
+.pk-match-vs {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 10px;
+}
+
+.pk-team {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.pk-vs {
+  font-size: 18px;
+  font-weight: 800;
+  color: #d8ae52;
+  flex-shrink: 0;
+}
+
+.pk-bet {
+  font-size: 13px;
+  color: #c9b174;
+  margin: 6px 0;
+}
+
+.pk-result { font-weight: 600; margin-top: 8px; font-size: 14px; }
+.pk-win-text { color: #4caf7d; }
+.pk-loss-text { color: #e57373; }
+
+.pk-match-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.pk-winner-choice {
+  display: grid;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.pk-winner-choice button {
+  width: 100%;
+  padding: 14px;
+  text-align: left;
+}
+
+/* Player grid */
+.pk-player-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  margin-top: 8px;
+}
+
+.pk-player-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 20px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 210, 0.1);
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+
+.pk-player-card.pk-player-me {
+  border-color: rgba(216, 174, 82, 0.35);
+  background: rgba(216, 174, 82, 0.06);
+}
+
+.pk-player-avatar {
+  margin-bottom: 4px !important;
+}
+
+.pk-player-bio {
+  font-size: 12px;
+  color: #9a9a8a;
+  margin: 4px 0;
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.pk-challenge-btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 8px 12px;
+  font-size: 13px;
+}
+
+.pk-you-tag {
+  margin-top: 8px;
+  font-size: 12px;
+}
+
+@media (max-width: 600px) {
+  .pk-player-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pk-match-vs {
+    gap: 8px;
   }
 }
 

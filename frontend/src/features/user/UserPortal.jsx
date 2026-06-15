@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { StatusLine } from '../../components/common'
 import { Topbar } from '../../components/shell'
 import { MemberHero } from './MemberHero'
+import { PkArena } from './PkArena'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserContent } from './UserContent'
@@ -55,6 +56,7 @@ export function UserPortal({ session, role, onSignOut }) {
           periods={periods}
           onPeriodChange={setSelectedPeriodId}
           onMenuToggle={() => setSidebarOpen((v) => !v)}
+          avatarPerson={activePerson}
         />
         <StatusLine text={toast} />
         {loading && !activePerson ? null : !activePerson ? (
@@ -71,6 +73,8 @@ export function UserPortal({ session, role, onSignOut }) {
             submitting={submitting}
             onSave={updateProfile}
           />
+        ) : activeTab === 'pk' ? (
+          <PkArena activePerson={activePerson} />
         ) : (
           <>
             <MemberHero

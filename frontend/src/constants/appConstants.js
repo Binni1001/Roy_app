@@ -28,6 +28,7 @@ export const adminTabs = [
 export const userTabs = [
   ['home', 'Trang cá nhân'],
   ['profile', 'Sửa hồ sơ'],
+  ['pk', 'Đấu trường'],
   ['debts', 'Công nợ'],
   ['history', 'Lịch sử'],
   ['payment', 'Thanh toán'],

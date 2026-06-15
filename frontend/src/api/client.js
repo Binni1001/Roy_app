@@ -159,6 +159,15 @@ export const api = {
       request({ url: '/api/admin-users', method: 'POST', data: payload }),
     revoke: (id) => request({ url: `/api/admin-users/${id}`, method: 'DELETE' }),
   },
+
+  pk: {
+    matches: () => request({ url: '/api/pk-matches' }),
+    byPerson: (personId) => request({ url: `/api/pk-matches/person/${personId}` }),
+    create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
+    update: (id, payload) => request({ url: `/api/pk-matches/${id}`, method: 'PUT', data: payload }),
+    leaderboard: () => request({ url: '/api/pk-matches/leaderboard' }),
+    people: () => request({ url: '/api/pk-matches/people' }),
+  },
 }
 
 export default http

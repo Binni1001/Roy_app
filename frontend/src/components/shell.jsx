@@ -1,5 +1,5 @@
 import logoUrl from '../assets/logo.png'
-import { displayRole } from '../utils/appUtils'
+import { displayRole, initials } from '../utils/appUtils'
 
 export function BrandBlock({ caption }) {
   return (
@@ -31,13 +31,19 @@ export function AccountBox({ session, role, onSignOut, showRole = true }) {
   )
 }
 
-export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, onMenuToggle, children }) {
+export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, onMenuToggle, avatarPerson, children }) {
   return (
     <header className="topbar">
       <div className="topbar-title">
         {onMenuToggle && (
           <button className="hamburger" onClick={onMenuToggle} aria-label="Mở menu">
-            <span /><span /><span />
+            {avatarPerson ? (
+              avatarPerson.avatar_url
+                ? <img src={avatarPerson.avatar_url} alt={avatarPerson.full_name} className="hamburger-avatar" />
+                : <span className="hamburger-initials">{initials(avatarPerson.full_name)}</span>
+            ) : (
+              <><span /><span /><span /></>
+            )}
           </button>
         )}
         <div>
