@@ -47,7 +47,7 @@ export function UserPortal({ session, role, onSignOut }) {
       />
       <main className="workspace user-workspace">
         <Topbar
-          eyebrow="Khu người dùng"
+          eyebrow=""
           title={activePerson?.full_name || 'Tài khoản cầu lông'}
           loading={loading}
           onRefresh={boot}

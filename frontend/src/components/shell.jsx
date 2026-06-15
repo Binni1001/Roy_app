@@ -21,11 +21,11 @@ export function BrandLogo() {
   )
 }
 
-export function AccountBox({ session, role, onSignOut }) {
+export function AccountBox({ session, role, onSignOut, showRole = true }) {
   return (
     <div className="account-box">
       <span>{session?.user?.email || 'Tài khoản Google'}</span>
-      <small>Quyền: {displayRole(role)}</small>
+      {showRole && <small>Quyền: {displayRole(role)}</small>}
       <button onClick={onSignOut}>Đăng xuất</button>
     </div>
   )

@@ -7,12 +7,15 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`user-sidebar${isOpen ? ' sidebar--open' : ''}`}>
-        <BrandBlock caption="Khu người dùng" />
-        <AccountBox session={session} role={role} onSignOut={onSignOut} />
+        <BrandBlock caption="Roy Badminton" />
+        <AccountBox session={session} role={role} onSignOut={onSignOut} showRole={false} />
         <div className="profile-card">
-          <span className="avatar">{initials(activePerson?.full_name)}</span>
+          {activePerson?.avatar_url
+            ? <img src={activePerson.avatar_url} alt={activePerson.full_name} className="avatar avatar-img" />
+            : <span className="avatar">{initials(activePerson?.full_name)}</span>
+          }
           <strong>{activePerson?.full_name || 'Chọn người dùng'}</strong>
-          <small>{activePerson?.phone || 'Chưa có số điện thoại'}</small>
+          <small>{activePerson?.nickname || activePerson?.phone || ''}</small>
         </div>
         <nav>
           {userTabs.map(([key, label]) => (
