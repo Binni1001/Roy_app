@@ -940,7 +940,7 @@ button:disabled {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 12px;
+  margin-bottom: 0;
 }
 .panel-header h2 {
   margin: 0;
@@ -948,6 +948,15 @@ button:disabled {
 .panel-header-action button {
   font-size: 0.85rem;
   padding: 5px 12px;
+}
+.panel-banner {
+  width: calc(100% + 32px);
+  margin: 10px -16px 16px;
+  height: 110px;
+  background: url('/images/panel-banner.jpg') center 60% / cover no-repeat;
+  opacity: 0.55;
+  border-radius: 0;
+  pointer-events: none;
 }
 
 .form,

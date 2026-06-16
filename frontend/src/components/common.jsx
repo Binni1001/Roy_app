@@ -5,6 +5,7 @@ export function Panel({ title, children, wide = false, action }) {
         <h2>{title}</h2>
         {action && <div className="panel-header-action">{action}</div>}
       </div>
+      {action && <div className="panel-banner" aria-hidden="true" />}
       {children}
     </article>
   )
