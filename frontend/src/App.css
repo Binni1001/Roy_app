@@ -568,8 +568,16 @@ nav button,
   min-height: 40px;
   border: 1px solid rgba(239, 231, 210, 0.14);
   border-radius: 8px;
-  color: #efe7d2;
+  color: #fff;
+  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
+              url('/images/panel-banner.jpg') center 65% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+}
+
+nav button {
   background: #1a2029;
+  text-shadow: none;
+  color: #efe7d2;
 }
 
 nav button {
@@ -589,8 +597,16 @@ nav button.active,
 .form button:hover,
 .stack button:hover,
 .member-hero button:hover {
+  color: #fff;
+  background: linear-gradient(rgba(180,130,20,0.72), rgba(180,130,20,0.72)),
+              url('/images/panel-banner.jpg') center 65% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+}
+
+nav button.active {
   color: #141414;
   background: #d8ae52;
+  text-shadow: none;
 }
 
 nav button.active small {
@@ -812,14 +828,18 @@ button:disabled {
   border: 1px solid rgba(239, 231, 210, 0.14);
   border-radius: 8px;
   padding: 0 14px;
-  color: #efe7d2;
-  background: #1a2029;
+  color: #fff;
+  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
+              url('/images/panel-banner.jpg') center 65% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
 }
 
 .modal-actions button[type='submit'],
 .modal-actions button:not(.danger):last-child {
-  color: #171717;
-  background: #d8ae52;
+  color: #fff;
+  background: linear-gradient(rgba(180,130,20,0.72), rgba(180,130,20,0.72)),
+              url('/images/panel-banner.jpg') center 65% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
 }
 
 .metrics {
@@ -949,31 +969,14 @@ button:disabled {
   font-size: 0.85rem;
   padding: 5px 12px;
 }
-/* Add buttons with badminton background image */
 .panel-header-action button,
 .pk-create-btn {
-  background-image: url('/images/panel-banner.jpg');
-  background-size: cover;
-  background-position: center 65%;
-  position: relative;
-  overflow: hidden;
   color: #fff;
-  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
-  border: none;
-}
-.panel-header-action button::before,
-.pk-create-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background: rgba(0,0,0,0.45);
-  z-index: 0;
-}
-.panel-header-action button span,
-.panel-header-action button,
-.pk-create-btn {
-  position: relative;
-  z-index: 1;
+  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
+              url('/images/panel-banner.jpg') center 65% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  border: 1px solid rgba(239, 231, 210, 0.14);
+  border-radius: 8px;
 }
 
 .form,
