@@ -572,12 +572,15 @@ nav button,
   background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
               url('/images/panel-banner.jpg') center 65% / cover;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
 }
 
 nav button {
   background: #1a2029;
   text-shadow: none;
   color: #efe7d2;
+  transition: background 0.18s ease, color 0.18s ease;
 }
 
 nav button {
@@ -592,15 +595,33 @@ nav button small {
   color: #7f8995;
 }
 
-nav button.active,
+/* Hover: brighten all action buttons */
 .toolbar button:hover,
 .form button:hover,
 .stack button:hover,
-.member-hero button:hover {
-  color: #fff;
-  background: linear-gradient(rgba(180,130,20,0.72), rgba(180,130,20,0.72)),
-              url('/images/panel-banner.jpg') center 65% / cover;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+.member-hero button:hover,
+.actions button:hover,
+.checkout button:hover,
+.modal-actions button:hover,
+.panel-header-action button:hover,
+.pk-create-btn:hover {
+  filter: brightness(1.45);
+  border-color: rgba(239, 231, 210, 0.35);
+  box-shadow: 0 0 10px rgba(216, 174, 82, 0.25);
+}
+
+/* Active (click) */
+.toolbar button:active,
+.form button:active,
+.stack button:active,
+.member-hero button:active,
+.actions button:active,
+.checkout button:active,
+.modal-actions button:active,
+.panel-header-action button:active,
+.pk-create-btn:active {
+  filter: brightness(1.7);
+  box-shadow: 0 0 16px rgba(216, 174, 82, 0.4);
 }
 
 nav button.active {
@@ -832,6 +853,8 @@ button:disabled {
   background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
               url('/images/panel-banner.jpg') center 65% / cover;
   text-shadow: 0 1px 4px rgba(0,0,0,0.9);
+  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
 }
 
 .modal-actions button[type='submit'],
@@ -977,6 +1000,8 @@ button:disabled {
   text-shadow: 0 1px 4px rgba(0,0,0,0.9);
   border: 1px solid rgba(239, 231, 210, 0.14);
   border-radius: 8px;
+  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
 }
 
 .form,
