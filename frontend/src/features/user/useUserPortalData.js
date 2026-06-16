@@ -111,9 +111,14 @@ export function useUserPortalData(session, setActiveTab) {
         period_id: selectedPeriodId,
       })
       setCheckout(result)
-      setActiveTab('payment')
-      setToast('Đã tạo lệnh thanh toán qua PayOS.')
       void loadPersonData(activePerson.id)
+      const url = result?.checkout_url || result?.checkoutUrl || result?.payment?.checkout_url
+      if (url) {
+        window.location.href = url
+      } else {
+        setActiveTab('payment')
+        setToast('Đã tạo lệnh thanh toán qua PayOS.')
+      }
       return result
     } catch (error) {
       setToast(errorText(error))
