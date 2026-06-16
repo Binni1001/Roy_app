@@ -45,4 +45,13 @@ export const clubFundTransactionsController = {
       res.status(400).json({ message: error.message });
     }
   },
+
+  async deposit(req, res) {
+    try {
+      const data = await clubFundTransactionsService.deposit(req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
 };

@@ -120,6 +120,8 @@ export function AdminContent(props) {
     <FundPanel
       balances={data.balances}
       fund={data.fund}
+      debts={data.debts}
+      people={people}
       fundForm={forms.fund}
       selectedPeriodId={selectedPeriodId}
       setForm={setForm}

@@ -1,4 +1,5 @@
 import { clubFundTransactionsRepository } from "./clubFundTransactions.repository.js";
+import { debtsRepository } from "../debts/debts.repository.js";
 import { validateAmount, validateText, assertValid } from "../../utils/validators.js";
 
 const allowedTypes = ["income", "expense", "refund", "adjustment"];
@@ -68,5 +69,30 @@ export const clubFundTransactionsService = {
     const { error } = await clubFundTransactionsRepository.remove(id);
     if (error) throw new Error(error.message);
     return { id };
+  },
+
+  async deposit(payload = {}) {
+    if (!payload.person_id) throw new Error("Vui lòng chọn người nộp quỹ");
+    assertValid(validateAmount(payload.amount, "Số tiền nộp quỹ"));
+    assertValid(validateText(payload.description, "Mô tả", 500));
+
+    const debtIds = Array.isArray(payload.debt_ids) ? payload.debt_ids.filter(Boolean) : [];
+
+    for (const debtId of debtIds) {
+      const { error } = await debtsRepository.updateStatus(debtId, "paid");
+      if (error) throw new Error(error.message);
+    }
+
+    const { data, error } = await clubFundTransactionsRepository.create({
+      period_id: payload.period_id || null,
+      person_id: payload.person_id,
+      payment_id: null,
+      transaction_type: "income",
+      amount: Number(payload.amount),
+      description: payload.description || null
+    });
+
+    if (error) throw new Error(error.message);
+    return data;
   },
 };
