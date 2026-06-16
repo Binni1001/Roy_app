@@ -47,5 +47,14 @@ export const shuttleExpensesController = {
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
+  },
+
+  async createWithFundSplit(req, res) {
+    try {
+      const data = await shuttleExpensesService.createWithFundSplit(req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
   }
 };

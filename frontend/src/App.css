@@ -1060,6 +1060,12 @@ td {
   padding: 12px 0;
 }
 
+.error {
+  color: #e57373;
+  font-size: 14px;
+  margin: 0;
+}
+
 .checkout {
   display: grid;
   gap: 8px;

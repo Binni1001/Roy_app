@@ -5,6 +5,7 @@ import { formatMoney } from '../../../utils/appUtils'
 
 export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm, selectedPeriodId, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
+  const [showFundSplit, setShowFundSplit] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
   const [deletingExpense, setDeletingExpense] = useState(null)
 
@@ -19,7 +20,12 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
         </Panel>
         <Panel
           title="Chi phí cầu"
-          action={<button onClick={() => setShowAdd(true)}>+ Thêm chi phí</button>}
+          action={(
+            <ActionGroup>
+              <button onClick={() => setShowFundSplit(true)}>+ Mua cầu (quỹ thiếu)</button>
+              <button onClick={() => setShowAdd(true)}>+ Thêm chi phí</button>
+            </ActionGroup>
+          )}
         >
           <SimpleTable
             rows={expenses}
@@ -78,6 +84,18 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
             </footer>
           </form>
         </Modal>
+      )}
+
+      {showFundSplit && (
+        <FundSplitModal
+          people={people}
+          periodId={selectedPeriodId}
+          onClose={() => setShowFundSplit(false)}
+          onSubmit={(payload) => {
+            submit(() => api.shuttleExpenses.createWithFundSplit(payload), 'Đã ghi nhận mua cầu (chia nguồn quỹ/cá nhân).')
+            setShowFundSplit(false)
+          }}
+        />
       )}
 
       {editingExpense && (
@@ -150,6 +168,97 @@ function ShuttleExpenseEditModal({ expense, onClose, onSubmit }) {
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+function FundSplitModal({ people, periodId, onClose, onSubmit }) {
+  const [draft, setDraft] = useState({
+    buyer_id: '',
+    buy_type: 'tube',
+    tube_count: 1,
+    shuttle_per_tube: 12,
+    single_count: 0,
+    total_price: '',
+    fund_amount: '',
+    buy_date: new Date().toISOString().slice(0, 10),
+    note: '',
+  })
+  const [error, setError] = useState('')
+
+  function update(field, value) {
+    setError('')
+    setDraft((d) => ({ ...d, [field]: value }))
+  }
+
+  const totalPrice = Number(draft.total_price || 0)
+  const fundAmount = Number(draft.fund_amount || 0)
+  const personalAmount = totalPrice - fundAmount
+
+  function validate() {
+    if (!draft.buyer_id) return 'Vui lòng chọn người mua/đại diện mua cầu.'
+    if (!totalPrice || totalPrice <= 0) return 'Tổng giá mua cầu phải lớn hơn 0.'
+    if (fundAmount < 0) return 'Số tiền quỹ chi không được âm.'
+    if (fundAmount > totalPrice) return 'Số tiền quỹ chi không được lớn hơn tổng giá mua cầu.'
+    if (personalAmount < 0) return 'Số tiền thành viên tự bỏ không hợp lệ.'
+    if (fundAmount === 0 && personalAmount === 0) return 'Phải có ít nhất một nguồn chi (quỹ hoặc cá nhân) lớn hơn 0.'
+    const tubeCount = Number(draft.tube_count || 0)
+    const singleCount = Number(draft.single_count || 0)
+    if (draft.buy_type === 'tube' && tubeCount <= 0) return 'Mua theo ống thì số ống phải lớn hơn 0.'
+    if (draft.buy_type === 'single' && singleCount <= 0) return 'Mua lẻ thì số cầu lẻ phải lớn hơn 0.'
+    if (draft.buy_type === 'mixed' && tubeCount <= 0 && singleCount <= 0) return 'Mua hỗn hợp thì phải có số ống hoặc số cầu lẻ.'
+    if (draft.buy_date && draft.buy_date > new Date().toISOString().slice(0, 10)) return 'Ngày mua không được ở tương lai.'
+    return ''
+  }
+
+  return (
+    <Modal title="Mua cầu khi quỹ thiếu" onClose={onClose}>
+      <form className="form" onSubmit={(e) => {
+        e.preventDefault()
+        const message = validate()
+        if (message) {
+          setError(message)
+          return
+        }
+        onSubmit({
+          period_id: periodId,
+          buyer_id: draft.buyer_id,
+          buy_type: draft.buy_type,
+          tube_count: Number(draft.tube_count || 0),
+          shuttle_per_tube: Number(draft.shuttle_per_tube || 12),
+          single_count: Number(draft.single_count || 0),
+          total_price: totalPrice,
+          fund_amount: fundAmount,
+          buy_date: draft.buy_date,
+          note: draft.note,
+        })
+      }}>
+        <p className="empty">
+          Dùng khi quỹ không đủ tiền mua cầu và có thành viên bỏ thêm tiền cá nhân để bù vào.
+          Phần quỹ chi sẽ tự ghi vào Sổ quỹ, phần thành viên tự bỏ sẽ được chia/hoàn lại khi chốt tiền cầu.
+        </p>
+        <SelectPeople people={people} value={draft.buyer_id} onChange={(v) => update('buyer_id', v)} label="Người mua/đại diện" />
+        <label>Loại mua
+          <select value={draft.buy_type} onChange={(e) => update('buy_type', e.target.value)}>
+            <option value="tube">Theo ống</option>
+            <option value="single">Cầu lẻ</option>
+            <option value="mixed">Cả ống và lẻ</option>
+          </select>
+        </label>
+        <Input label="Số ống" type="number" value={draft.tube_count} onChange={(v) => update('tube_count', v)} />
+        <Input label="Số cầu mỗi ống" type="number" value={draft.shuttle_per_tube} onChange={(v) => update('shuttle_per_tube', v)} />
+        <Input label="Số cầu lẻ" type="number" value={draft.single_count} onChange={(v) => update('single_count', v)} />
+        <Input label="Tổng giá mua cầu" type="number" value={draft.total_price} onChange={(v) => update('total_price', v)} />
+        <Input label="Số tiền quỹ chi" type="number" value={draft.fund_amount} onChange={(v) => update('fund_amount', v)} />
+        <p className="empty">Thành viên tự bỏ: <strong>{formatMoney(personalAmount > 0 ? personalAmount : 0)}</strong></p>
+        <Input label="Ngày mua" type="date" value={draft.buy_date} onChange={(v) => update('buy_date', v)} />
+        <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
+        {error && <p className="error">{error}</p>}
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Ghi nhận mua cầu</button>
         </footer>
       </form>
     </Modal>

@@ -128,6 +128,8 @@ export const api = {
     byPeriod: (periodId) => request({ url: `/api/shuttle-expenses/period/${periodId}` }),
     create: (payload) =>
       request({ url: '/api/shuttle-expenses', method: 'POST', data: payload }),
+    createWithFundSplit: (payload) =>
+      request({ url: '/api/shuttle-expenses/with-fund-split', method: 'POST', data: payload }),
     update: (id, payload) =>
       request({ url: `/api/shuttle-expenses/${id}`, method: 'PUT', data: payload }),
     remove: (id) => request({ url: `/api/shuttle-expenses/${id}`, method: 'DELETE' }),

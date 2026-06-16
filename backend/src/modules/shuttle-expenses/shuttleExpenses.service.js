@@ -1,7 +1,30 @@
 import { shuttleExpensesRepository } from "./shuttleExpenses.repository.js";
+import { clubFundTransactionsRepository } from "../club-fund-transactions/clubFundTransactions.repository.js";
 import { validateDateNotFuture, validateAmount, validateText, assertValid } from "../../utils/validators.js";
 
 const allowedBuyTypes = ["tube", "single", "mixed"];
+
+function validateBuyTypeAndCounts(buyType, tubeCount, shuttlePerTube, singleCount) {
+  if (!allowedBuyTypes.includes(buyType)) {
+    throw new Error("Loai mua cau khong hop le");
+  }
+
+  if (tubeCount < 0) throw new Error("So ong khong duoc nho hon 0");
+  if (shuttlePerTube <= 0) throw new Error("So qua moi ong phai lon hon 0");
+  if (singleCount < 0) throw new Error("So qua le khong duoc nho hon 0");
+
+  if (buyType === "tube" && tubeCount <= 0) {
+    throw new Error("Mua theo ong thi so ong phai lon hon 0");
+  }
+
+  if (buyType === "single" && singleCount <= 0) {
+    throw new Error("Mua le thi so qua le phai lon hon 0");
+  }
+
+  if (buyType === "mixed" && tubeCount <= 0 && singleCount <= 0) {
+    throw new Error("Mua mixed thi phai co so ong hoac so qua le");
+  }
+}
 
 export const shuttleExpensesService = {
   async getAll() {
@@ -43,35 +66,16 @@ export const shuttleExpensesService = {
     }
 
     const buyType = payload.buy_type || "tube";
-
-    if (!allowedBuyTypes.includes(buyType)) {
-      throw new Error("Loai mua cau khong hop le");
-    }
-
     const tubeCount = Number(payload.tube_count || 0);
     const shuttlePerTube = Number(payload.shuttle_per_tube || 12);
     const singleCount = Number(payload.single_count || 0);
     const totalAmount = Number(payload.total_amount || 0);
 
-    if (tubeCount < 0) throw new Error("So ong khong duoc nho hon 0");
-    if (shuttlePerTube <= 0) throw new Error("So qua moi ong phai lon hon 0");
-    if (singleCount < 0) throw new Error("So qua le khong duoc nho hon 0");
+    validateBuyTypeAndCounts(buyType, tubeCount, shuttlePerTube, singleCount);
     assertValid(validateAmount(totalAmount, "Tong tien mua cau"));
 
     // Validate buy_date: không được ở tương lai
     assertValid(validateDateNotFuture(payload.buy_date, "Ngay mua cau"));
-
-    if (buyType === "tube" && tubeCount <= 0) {
-      throw new Error("Mua theo ong thi so ong phai lon hon 0");
-    }
-
-    if (buyType === "single" && singleCount <= 0) {
-      throw new Error("Mua le thi so qua le phai lon hon 0");
-    }
-
-    if (buyType === "mixed" && tubeCount <= 0 && singleCount <= 0) {
-      throw new Error("Mua mixed thi phai co so ong hoac so qua le");
-    }
 
     const { data, error } = await shuttleExpensesRepository.create({
       period_id: payload.period_id,
@@ -144,5 +148,92 @@ export const shuttleExpensesService = {
     const { data, error } = await shuttleExpensesRepository.remove(id);
     if (error) throw new Error(error.message);
     return data;
+  },
+
+  // Mua cau khi quy khong du tien: tach 1 lan mua thanh 2 nguon -
+  // phan quy chi (ghi vao so quy) va phan thanh vien tu bo tien (duoc
+  // chia/hoan lai qua chot tien cau).
+  async createWithFundSplit(payload = {}) {
+    if (!payload.period_id) throw new Error("Period ID khong duoc de trong");
+    if (!payload.buyer_id) throw new Error("Vui long chon nguoi mua/dai dien mua cau");
+
+    const { data: period, error: periodError } = await shuttleExpensesRepository.getPeriodById(payload.period_id);
+    if (periodError) throw new Error(periodError.message);
+    if (!period) throw new Error("Period khong ton tai");
+    if (period.status === "closed") {
+      throw new Error("Ky nay da dong, khong the them chi phi cau");
+    }
+    if (period.status === "draft") {
+      throw new Error("Ky nay chua mo, khong the them chi phi cau");
+    }
+
+    const { data: membership, error: memberError } = await shuttleExpensesRepository.getFixedMember(
+      payload.period_id,
+      payload.buyer_id
+    );
+    if (memberError) throw new Error(memberError.message);
+    if (!membership) {
+      throw new Error("Nguoi mua cau phai la fixed member cua ky nay");
+    }
+
+    const buyType = payload.buy_type || "tube";
+    const tubeCount = Number(payload.tube_count || 0);
+    const shuttlePerTube = Number(payload.shuttle_per_tube || 12);
+    const singleCount = Number(payload.single_count || 0);
+
+    validateBuyTypeAndCounts(buyType, tubeCount, shuttlePerTube, singleCount);
+    assertValid(validateDateNotFuture(payload.buy_date, "Ngay mua cau"));
+    assertValid(validateText(payload.note, "Ghi chu", 500));
+
+    const totalPrice = Number(payload.total_price);
+    assertValid(validateAmount(totalPrice, "Tong gia mua cau"));
+
+    const fundAmount = Number(payload.fund_amount || 0);
+    assertValid(validateAmount(fundAmount, "So tien quy chi", true));
+
+    if (fundAmount > totalPrice) {
+      throw new Error("So tien quy chi khong duoc lon hon tong gia mua cau");
+    }
+
+    const personalAmount = Math.round((totalPrice - fundAmount) * 100) / 100;
+
+    if (personalAmount <= 0 && fundAmount <= 0) {
+      throw new Error("Phai co it nhat mot nguon chi tien (quy hoac ca nhan) lon hon 0");
+    }
+
+    const buyDate = payload.buy_date || new Date().toISOString().slice(0, 10);
+    const note = payload.note || null;
+
+    const { data: shuttleExpense, error: shuttleError } = await shuttleExpensesRepository.create({
+      period_id: payload.period_id,
+      buyer_id: payload.buyer_id,
+      buy_type: buyType,
+      tube_count: tubeCount,
+      shuttle_per_tube: shuttlePerTube,
+      single_count: singleCount,
+      total_amount: personalAmount,
+      buy_date: buyDate,
+      note
+    });
+
+    if (shuttleError) throw new Error(shuttleError.message);
+
+    let fundTransaction = null;
+
+    if (fundAmount > 0) {
+      const { data, error } = await clubFundTransactionsRepository.create({
+        period_id: payload.period_id,
+        person_id: payload.buyer_id,
+        payment_id: null,
+        transaction_type: "expense",
+        amount: fundAmount,
+        description: note ? `Mua cau (quy chi) - ${note}` : "Mua cau (quy chi)"
+      });
+
+      if (error) throw new Error(error.message);
+      fundTransaction = data;
+    }
+
+    return { shuttle_expense: shuttleExpense, fund_transaction: fundTransaction };
   }
 };
