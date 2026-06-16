@@ -37,7 +37,7 @@ export const clubFundTransactionsRepository = {
   async update(id, payload) {
     return await supabase
       .from("club_fund_transactions")
-      .update({ ...payload, updated_at: new Date().toISOString() })
+      .update(payload)
       .eq("id", id)
       .select(`*, person:people(id, full_name, nickname, phone), period:periods(id, name)`)
       .single();
