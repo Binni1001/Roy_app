@@ -1,5 +1,13 @@
-export function Panel({ title, children, wide = false }) {
-  return <article className={wide ? 'panel wide' : 'panel'}><h2>{title}</h2>{children}</article>
+export function Panel({ title, children, wide = false, action }) {
+  return (
+    <article className={wide ? 'panel wide' : 'panel'}>
+      <div className="panel-header">
+        <h2>{title}</h2>
+        {action && <div className="panel-header-action">{action}</div>}
+      </div>
+      {children}
+    </article>
+  )
 }
 
 export function Input({ label, value, onChange, type = 'text', required = false }) {

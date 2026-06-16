@@ -6,36 +6,17 @@ import { emptyPerson } from '../../../constants/appConstants'
 import { displayValue, initials } from '../../../utils/appUtils'
 
 export function PeoplePanel({ people, form, setForm, submit }) {
+  const [showAdd, setShowAdd] = useState(false)
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
 
   return (
     <>
-      <section className="grid two">
-        <Panel title="Thêm người">
-          <form
-            className="form"
-            onSubmit={(event) => {
-              event.preventDefault()
-              submit(() => api.people.create(form), 'Đã thêm người mới.')
-              setForm('person', emptyPerson)
-            }}
-          >
-            <Input label="Họ tên" value={form.full_name} onChange={(value) => setForm('person', { full_name: value })} required />
-            <Input label="Điện thoại" value={form.phone} onChange={(value) => setForm('person', { phone: value })} />
-            <Input label="Thư điện tử" value={form.email} onChange={(value) => setForm('person', { email: value })} />
-            <label>
-              Hình thức chơi
-              <select value={form.attendance_type} onChange={(event) => setForm('person', { attendance_type: event.target.value })}>
-                <option value="fixed">Đánh cố định</option>
-                <option value="guest">Đánh vãng lai</option>
-              </select>
-            </label>
-            <Input label="Ghi chú" value={form.note} onChange={(value) => setForm('person', { note: value })} />
-            <button>Thêm người</button>
-          </form>
-        </Panel>
-        <Panel title="Danh sách người">
+      <section className="grid one">
+        <Panel
+          title="Danh sách người"
+          action={<button onClick={() => setShowAdd(true)}>+ Thêm người</button>}
+        >
           <SimpleTable
             rows={people}
             columns={[
@@ -54,6 +35,17 @@ export function PeoplePanel({ people, form, setForm, submit }) {
           />
         </Panel>
       </section>
+
+      {showAdd && (
+        <PersonAddModal
+          onClose={() => setShowAdd(false)}
+          onSubmit={(payload) => {
+            submit(() => api.people.create(payload), 'Đã thêm người mới.')
+            setShowAdd(false)
+          }}
+        />
+      )}
+
       {editingPerson && (
         <PersonEditModal
           person={editingPerson}
@@ -78,6 +70,7 @@ export function PeoplePanel({ people, form, setForm, submit }) {
           }}
         />
       )}
+
       {deletingPerson && (
         <ConfirmModal
           title="Xóa người chơi"
@@ -95,6 +88,32 @@ export function PeoplePanel({ people, form, setForm, submit }) {
   )
 }
 
+function PersonAddModal({ onClose, onSubmit }) {
+  const [draft, setDraft] = useState({ ...emptyPerson })
+  function update(field, value) { setDraft((d) => ({ ...d, [field]: value })) }
+
+  return (
+    <Modal title="Thêm người" onClose={onClose}>
+      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit(draft) }}>
+        <Input label="Họ tên" value={draft.full_name} onChange={(v) => update('full_name', v)} required />
+        <Input label="Điện thoại" value={draft.phone} onChange={(v) => update('phone', v)} />
+        <Input label="Thư điện tử" value={draft.email} onChange={(v) => update('email', v)} />
+        <label>Hình thức chơi
+          <select value={draft.attendance_type} onChange={(e) => update('attendance_type', e.target.value)}>
+            <option value="fixed">Đánh cố định</option>
+            <option value="guest">Đánh vãng lai</option>
+          </select>
+        </label>
+        <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Thêm người</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
 function PersonEditModal({ person, onClose, onSubmit }) {
   const [draft, setDraft] = useState({
     full_name: person.full_name || '',
@@ -109,9 +128,7 @@ function PersonEditModal({ person, onClose, onSubmit }) {
   const [newPassword, setNewPassword] = useState('')
   const fileRef = useRef()
 
-  function update(field, value) {
-    setDraft((current) => ({ ...current, [field]: value }))
-  }
+  function update(field, value) { setDraft((d) => ({ ...d, [field]: value })) }
 
   function handleAvatarChange(e) {
     const file = e.target.files?.[0]
@@ -123,51 +140,35 @@ function PersonEditModal({ person, onClose, onSubmit }) {
 
   return (
     <Modal title="Sửa người chơi" onClose={onClose}>
-      <form
-        className="form"
-        onSubmit={(event) => {
-          event.preventDefault()
-          onSubmit(draft, avatarFile || null, newPassword || null)
-        }}
-      >
-        {/* Avatar */}
+      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit(draft, avatarFile || null, newPassword || null) }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div
-            className="avatar large avatar-upload-circle"
             onClick={() => fileRef.current?.click()}
             title="Nhấn để đổi ảnh"
-            style={{ cursor: 'pointer', width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+            style={{ cursor: 'pointer', width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'var(--surface-2, #333)' }}
           >
             {avatarPreview
               ? <img src={avatarPreview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
-              : <span>{initials(draft.full_name)}</span>}
+              : <span style={{ fontSize: '1.4rem' }}>{initials(draft.full_name)}</span>}
           </div>
           <small className="muted" style={{ cursor: 'pointer' }} onClick={() => fileRef.current?.click()}>Nhấn để đổi ảnh đại diện</small>
           <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
         </div>
 
-        <Input label="Họ tên" value={draft.full_name} onChange={(value) => update('full_name', value)} required />
-        <Input label="Điện thoại" value={draft.phone} onChange={(value) => update('phone', value)} />
-        <Input label="Thư điện tử" value={draft.email} onChange={(value) => update('email', value)} />
-        <label>
-          Hình thức chơi
-          <select value={draft.attendance_type} onChange={(event) => update('attendance_type', event.target.value)}>
+        <Input label="Họ tên" value={draft.full_name} onChange={(v) => update('full_name', v)} required />
+        <Input label="Điện thoại" value={draft.phone} onChange={(v) => update('phone', v)} />
+        <Input label="Thư điện tử" value={draft.email} onChange={(v) => update('email', v)} />
+        <label>Hình thức chơi
+          <select value={draft.attendance_type} onChange={(e) => update('attendance_type', e.target.value)}>
             <option value="fixed">Đánh cố định</option>
             <option value="guest">Đánh vãng lai</option>
           </select>
         </label>
-        <Input label="Ghi chú" value={draft.note} onChange={(value) => update('note', value)} />
+        <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
 
-        {/* Password */}
         <label>
           Mật khẩu mới <small className="muted">(để trống nếu không đổi)</small>
-          <input
-            type="password"
-            value={newPassword}
-            onChange={(e) => setNewPassword(e.target.value)}
-            placeholder="Tối thiểu 6 ký tự"
-            autoComplete="new-password"
-          />
+          <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Tối thiểu 6 ký tự" autoComplete="new-password" />
         </label>
 
         <footer className="modal-actions">

@@ -935,6 +935,21 @@ button:disabled {
   grid-column: 1 / -1;
 }
 
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+.panel-header h2 {
+  margin: 0;
+}
+.panel-header-action button {
+  font-size: 0.85rem;
+  padding: 5px 12px;
+}
+
 .form,
 .stack {
   display: grid;
