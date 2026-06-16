@@ -24,6 +24,7 @@ export function PeoplePanel({ people, form, setForm, submit }) {
               ['phone', 'Điện thoại'],
               ['email', 'Thư điện tử'],
               ['attendance_type', 'Hình thức chơi', displayValue],
+              ['status', 'Trạng thái', (v) => v === 'inactive' ? 'Đã nghỉ' : 'Đang hoạt động'],
               ['note', 'Ghi chú'],
             ]}
             actions={(person) => (
@@ -120,6 +121,7 @@ function PersonEditModal({ person, onClose, onSubmit }) {
     phone: person.phone || '',
     email: person.email || '',
     attendance_type: person.attendance_type || 'guest',
+    status: person.status || 'active',
     note: person.note || '',
     avatar_url: person.avatar_url || '',
   })
@@ -162,6 +164,12 @@ function PersonEditModal({ person, onClose, onSubmit }) {
           <select value={draft.attendance_type} onChange={(e) => update('attendance_type', e.target.value)}>
             <option value="fixed">Đánh cố định</option>
             <option value="guest">Đánh vãng lai</option>
+          </select>
+        </label>
+        <label>Trạng thái
+          <select value={draft.status} onChange={(e) => update('status', e.target.value)}>
+            <option value="active">Đang hoạt động</option>
+            <option value="inactive">Đã nghỉ</option>
           </select>
         </label>
         <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />

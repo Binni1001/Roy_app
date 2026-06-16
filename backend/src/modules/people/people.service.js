@@ -257,6 +257,11 @@ export const peopleService = {
     const { data, error } = await peopleRepository.remove(id);
 
     if (error) {
+      if (error.code === "23503") {
+        throw new Error(
+          "Không thể xóa người này vì đã có dữ liệu liên quan (kỳ sinh hoạt, công nợ, kèo PK, chi phí cầu...). Hãy chuyển trạng thái sang \"Nghỉ\" thay vì xóa."
+        );
+      }
       throw new Error(error.message);
     }
 
