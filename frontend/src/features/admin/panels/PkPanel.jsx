@@ -23,6 +23,77 @@ function PersonCell({ p }) {
   )
 }
 
+function Avatar({ person, size = 'md' }) {
+  const cls = size === 'lg' ? 'pk-avatar-lg' : 'pk-avatar-sm'
+  if (!person) return <div className={`pk-avatar-circle ${cls} muted`}>?</div>
+  if (person.avatar_url) return <img src={person.avatar_url} alt={person.full_name} className={`pk-avatar-circle ${cls} avatar-img`} />
+  return <div className={`pk-avatar-circle ${cls}`}>{initials(person.full_name)}</div>
+}
+
+function TeamBlock({ main, partner, label, isWinner }) {
+  return (
+    <div className={`pk-team-block${isWinner ? ' pk-winner-side' : ''}`}>
+      <div className="pk-team-avatars">
+        <Avatar person={main} size="lg" />
+        {partner && <Avatar person={partner} size="md" />}
+      </div>
+      <div className="pk-team-names">
+        <strong>{main?.full_name || '?'}</strong>
+        {partner && <span className="pk-partner-name">& {partner.full_name}</span>}
+      </div>
+      <span className="pk-team-label">{label}</span>
+      {isWinner && <span className="pk-crown">🏆</span>}
+    </div>
+  )
+}
+
+function AdminMatchCard({ m, onEdit, onDelete }) {
+  const challengerWon = m.winner_side === 'challenger'
+  const opponentWon   = m.winner_side === 'opponent'
+
+  return (
+    <div className={`pk-match-card pk-match-card-v2 pk-status-${m.status}`}>
+      <div className="pk-card-header">
+        <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
+        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
+        {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
+      </div>
+
+      <div className="pk-card-vs-row">
+        <TeamBlock
+          main={m.challenger}
+          partner={m.challenger_partner}
+          label="Thách đấu"
+          isWinner={m.status === 'completed' && challengerWon}
+        />
+        <div className="pk-vs-center">
+          <span className="pk-vs-text">VS</span>
+          {m.status === 'completed' && (
+            <span className="pk-score-label">{challengerWon ? '1 – 0' : '0 – 1'}</span>
+          )}
+        </div>
+        <TeamBlock
+          main={m.opponent}
+          partner={m.opponent_partner}
+          label="Đối thủ"
+          isWinner={m.status === 'completed' && opponentWon}
+        />
+      </div>
+
+      <div className="pk-card-footer">
+        {m.bet_items && <span className="pk-bet">🎁 {m.bet_items}</span>}
+        {m.note      && <span className="pk-note muted">{m.note}</span>}
+        <div className="pk-match-actions">
+          <ActionGroup>
+            <button onClick={() => onEdit(m)}>Sửa</button>
+            <button className="danger" onClick={() => onDelete(m)}>Xóa</button>
+          </ActionGroup>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export function PkPanel() {
   const [matches, setMatches]     = useState([])
   const [leaderboard, setLeaderboard] = useState([])
@@ -122,50 +193,15 @@ export function PkPanel() {
           {loading ? <p className="muted">Đang tải...</p> : filtered.length === 0 ? (
             <p className="muted">Không có kèo nào.</p>
           ) : (
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Ngày</th>
-                    <th>Loại</th>
-                    <th>Trạng thái</th>
-                    <th>Bên thách đấu</th>
-                    <th>Bên đối thủ</th>
-                    <th>Thắng</th>
-                    <th>Cược</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filtered.map((m) => (
-                    <tr key={m.id}>
-                      <td>{m.played_at ? formatDate(m.played_at) : <span className="muted">—</span>}</td>
-                      <td>{m.match_type === 'singles' ? 'Đơn' : 'Đôi'}</td>
-                      <td><span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span></td>
-                      <td>
-                        <PersonCell p={m.challenger} />
-                        {m.challenger_partner && <div><small className="muted">& </small><PersonCell p={m.challenger_partner} /></div>}
-                      </td>
-                      <td>
-                        <PersonCell p={m.opponent} />
-                        {m.opponent_partner && <div><small className="muted">& </small><PersonCell p={m.opponent_partner} /></div>}
-                      </td>
-                      <td>
-                        {m.winner_side === 'challenger' ? <span className="pk-win">Thách đấu</span>
-                          : m.winner_side === 'opponent' ? <span className="pk-win">Đối thủ</span>
-                          : <span className="muted">—</span>}
-                      </td>
-                      <td>{m.bet_items || <span className="muted">—</span>}</td>
-                      <td>
-                        <ActionGroup>
-                          <button onClick={() => setEditing(m)}>Sửa</button>
-                          <button className="danger" onClick={() => setDeleting(m)}>Xóa</button>
-                        </ActionGroup>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className="pk-match-list">
+              {filtered.map((m) => (
+                <AdminMatchCard
+                  key={m.id}
+                  m={m}
+                  onEdit={setEditing}
+                  onDelete={setDeleting}
+                />
+              ))}
             </div>
           )}
         </Panel>
