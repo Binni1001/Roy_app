@@ -1,5 +1,6 @@
 import { guestAttendancesRepository } from "./guestAttendances.repository.js";
 import { validateAmount, validateText, assertValid } from "../../utils/validators.js";
+import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 function buildGuestDebtDescription(session, attendanceId) {
   const periodName = session.period?.name || "ky";
@@ -64,6 +65,8 @@ export const guestAttendancesService = {
     if (existingResult.data) {
       throw new Error("Nguoi nay da co trong buoi danh nay");
     }
+
+    await assertPeopleActive([payload.person_id]);
 
     const amount =
       payload.amount !== undefined

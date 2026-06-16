@@ -1,6 +1,7 @@
 import { shuttleExpensesRepository } from "./shuttleExpenses.repository.js";
 import { clubFundTransactionsRepository } from "../club-fund-transactions/clubFundTransactions.repository.js";
 import { validateDateNotFuture, validateAmount, validateText, assertValid } from "../../utils/validators.js";
+import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 const allowedBuyTypes = ["tube", "single", "mixed"];
 
@@ -64,6 +65,8 @@ export const shuttleExpensesService = {
     if (!membership) {
       throw new Error("Nguoi mua cau phai la fixed member cua ky nay");
     }
+
+    await assertPeopleActive([payload.buyer_id]);
 
     const buyType = payload.buy_type || "tube";
     const tubeCount = Number(payload.tube_count || 0);
@@ -175,6 +178,8 @@ export const shuttleExpensesService = {
     if (!membership) {
       throw new Error("Nguoi mua cau phai la fixed member cua ky nay");
     }
+
+    await assertPeopleActive([payload.buyer_id]);
 
     const buyType = payload.buy_type || "tube";
     const tubeCount = Number(payload.tube_count || 0);

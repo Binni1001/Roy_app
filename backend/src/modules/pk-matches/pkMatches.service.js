@@ -1,4 +1,5 @@
 import { pkMatchesRepository } from "./pkMatches.repository.js";
+import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 function startOfDay(date) {
   const d = new Date(date);
@@ -58,6 +59,8 @@ export const pkMatchesService = {
       if (!challenger_partner_id) throw new Error("Đánh đôi cần chọn đồng đội phía thách đấu");
       if (!opponent_partner_id)   throw new Error("Đánh đôi cần chọn đồng đội phía đối thủ");
     }
+
+    await assertPeopleActive([challenger_id, opponent_id, challenger_partner_id, opponent_partner_id]);
 
     const insert = {
       match_type,

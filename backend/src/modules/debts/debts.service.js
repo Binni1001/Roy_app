@@ -46,6 +46,9 @@ export const debtsService = {
     const personResult = await debtsRepository.getPersonById(payload.person_id);
     if (personResult.error) throw new Error(personResult.error.message);
     if (!personResult.data) throw new Error("Person khong ton tai");
+    if (personResult.data.status !== "active") {
+      throw new Error(`Khong the tao cong no cho nguoi da nghi: ${personResult.data.full_name}`);
+    }
 
     const { data, error } = await debtsRepository.create({
       period_id: payload.period_id,

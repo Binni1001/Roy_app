@@ -1,6 +1,7 @@
 import { clubFundTransactionsRepository } from "./clubFundTransactions.repository.js";
 import { debtsRepository } from "../debts/debts.repository.js";
 import { validateAmount, validateText, assertValid } from "../../utils/validators.js";
+import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 const allowedTypes = ["income", "expense", "refund", "adjustment"];
 
@@ -30,6 +31,10 @@ export const clubFundTransactionsService = {
 
     assertValid(validateAmount(payload.amount, "So tien giao dich quy"));
     assertValid(validateText(payload.description, "Mo ta giao dich", 500));
+
+    if (payload.person_id) {
+      await assertPeopleActive([payload.person_id]);
+    }
 
     const { data, error } = await clubFundTransactionsRepository.create({
       period_id: payload.period_id || null,
@@ -75,6 +80,8 @@ export const clubFundTransactionsService = {
     if (!payload.person_id) throw new Error("Vui lòng chọn người nộp quỹ");
     assertValid(validateAmount(payload.amount, "Số tiền nộp quỹ"));
     assertValid(validateText(payload.description, "Mô tả", 500));
+
+    await assertPeopleActive([payload.person_id]);
 
     const debtIds = Array.isArray(payload.debt_ids) ? payload.debt_ids.filter(Boolean) : [];
 

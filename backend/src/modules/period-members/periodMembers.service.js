@@ -253,5 +253,24 @@ export const periodMembersService = {
       period_member: data,
       debt_action
     };
+  },
+
+  async deletePeriodMember(id) {
+    if (!id) {
+      throw new Error("Period member ID khong duoc de trong");
+    }
+
+    const { data, error } = await periodMembersRepository.remove(id);
+
+    if (error) {
+      if (error.code === "23503") {
+        throw new Error(
+          "Khong the xoa thanh vien nay khoi ky vi da co du lieu lien quan (cong no, chi phi cau...)."
+        );
+      }
+      throw new Error(error.message);
+    }
+
+    return data;
   }
 };
