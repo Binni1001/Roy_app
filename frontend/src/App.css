@@ -949,15 +949,31 @@ button:disabled {
   font-size: 0.85rem;
   padding: 5px 12px;
 }
-.panel-banner {
-  width: 100%;
-  margin: 10px 0 16px;
-  height: 110px;
-  background: url('/images/panel-banner.jpg') center 60% / cover no-repeat;
-  opacity: 0.6;
-  border-radius: 6px;
-  pointer-events: none;
-  display: block;
+/* Add buttons with badminton background image */
+.panel-header-action button,
+.pk-create-btn {
+  background-image: url('/images/panel-banner.jpg');
+  background-size: cover;
+  background-position: center 65%;
+  position: relative;
+  overflow: hidden;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0,0,0,0.8);
+  border: none;
+}
+.panel-header-action button::before,
+.pk-create-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(0,0,0,0.45);
+  z-index: 0;
+}
+.panel-header-action button span,
+.panel-header-action button,
+.pk-create-btn {
+  position: relative;
+  z-index: 1;
 }
 
 .form,
