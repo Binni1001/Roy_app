@@ -6,7 +6,7 @@ import { AdminSidebar } from './AdminSidebar'
 import { useAdminPortalData } from './useAdminPortalData'
 
 export function AdminPortal({ session, role, onSignOut }) {
-  const [activeTab, setActiveTab] = useState('dashboard')
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
   const {
     activePeriod,
@@ -34,7 +34,7 @@ export function AdminPortal({ session, role, onSignOut }) {
     <div className={`admin-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <AdminSidebar
         activeTab={activeTab}
-        setActiveTab={(tab) => { setActiveTab(tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
+        setActiveTab={(tab) => { setActiveTab(tab); sessionStorage.setItem('admin_tab', tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
         session={session}
         role={role}
         onSignOut={onSignOut}

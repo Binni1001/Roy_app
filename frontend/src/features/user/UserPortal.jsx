@@ -12,7 +12,7 @@ import { UserSidebar } from './UserSidebar'
 import { useUserPortalData } from './useUserPortalData'
 
 export function UserPortal({ session, role, onSignOut }) {
-  const [activeTab, setActiveTab] = useState('home')
+  const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('user_tab') || 'home')
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
 
   const {
@@ -43,7 +43,7 @@ export function UserPortal({ session, role, onSignOut }) {
     <div className={`user-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
       <UserSidebar
         activeTab={activeTab}
-        setActiveTab={(tab) => { setActiveTab(tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
+        setActiveTab={(tab) => { setActiveTab(tab); sessionStorage.setItem('user_tab', tab); if (window.innerWidth <= 860) setSidebarOpen(false) }}
         activePerson={activePerson}
         session={session}
         role={role}
