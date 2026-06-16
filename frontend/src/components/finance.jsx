@@ -35,6 +35,7 @@ export function FundTable({ rows, submit }) {
           ['created_at', 'Ngày', formatDate],
           ['transaction_type', 'Loại', displayValue],
           ['amount', 'Số tiền', formatMoney],
+          ['person.full_name', 'Người'],
           ['description', 'Nội dung'],
         ]}
         actions={submit ? (row) => (

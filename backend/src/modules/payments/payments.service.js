@@ -263,7 +263,9 @@ export const paymentsService = {
 
       updatedDebts.push(debtResult.data);
 
-      const fundDescription = `Thu tien ${debt.debt_type}`;
+      const fundDescription = debt.description
+        ? `Thu tien - ${debt.description}`
+        : `Thu tien ${debt.debt_type}`;
       // FIX #1: dùng debt_id để check duplicate (không dùng amount nữa)
       const existingFundResult = await paymentsRepository.findFundTransaction(
         payment.id,
