@@ -229,6 +229,26 @@ export const peopleService = {
     return data;
   },
 
+  async updatePersonPassword(id, newPassword) {
+    if (!id) throw new Error("Person ID không được để trống");
+    if (!newPassword || newPassword.length < 6) throw new Error("Mật khẩu phải có ít nhất 6 ký tự");
+
+    const person = await this.getPersonById(id);
+    if (!person?.email) throw new Error("Người dùng này chưa có email liên kết");
+
+    const { supabase } = await import("../../config/supabase.js");
+    const { data: { users }, error: listErr } = await supabase.auth.admin.listUsers();
+    if (listErr) throw new Error(listErr.message);
+
+    const authUser = users.find((u) => u.email?.toLowerCase() === person.email.toLowerCase());
+    if (!authUser) throw new Error("Không tìm thấy tài khoản Supabase Auth cho email này");
+
+    const { error: updateErr } = await supabase.auth.admin.updateUserById(authUser.id, { password: newPassword });
+    if (updateErr) throw new Error(updateErr.message);
+
+    return { success: true };
+  },
+
   async deletePerson(id) {
     if (!id) {
       throw new Error("Person ID khong duoc de trong");

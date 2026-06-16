@@ -70,6 +70,15 @@ export const peopleController = {
     }
   },
 
+  async updatePassword(req, res) {
+    try {
+      const data = await peopleService.updatePersonPassword(req.params.id, req.body.password);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async remove(req, res) {
     try {
       const data = await peopleService.deletePerson(req.params.id);

@@ -1,8 +1,9 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { api } from '../../../api/client'
+import { supabase } from '../../../lib/supabase'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable } from '../../../components/common'
 import { emptyPerson } from '../../../constants/appConstants'
-import { displayValue } from '../../../utils/appUtils'
+import { displayValue, initials } from '../../../utils/appUtils'
 
 export function PeoplePanel({ people, form, setForm, submit }) {
   const [editingPerson, setEditingPerson] = useState(null)
@@ -57,8 +58,22 @@ export function PeoplePanel({ people, form, setForm, submit }) {
         <PersonEditModal
           person={editingPerson}
           onClose={() => setEditingPerson(null)}
-          onSubmit={(payload) => {
-            submit(() => api.people.update(editingPerson.id, payload), 'Đã cập nhật người.')
+          onSubmit={(payload, avatarFile, newPassword) => {
+            const id = editingPerson.id
+            submit(async () => {
+              let avatar_url = payload.avatar_url
+              if (avatarFile) {
+                const ext = avatarFile.name.split('.').pop()
+                const path = `${id}.${ext}`
+                const { error: upErr } = await supabase.storage
+                  .from('avatars').upload(path, avatarFile, { upsert: true, contentType: avatarFile.type })
+                if (upErr) throw new Error(upErr.message)
+                const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
+                avatar_url = urlData.publicUrl
+              }
+              await api.people.update(id, { ...payload, avatar_url })
+              if (newPassword) await api.people.updatePassword(id, newPassword)
+            }, 'Đã cập nhật người.')
             setEditingPerson(null)
           }}
         />
@@ -87,10 +102,23 @@ function PersonEditModal({ person, onClose, onSubmit }) {
     email: person.email || '',
     attendance_type: person.attendance_type || 'guest',
     note: person.note || '',
+    avatar_url: person.avatar_url || '',
   })
+  const [avatarFile, setAvatarFile] = useState(null)
+  const [avatarPreview, setAvatarPreview] = useState(person.avatar_url || '')
+  const [newPassword, setNewPassword] = useState('')
+  const fileRef = useRef()
 
   function update(field, value) {
     setDraft((current) => ({ ...current, [field]: value }))
+  }
+
+  function handleAvatarChange(e) {
+    const file = e.target.files?.[0]
+    if (!file) return
+    if (file.size > 2 * 1024 * 1024) { alert('Ảnh không được vượt quá 2MB'); return }
+    setAvatarFile(file)
+    setAvatarPreview(URL.createObjectURL(file))
   }
 
   return (
@@ -99,9 +127,25 @@ function PersonEditModal({ person, onClose, onSubmit }) {
         className="form"
         onSubmit={(event) => {
           event.preventDefault()
-          onSubmit(draft)
+          onSubmit(draft, avatarFile || null, newPassword || null)
         }}
       >
+        {/* Avatar */}
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 8 }}>
+          <div
+            className="avatar large avatar-upload-circle"
+            onClick={() => fileRef.current?.click()}
+            title="Nhấn để đổi ảnh"
+            style={{ cursor: 'pointer', width: 72, height: 72, borderRadius: '50%', overflow: 'hidden', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
+          >
+            {avatarPreview
+              ? <img src={avatarPreview} alt="avatar" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              : <span>{initials(draft.full_name)}</span>}
+          </div>
+          <small className="muted" style={{ cursor: 'pointer' }} onClick={() => fileRef.current?.click()}>Nhấn để đổi ảnh đại diện</small>
+          <input ref={fileRef} type="file" accept="image/*" style={{ display: 'none' }} onChange={handleAvatarChange} />
+        </div>
+
         <Input label="Họ tên" value={draft.full_name} onChange={(value) => update('full_name', value)} required />
         <Input label="Điện thoại" value={draft.phone} onChange={(value) => update('phone', value)} />
         <Input label="Thư điện tử" value={draft.email} onChange={(value) => update('email', value)} />
@@ -113,6 +157,19 @@ function PersonEditModal({ person, onClose, onSubmit }) {
           </select>
         </label>
         <Input label="Ghi chú" value={draft.note} onChange={(value) => update('note', value)} />
+
+        {/* Password */}
+        <label>
+          Mật khẩu mới <small className="muted">(để trống nếu không đổi)</small>
+          <input
+            type="password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            placeholder="Tối thiểu 6 ký tự"
+            autoComplete="new-password"
+          />
+        </label>
+
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>

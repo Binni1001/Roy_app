@@ -47,6 +47,8 @@ export const api = {
     create: (payload) => request({ url: '/api/people', method: 'POST', data: payload }),
     update: (id, payload) =>
       request({ url: `/api/people/${id}`, method: 'PUT', data: payload }),
+    updatePassword: (id, password) =>
+      request({ url: `/api/people/${id}/password`, method: 'PUT', data: { password } }),
     remove: (id) => request({ url: `/api/people/${id}`, method: 'DELETE' }),
   },
 
