@@ -19,74 +19,109 @@ function sortByDate(arr) {
 }
 
 function startOfDay(date) {
-  const d = new Date(date);
-  d.setHours(0, 0, 0, 0);
-  return d;
+  const d = new Date(date)
+  d.setHours(0, 0, 0, 0)
+  return d
 }
 
 function getResultLock(m) {
-  const now = new Date();
-  const today = startOfDay(now);
-  if (!m.played_at) return { canRecord: false, reason: 'Kèo chưa có ngày đấu' };
-  const matchDay = startOfDay(new Date(m.played_at));
-  if (matchDay > today) return { canRecord: false, reason: `Chưa đến ngày đấu (${formatDate(m.played_at)})` };
+  const now = new Date()
+  const today = startOfDay(now)
+  if (!m.played_at) return { canRecord: false, reason: 'Kèo chưa có ngày đấu' }
+  const matchDay = startOfDay(new Date(m.played_at))
+  if (matchDay > today) return { canRecord: false, reason: `Chưa đến ngày đấu (${formatDate(m.played_at)})` }
   if (m.status === 'completed' && m.updated_at) {
-    const diffHours = (now - new Date(m.updated_at)) / (1000 * 60 * 60);
-    if (diffHours > 24) return { canRecord: false, reason: 'Kết quả đã khoá sau 24 giờ' };
+    const diffHours = (now - new Date(m.updated_at)) / (1000 * 60 * 60)
+    if (diffHours > 24) return { canRecord: false, reason: 'Kết quả đã khoá sau 24 giờ' }
   }
-  return { canRecord: true, reason: null };
+  return { canRecord: true, reason: null }
+}
+
+function isParticipant(m, activePerson) {
+  if (!activePerson) return false
+  return [m.challenger_id, m.opponent_id, m.challenger_partner_id, m.opponent_partner_id]
+    .filter(Boolean)
+    .includes(activePerson.id)
+}
+
+function Avatar({ person, size = 'md' }) {
+  const cls = size === 'lg' ? 'pk-avatar-lg' : 'pk-avatar-sm'
+  if (!person) return <div className={`pk-avatar-circle ${cls} muted`}>?</div>
+  if (person.avatar_url) return <img src={person.avatar_url} alt={person.full_name} className={`pk-avatar-circle ${cls} avatar-img`} />
+  return <div className={`pk-avatar-circle ${cls}`}>{initials(person.full_name)}</div>
+}
+
+function TeamBlock({ main, partner, label, isWinner }) {
+  return (
+    <div className={`pk-team-block${isWinner ? ' pk-winner-side' : ''}`}>
+      <div className="pk-team-avatars">
+        <Avatar person={main} size="lg" />
+        {partner && <Avatar person={partner} size="md" />}
+      </div>
+      <div className="pk-team-names">
+        <strong>{main?.full_name || '?'}</strong>
+        {partner && <span className="pk-partner-name">& {partner.full_name}</span>}
+      </div>
+      <span className="pk-team-label">{label}</span>
+      {isWinner && <span className="pk-crown">🏆</span>}
+    </div>
+  )
 }
 
 function MatchCard({ m, activePerson, onSetResult, onCancel }) {
-  const iAmChallenger = m.challenger?.id === activePerson?.id || m.challenger_partner?.id === activePerson?.id
-  const mySide    = iAmChallenger ? m.challenger       : m.opponent
-  const theirSide = iAmChallenger ? m.opponent         : m.challenger
-  const myPartner    = iAmChallenger ? m.challenger_partner : m.opponent_partner
-  const theirPartner = iAmChallenger ? m.opponent_partner   : m.challenger_partner
-  const iWon = m.winner_side && (
-    (iAmChallenger && m.winner_side === 'challenger') ||
-    (!iAmChallenger && m.winner_side === 'opponent')
-  )
-  const { canRecord, reason } = getResultLock(m);
+  const amParticipant = isParticipant(m, activePerson)
+  const { canRecord, reason } = getResultLock(m)
+  const challengerWon = m.winner_side === 'challenger'
+  const opponentWon   = m.winner_side === 'opponent'
 
   return (
-    <div className={`pk-match-card${m.status === 'completed' ? (iWon ? ' pk-won' : ' pk-lost') : ''}`}>
-      <div className="pk-match-header">
+    <div className={`pk-match-card pk-match-card-v2 pk-status-${m.status}`}>
+      {/* Header row */}
+      <div className="pk-card-header">
         <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
-        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? 'Đơn' : 'Đôi'}</span>
-        {m.played_at && <small className="muted">{formatDate(m.played_at)}</small>}
+        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
+        {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
       </div>
 
-      <div className="pk-match-vs">
-        <div className="pk-team">
-          <strong>{mySide?.full_name || 'Tôi'}</strong>
-          {myPartner && <small>& {myPartner.full_name}</small>}
-          <span className="muted">Bên tôi</span>
+      {/* VS row */}
+      <div className="pk-card-vs-row">
+        <TeamBlock
+          main={m.challenger}
+          partner={m.challenger_partner}
+          label="Thách đấu"
+          isWinner={m.status === 'completed' && challengerWon}
+        />
+        <div className="pk-vs-center">
+          <span className="pk-vs-text">VS</span>
+          {m.status === 'completed' && (
+            <span className="pk-score-label">
+              {challengerWon ? '1 – 0' : '0 – 1'}
+            </span>
+          )}
         </div>
-        <span className="pk-vs">VS</span>
-        <div className="pk-team">
-          <strong>{theirSide?.full_name || '?'}</strong>
-          {theirPartner && <small>& {theirPartner.full_name}</small>}
-          <span className="muted">Đối thủ</span>
-        </div>
+        <TeamBlock
+          main={m.opponent}
+          partner={m.opponent_partner}
+          label="Đối thủ"
+          isWinner={m.status === 'completed' && opponentWon}
+        />
       </div>
 
-      {m.bet_items && <p className="pk-bet">🎁 Cược: {m.bet_items}</p>}
-      {m.note && <p className="pk-note muted">{m.note}</p>}
+      {/* Footer */}
+      {(m.bet_items || m.note || amParticipant) && (
+        <div className="pk-card-footer">
+          {m.bet_items && <span className="pk-bet">🎁 {m.bet_items}</span>}
+          {m.note      && <span className="pk-note muted">{m.note}</span>}
 
-      {m.status === 'completed' && m.winner_side && (
-        <p className={`pk-result ${iWon ? 'pk-win-text' : 'pk-loss-text'}`}>
-          {iWon ? '🏆 Bạn đã thắng!' : '😔 Bạn đã thua'}
-        </p>
-      )}
-
-      {(m.status === 'pending' || m.status === 'active') && (
-        <div className="pk-match-actions">
-          <span title={!canRecord ? reason : undefined} style={{ display: 'inline-block' }}>
-            <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
-          </span>
-          {!canRecord && reason && <small className="muted pk-lock-hint">{reason}</small>}
-          <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
+          {amParticipant && (m.status === 'pending' || m.status === 'active') && (
+            <div className="pk-match-actions">
+              <span title={!canRecord ? reason : undefined}>
+                <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
+              </span>
+              {!canRecord && reason && <small className="muted pk-lock-hint">{reason}</small>}
+              <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
+            </div>
+          )}
         </div>
       )}
     </div>
@@ -126,7 +161,7 @@ export function PkArena({ activePerson }) {
     try {
       const [lb, ms, pp] = await Promise.all([
         api.pk.leaderboard().catch(() => []),
-        api.pk.myMatches().catch(() => []),
+        api.pk.matches().catch(() => []),   // tất cả kèo, không chỉ của mình
         api.pk.people().catch(() => []),
       ])
       setLeaderboard(lb)
@@ -156,9 +191,7 @@ export function PkArena({ activePerson }) {
       setShowCreate(false)
       setForm({ match_type: 'singles', opponent_id: '', challenger_partner_id: '', opponent_partner_id: '', bet_items: '', played_at: '', note: '' })
       void loadAll()
-    } catch (err) {
-      setToast(err.message)
-    }
+    } catch (err) { setToast(err.message) }
   }
 
   async function handleSetWinner(matchId, winnerSide) {
@@ -182,9 +215,7 @@ export function PkArena({ activePerson }) {
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
   const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
   const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
-
   const filteredMatches = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
-
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
   return (
@@ -193,7 +224,7 @@ export function PkArena({ activePerson }) {
 
       <div className="pk-tabs">
         <button className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>Bảng xếp hạng</button>
-        <button className={tab === 'matches'     ? 'active' : ''} onClick={() => setTab('matches')}>Kèo của tôi</button>
+        <button className={tab === 'matches'     ? 'active' : ''} onClick={() => setTab('matches')}>Kèo đấu</button>
         <button className={tab === 'players'     ? 'active' : ''} onClick={() => setTab('players')}>Thành viên</button>
       </div>
 
@@ -233,12 +264,11 @@ export function PkArena({ activePerson }) {
         </Panel>
       )}
 
-      {/* ── MY MATCHES ── */}
+      {/* ── ALL MATCHES ── */}
       {tab === 'matches' && (
-        <Panel title="Kèo của tôi">
-          <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
-
-          {/* Filter tabs */}
+        <Panel title="Kèo đấu"
+          action={<button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>}
+        >
           <div className="pk-filter-tabs">
             <button className={matchFilter === 'upcoming'  ? 'active' : ''} onClick={() => setMatchFilter('upcoming')}>
               Sắp tới {upcoming.length > 0 && <span className="pk-count">{upcoming.length}</span>}
@@ -253,7 +283,7 @@ export function PkArena({ activePerson }) {
 
           {loading ? <p className="muted">Đang tải...</p> : filteredMatches.length === 0 ? (
             <p className="muted">
-              {matchFilter === 'upcoming'  && 'Không có kèo nào đang chờ.'}
+              {matchFilter === 'upcoming'  && 'Chưa có kèo nào sắp tới.'}
               {matchFilter === 'completed' && 'Chưa có trận đấu nào kết thúc.'}
               {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
             </p>
@@ -342,8 +372,8 @@ export function PkArena({ activePerson }) {
               <label>Vật phẩm cược
                 <input type="text" value={form.bet_items} onChange={(e) => updateForm('bet_items', e.target.value)} placeholder="VD: 2 chai nước, 1 ổ bánh mì" />
               </label>
-              <label>Ngày đấu
-                <input type="date" value={form.played_at} onChange={(e) => updateForm('played_at', e.target.value)} />
+              <label>Ngày đấu *
+                <input type="date" value={form.played_at} onChange={(e) => updateForm('played_at', e.target.value)} required />
               </label>
               <label>Ghi chú
                 <input type="text" value={form.note} onChange={(e) => updateForm('note', e.target.value)} placeholder="Tuỳ chọn" />

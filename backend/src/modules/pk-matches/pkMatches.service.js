@@ -76,12 +76,25 @@ export const pkMatchesService = {
     return data;
   },
 
-  async update(id, payload, isAdmin = false) {
+  async update(id, payload, isAdmin = false, authUser = null) {
     if (!id) throw new Error("Match ID là bắt buộc");
 
     // Lấy trạng thái hiện tại của kèo
     const { data: existing, error: fetchError } = await pkMatchesRepository.getById(id);
     if (fetchError || !existing) throw new Error("Không tìm thấy kèo đấu");
+
+    // ── Kiểm tra người gọi có trong kèo không ──
+    if (!isAdmin && authUser?.email) {
+      const { supabase } = await import("../../config/supabase.js");
+      const { data: person } = await supabase.from('people').select('id').ilike('email', authUser.email).maybeSingle();
+      const participantIds = [
+        existing.challenger_id, existing.opponent_id,
+        existing.challenger_partner_id, existing.opponent_partner_id,
+      ].filter(Boolean);
+      if (!person || !participantIds.includes(person.id)) {
+        throw new Error("Bạn không phải người trong kèo này");
+      }
+    }
 
     const now      = new Date();
     const today    = startOfDay(now);

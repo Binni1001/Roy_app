@@ -1673,23 +1673,34 @@ button.danger:hover {
   margin-top: 8px;
 }
 
-.pk-match-card {
-  padding: 16px;
-  border-radius: 12px;
+/* ── Match card v2 ── */
+.pk-match-card-v2 {
+  border-radius: 14px;
   border: 1px solid rgba(239, 231, 210, 0.12);
-  background: rgba(255, 255, 255, 0.03);
-  transition: border-color 0.2s;
+  background: rgba(255,255,255,0.03);
+  overflow: hidden;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
+.pk-match-card-v2:hover {
+  border-color: rgba(216,174,82,0.25);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+}
+.pk-match-card-v2.pk-status-completed { border-color: rgba(76,175,125,0.3); background: rgba(76,175,125,0.04); }
+.pk-match-card-v2.pk-status-cancelled { opacity: 0.6; }
 
-.pk-match-card.pk-won { border-color: rgba(76, 175, 125, 0.4); background: rgba(76, 175, 125, 0.06); }
-.pk-match-card.pk-lost { border-color: rgba(229, 115, 115, 0.3); background: rgba(229, 115, 115, 0.04); }
-
-.pk-match-header {
+.pk-card-header {
   display: flex;
   align-items: center;
   gap: 8px;
-  margin-bottom: 12px;
+  padding: 10px 16px;
+  border-bottom: 1px solid rgba(239,231,210,0.07);
   flex-wrap: wrap;
+}
+
+.pk-card-date {
+  margin-left: auto;
+  font-size: 12px;
+  color: #8a94a0;
 }
 
 .pk-badge {
@@ -1698,39 +1709,107 @@ button.danger:hover {
   font-size: 11px;
   font-weight: 600;
 }
-
-.pk-badge-pending  { background: rgba(255,193,7,0.15); color: #ffc107; }
+.pk-badge-pending  { background: rgba(255,193,7,0.15);  color: #ffc107; }
 .pk-badge-active   { background: rgba(33,150,243,0.15); color: #64b5f6; }
 .pk-badge-completed{ background: rgba(76,175,125,0.15); color: #4caf7d; }
-.pk-badge-cancelled{ background: rgba(158,158,158,0.15); color: #9e9e9e; }
+.pk-badge-cancelled{ background: rgba(158,158,158,0.15);color: #9e9e9e; }
 .pk-badge-type     { background: rgba(216,174,82,0.12); color: #d8ae52; }
 
-.pk-match-vs {
+/* VS row */
+.pk-card-vs-row {
   display: flex;
   align-items: center;
-  gap: 16px;
-  margin-bottom: 10px;
+  gap: 0;
+  padding: 20px 16px;
 }
 
-.pk-team {
+.pk-team-block {
+  flex: 1;
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  align-items: center;
+  gap: 8px;
+  text-align: center;
+  position: relative;
 }
 
-.pk-vs {
-  font-size: 18px;
-  font-weight: 800;
+.pk-team-block.pk-winner-side .pk-team-names strong {
+  color: #4caf7d;
+}
+
+.pk-team-avatars {
+  display: flex;
+  justify-content: center;
+  gap: -8px;
+  position: relative;
+}
+
+.pk-avatar-circle {
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(239,231,210,0.15);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  background: #1e2630;
   color: #d8ae52;
   flex-shrink: 0;
 }
+.pk-avatar-lg { width: 56px; height: 56px; font-size: 1.1rem; }
+.pk-avatar-sm { width: 32px; height: 32px; font-size: 0.7rem; margin-left: -10px; margin-top: 18px; border: 2px solid #10141b; }
 
-.pk-bet {
-  font-size: 13px;
-  color: #c9b174;
-  margin: 6px 0;
+.pk-team-names {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
+.pk-team-names strong { font-size: 0.95rem; color: #efe7d2; }
+.pk-partner-name { font-size: 0.78rem; color: #8a94a0; }
+.pk-team-label   { font-size: 0.72rem; color: #5a6472; text-transform: uppercase; letter-spacing: 0.05em; }
+.pk-crown        { font-size: 1.1rem; }
+
+.pk-vs-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 0 16px;
+  flex-shrink: 0;
+}
+.pk-vs-text {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #d8ae52;
+  letter-spacing: 0.05em;
+}
+.pk-score-label {
+  font-size: 0.75rem;
+  color: #8a94a0;
+  font-weight: 600;
+}
+
+/* Card footer */
+.pk-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px 14px;
+  border-top: 1px solid rgba(239,231,210,0.07);
+}
+.pk-bet  { font-size: 12px; color: #c9b174; }
+.pk-note { font-size: 12px; }
+
+/* Legacy support */
+.pk-match-card {
+  padding: 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239, 231, 210, 0.12);
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pk-badge-type { background: rgba(216,174,82,0.12); color: #d8ae52; }
 
 .pk-result { font-weight: 600; margin-top: 8px; font-size: 14px; }
 .pk-win-text { color: #4caf7d; }
