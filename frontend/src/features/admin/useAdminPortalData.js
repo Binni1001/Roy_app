@@ -29,7 +29,7 @@ export function useAdminPortalData(role) {
       },
       {
         label: 'Quỹ hiện tại',
-        value: formatMoney(readTotal(dashboard, ['fund_balance', 'club_fund_balance'])),
+        value: formatMoney(readTotal(dashboard.fund, ['balance']) || readTotal(dashboard, ['fund_balance', 'club_fund_balance'])),
       },
       { label: 'Thành viên kỳ', value: data.members.length || people.length },
       { label: 'Buổi đã ghi', value: data.sessions.length },
