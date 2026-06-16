@@ -1,5 +1,6 @@
+import { useState } from 'react'
 import { api } from '../api/client'
-import { ActionGroup, SimpleTable } from './common'
+import { ActionGroup, ConfirmModal, Input, Modal, SimpleTable } from './common'
 import { displayValue, formatDate, formatMoney } from '../utils/appUtils'
 
 export function DebtTable({ debts, admin = false, submit }) {
@@ -22,17 +23,83 @@ export function DebtTable({ debts, admin = false, submit }) {
   )
 }
 
-export function FundTable({ rows }) {
+export function FundTable({ rows, submit }) {
+  const [editing, setEditing] = useState(null)
+  const [deleting, setDeleting] = useState(null)
+
   return (
-    <SimpleTable
-      rows={rows}
-      columns={[
-        ['created_at', 'Ngày', formatDate],
-        ['transaction_type', 'Loại', displayValue],
-        ['amount', 'Số tiền', formatMoney],
-        ['description', 'Nội dung'],
-      ]}
-    />
+    <>
+      <SimpleTable
+        rows={rows}
+        columns={[
+          ['created_at', 'Ngày', formatDate],
+          ['transaction_type', 'Loại', displayValue],
+          ['amount', 'Số tiền', formatMoney],
+          ['description', 'Nội dung'],
+        ]}
+        actions={submit ? (row) => (
+          <ActionGroup>
+            <button onClick={() => setEditing(row)}>Sửa</button>
+            <button className="danger" onClick={() => setDeleting(row)}>Xóa</button>
+          </ActionGroup>
+        ) : null}
+      />
+
+      {editing && (
+        <FundEditModal
+          row={editing}
+          onClose={() => setEditing(null)}
+          onSubmit={(payload) => {
+            submit(() => api.fund.update(editing.id, payload), 'Đã cập nhật giao dịch.')
+            setEditing(null)
+          }}
+        />
+      )}
+
+      {deleting && (
+        <ConfirmModal
+          title="Xóa giao dịch"
+          message={`Xóa giao dịch "${deleting.description || formatMoney(deleting.amount)}"?`}
+          confirmText="Xóa"
+          danger
+          onClose={() => setDeleting(null)}
+          onConfirm={() => {
+            submit(() => api.fund.remove(deleting.id), 'Đã xóa giao dịch.')
+            setDeleting(null)
+          }}
+        />
+      )}
+    </>
+  )
+}
+
+const FUND_TYPES = ['income', 'expense', 'refund', 'adjustment']
+const FUND_LABELS = { income: 'Thu', expense: 'Chi', refund: 'Hoàn tiền', adjustment: 'Điều chỉnh' }
+
+function FundEditModal({ row, onClose, onSubmit }) {
+  const [draft, setDraft] = useState({
+    transaction_type: row.transaction_type || 'expense',
+    amount: row.amount || 0,
+    description: row.description || '',
+  })
+  function update(k, v) { setDraft((d) => ({ ...d, [k]: v })) }
+
+  return (
+    <Modal title="Sửa giao dịch quỹ" onClose={onClose}>
+      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit({ ...draft, amount: Number(draft.amount) }) }}>
+        <label>Loại
+          <select value={draft.transaction_type} onChange={(e) => update('transaction_type', e.target.value)}>
+            {FUND_TYPES.map((t) => <option key={t} value={t}>{FUND_LABELS[t]}</option>)}
+          </select>
+        </label>
+        <Input label="Số tiền" type="number" value={draft.amount} onChange={(v) => update('amount', v)} />
+        <Input label="Nội dung" value={draft.description} onChange={(v) => update('description', v)} />
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Lưu thay đổi</button>
+        </footer>
+      </form>
+    </Modal>
   )
 }
 

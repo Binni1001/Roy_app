@@ -26,5 +26,23 @@ export const clubFundTransactionsController = {
     } catch (error) {
       res.status(400).json({ message: error.message });
     }
-  }
+  },
+
+  async update(req, res) {
+    try {
+      const data = await clubFundTransactionsService.update(req.params.id, req.body);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async remove(req, res) {
+    try {
+      const data = await clubFundTransactionsService.remove(req.params.id);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
 };

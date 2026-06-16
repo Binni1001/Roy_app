@@ -149,6 +149,10 @@ export const api = {
       request({ url: `/api/club-fund-transactions/period/${periodId}` }),
     create: (payload) =>
       request({ url: '/api/club-fund-transactions', method: 'POST', data: payload }),
+    update: (id, payload) =>
+      request({ url: `/api/club-fund-transactions/${id}`, method: 'PUT', data: payload }),
+    remove: (id) =>
+      request({ url: `/api/club-fund-transactions/${id}`, method: 'DELETE' }),
   },
 
   dashboard: {

@@ -30,11 +30,23 @@ export const clubFundTransactionsRepository = {
     return await supabase
       .from("club_fund_transactions")
       .insert([payload])
-      .select(`
-        *,
-        person:people(id, full_name, nickname, phone),
-        period:periods(id, name)
-      `)
+      .select(`*, person:people(id, full_name, nickname, phone), period:periods(id, name)`)
       .single();
-  }
+  },
+
+  async update(id, payload) {
+    return await supabase
+      .from("club_fund_transactions")
+      .update({ ...payload, updated_at: new Date().toISOString() })
+      .eq("id", id)
+      .select(`*, person:people(id, full_name, nickname, phone), period:periods(id, name)`)
+      .single();
+  },
+
+  async remove(id) {
+    return await supabase
+      .from("club_fund_transactions")
+      .delete()
+      .eq("id", id);
+  },
 };

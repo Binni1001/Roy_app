@@ -41,5 +41,32 @@ export const clubFundTransactionsService = {
 
     if (error) throw new Error(error.message);
     return data;
-  }
+  },
+
+  async update(id, payload = {}) {
+    if (!id) throw new Error("ID giao dịch không được để trống");
+    const allowed = {};
+    if (payload.transaction_type !== undefined) {
+      if (!allowedTypes.includes(payload.transaction_type)) throw new Error("Loại giao dịch không hợp lệ");
+      allowed.transaction_type = payload.transaction_type;
+    }
+    if (payload.amount !== undefined) {
+      assertValid(validateAmount(payload.amount, "Số tiền"));
+      allowed.amount = Number(payload.amount);
+    }
+    if (payload.description !== undefined) {
+      assertValid(validateText(payload.description, "Mô tả", 500));
+      allowed.description = payload.description || null;
+    }
+    const { data, error } = await clubFundTransactionsRepository.update(id, allowed);
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async remove(id) {
+    if (!id) throw new Error("ID giao dịch không được để trống");
+    const { error } = await clubFundTransactionsRepository.remove(id);
+    if (error) throw new Error(error.message);
+    return { id };
+  },
 };

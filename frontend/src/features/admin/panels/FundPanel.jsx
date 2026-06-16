@@ -26,7 +26,7 @@ export function FundPanel({ balances, fund, fundForm, selectedPeriodId, setForm,
           title="Sổ quỹ câu lạc bộ"
           action={<button onClick={() => setShowAdd(true)}>+ Ghi thu/chi</button>}
         >
-          <FundTable rows={fund} />
+          <FundTable rows={fund} submit={submit} />
         </Panel>
       </section>
 
