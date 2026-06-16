@@ -11,13 +11,17 @@ export function DebtsPanel({
   submit,
 }) {
   return (
-    <section className="grid two">
-      <Panel title="Tạo thanh toán">
-        <div className="form">
-          <SelectPeople people={people} value={selectedPersonId} onChange={setSelectedPersonId} />
-          <button onClick={() => createPayment(selectedPersonId)}>Tạo thanh toán PayOS</button>
-          <CheckoutBox checkout={checkout} submit={submit} />
-        </div>
+    <section className="grid one">
+      <Panel
+        title="Tạo thanh toán"
+        action={
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+            <SelectPeople people={people} value={selectedPersonId} onChange={setSelectedPersonId} />
+            <button onClick={() => createPayment(selectedPersonId)}>Tạo thanh toán PayOS</button>
+          </div>
+        }
+      >
+        <CheckoutBox checkout={checkout} submit={submit} />
       </Panel>
       <Panel title="Công nợ">
         <DebtTable debts={debts} admin submit={submit} />

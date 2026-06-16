@@ -950,13 +950,14 @@ button:disabled {
   padding: 5px 12px;
 }
 .panel-banner {
-  width: calc(100% + 32px);
-  margin: 10px -16px 16px;
+  width: 100%;
+  margin: 10px 0 16px;
   height: 110px;
   background: url('/images/panel-banner.jpg') center 60% / cover no-repeat;
-  opacity: 0.55;
-  border-radius: 0;
+  opacity: 0.6;
+  border-radius: 6px;
   pointer-events: none;
+  display: block;
 }
 
 .form,

@@ -237,6 +237,7 @@ export function PkArena({ activePerson }) {
       {tab === 'matches' && (
         <Panel title="Kèo của tôi">
           <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
+          <div className="panel-banner" aria-hidden="true" />
 
           {/* Filter tabs */}
           <div className="pk-filter-tabs">
