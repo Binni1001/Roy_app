@@ -2869,6 +2869,20 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   .an-stat-card { padding: 8px 10px; }
 }
 
+.an-export-btn {
+  padding: 8px 16px;
+  border-radius: 8px;
+  background: rgba(216,174,82,0.12);
+  border: 1px solid rgba(216,174,82,0.3);
+  color: #d8ae52;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.15s;
+  white-space: nowrap;
+}
+.an-export-btn:hover { background: rgba(216,174,82,0.22); }
+
 /* ════════════════════════════════
    PROFILE EDIT
    ════════════════════════════════ */

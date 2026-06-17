@@ -1,6 +1,7 @@
 import { useMemo } from 'react'
 import { Panel } from '../../../components/common'
 import { formatMoney, formatDate } from '../../../utils/appUtils'
+import { printPeriodReport } from '../../../utils/printReport'
 
 /* ─────────────────────────────────────────
    CHART PRIMITIVES (pure CSS / SVG)
@@ -278,11 +279,18 @@ function MemberSection({ debts, members }) {
 ───────────────────────────────────────── */
 
 export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePeriod }) {
+  function handleExport() {
+    printPeriodReport({ period: activePeriod, debts, fund, shuttleExpenses, members })
+  }
+
   return (
     <div className="an-root">
-      <div className="an-header">
-        <h2 className="an-title">📊 Báo cáo kỳ {activePeriod?.name || ''}</h2>
-        <p className="an-subtitle muted">Tổng hợp tình hình tài chính và hoạt động</p>
+      <div className="an-header" style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', flexWrap: 'wrap', gap: 10 }}>
+        <div>
+          <h2 className="an-title">📊 Báo cáo kỳ {activePeriod?.name || ''}</h2>
+          <p className="an-subtitle muted">Tổng hợp tình hình tài chính và hoạt động</p>
+        </div>
+        <button className="an-export-btn" onClick={handleExport}>🖨️ Xuất PDF</button>
       </div>
       <section className="grid two">
         <DebtSection debts={debts} />
