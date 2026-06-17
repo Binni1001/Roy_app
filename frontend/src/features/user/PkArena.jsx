@@ -272,6 +272,7 @@ export function PkArena({ activePerson }) {
   const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [matchSearch, setMatchSearch]     = useState('')
   const [dateFilter, setDateFilter]       = useState('all')
+  const [specificDate, setSpecificDate]   = useState('')
   const [showResult, setShowResult] = useState(null)
   const [cancelId, setCancelId]   = useState(null)
   const [form, setForm] = useState({
@@ -363,6 +364,7 @@ export function PkArena({ activePerson }) {
   function matchInDateRange(m) {
     const d = new Date(m.played_at || m.created_at)
     const now = new Date()
+    if (specificDate) return d.toDateString() === new Date(specificDate).toDateString()
     if (dateFilter === 'today') return d.toDateString() === now.toDateString()
     if (dateFilter === 'week') {
       const start = new Date(now); start.setDate(now.getDate() - now.getDay())
@@ -482,10 +484,20 @@ export function PkArena({ activePerson }) {
                 👤 Của tôi
               </button>
               {['all','today','week','month'].map((d) => (
-                <button key={d} className={`pk-chip${dateFilter === d ? ' pk-chip-active' : ''}`} onClick={() => setDateFilter(d)}>
+                <button key={d} className={`pk-chip${!specificDate && dateFilter === d ? ' pk-chip-active' : ''}`}
+                  onClick={() => { setDateFilter(d); setSpecificDate('') }}>
                   {d === 'all' ? 'Tất cả ngày' : d === 'today' ? 'Hôm nay' : d === 'week' ? 'Tuần này' : 'Tháng này'}
                 </button>
               ))}
+              <div className="pk-date-wrap">
+                <input
+                  type="date"
+                  className={`pk-date-input${specificDate ? ' pk-date-active' : ''}`}
+                  value={specificDate}
+                  onChange={(e) => { setSpecificDate(e.target.value); setDateFilter('all') }}
+                />
+                {specificDate && <button className="pk-search-clear pk-date-clear" onClick={() => setSpecificDate('')}>×</button>}
+              </div>
             </div>
           </div>
 

@@ -160,6 +160,7 @@ export function PkPanel() {
   const [showRandom, setShowRandom] = useState(false)
   const [matchSearch, setMatchSearch] = useState('')
   const [dateFilter, setDateFilter]   = useState('all')
+  const [specificDate, setSpecificDate] = useState('')
 
   useEffect(() => { loadAll() }, [])
   useEffect(() => {
@@ -205,6 +206,7 @@ export function PkPanel() {
   function matchInDateRange(m) {
     const d = new Date(m.played_at || m.created_at)
     const now = new Date()
+    if (specificDate) return d.toDateString() === new Date(specificDate).toDateString()
     if (dateFilter === 'today') return d.toDateString() === now.toDateString()
     if (dateFilter === 'week') { const s = new Date(now); s.setDate(now.getDate() - now.getDay()); return d >= s }
     if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
@@ -284,10 +286,20 @@ export function PkPanel() {
             </div>
             <div className="pk-filter-row">
               {['all','today','week','month'].map((d) => (
-                <button key={d} className={`pk-chip${dateFilter === d ? ' pk-chip-active' : ''}`} onClick={() => setDateFilter(d)}>
+                <button key={d} className={`pk-chip${!specificDate && dateFilter === d ? ' pk-chip-active' : ''}`}
+                  onClick={() => { setDateFilter(d); setSpecificDate('') }}>
                   {d === 'all' ? 'Tất cả ngày' : d === 'today' ? 'Hôm nay' : d === 'week' ? 'Tuần này' : 'Tháng này'}
                 </button>
               ))}
+              <div className="pk-date-wrap">
+                <input
+                  type="date"
+                  className={`pk-date-input${specificDate ? ' pk-date-active' : ''}`}
+                  value={specificDate}
+                  onChange={(e) => { setSpecificDate(e.target.value); setDateFilter('all') }}
+                />
+                {specificDate && <button className="pk-search-clear pk-date-clear" onClick={() => setSpecificDate('')}>×</button>}
+              </div>
             </div>
           </div>
 
