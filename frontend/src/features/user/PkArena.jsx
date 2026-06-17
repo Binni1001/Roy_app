@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+﻿import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
@@ -332,7 +332,7 @@ export function PkArena({ activePerson }) {
                 </thead>
                 <tbody>
                   {leaderboard.map((row) => (
-                    <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={leaderboard.length} />)
+                    <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={leaderboard.length} />
                   ))}
                 </tbody>
               </table>
