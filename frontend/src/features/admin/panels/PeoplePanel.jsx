@@ -1,7 +1,7 @@
-import { useRef, useState } from 'react'
+import { useRef, useState, useMemo } from 'react'
 import { api } from '../../../api/client'
 import { supabase } from '../../../lib/supabase'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, filterRows } from '../../../components/common'
 import { emptyPerson } from '../../../constants/appConstants'
 import { displayValue, initials } from '../../../utils/appUtils'
 
@@ -9,6 +9,12 @@ export function PeoplePanel({ people, form, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
+  const [query, setQuery] = useState('')
+
+  const filtered = useMemo(
+    () => filterRows(people, query, ['full_name', 'phone', 'email', 'note', 'nickname']),
+    [people, query]
+  )
 
   return (
     <>
@@ -17,8 +23,9 @@ export function PeoplePanel({ people, form, setForm, submit }) {
           title="Danh sách người"
           action={<button onClick={() => setShowAdd(true)}>+ Thêm người</button>}
         >
+          <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, SĐT, email..." />
           <SimpleTable
-            rows={people}
+            rows={filtered}
             columns={[
               ['full_name', 'Họ tên'],
               ['phone', 'Điện thoại'],

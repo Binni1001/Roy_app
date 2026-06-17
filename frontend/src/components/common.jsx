@@ -77,6 +77,36 @@ export function ConfirmModal({
   )
 }
 
+export function SearchBox({ value, onChange, placeholder = 'Tìm kiếm...' }) {
+  return (
+    <div className="search-box">
+      <span className="search-icon">🔍</span>
+      <input
+        type="text"
+        className="search-input"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
+      {value && (
+        <button className="search-clear" onClick={() => onChange('')} type="button">×</button>
+      )}
+    </div>
+  )
+}
+
+/** Filter rows by query across given field paths */
+export function filterRows(rows, query, fields) {
+  if (!query.trim()) return rows
+  const q = query.toLowerCase().trim()
+  return rows.filter((row) =>
+    fields.some((field) => {
+      const val = field.split('.').reduce((o, k) => o?.[k], row)
+      return String(val || '').toLowerCase().includes(q)
+    })
+  )
+}
+
 export function SimpleTable({ rows, columns, actions }) {
   if (!rows.length) return (
     <div className="empty-state">

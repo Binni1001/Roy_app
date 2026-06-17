@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, filterRows } from '../../../components/common'
 import { FundTable } from '../../../components/finance'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
 
@@ -8,6 +8,12 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
   const [showAdd, setShowAdd] = useState(false)
   const [showDeposit, setShowDeposit] = useState(false)
   const [offsetBalance, setOffsetBalance] = useState(null)
+  const [fundQuery, setFundQuery] = useState('')
+
+  const filteredFund = useMemo(
+    () => filterRows(fund, fundQuery, ['description', 'person.full_name', 'transaction_type']),
+    [fund, fundQuery]
+  )
 
   return (
     <>
@@ -32,7 +38,8 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
             </ActionGroup>
           )}
         >
-          <FundTable rows={fund} submit={submit} />
+          <SearchBox value={fundQuery} onChange={setFundQuery} placeholder="Tìm theo nội dung, người, loại..." />
+          <FundTable rows={filteredFund} submit={submit} />
         </Panel>
       </section>
 
