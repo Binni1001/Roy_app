@@ -566,50 +566,94 @@ export function PkArena({ activePerson }) {
 
       {showCreate && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowCreate(false)}>
-          <section className="modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
+          <section className="modal ck-modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
             <header className="modal-header">
-              <h2>Tạo kèo thách đấu</h2>
+              <h2>⚔️ Tạo kèo thách đấu</h2>
               <button className="icon-button" onClick={() => setShowCreate(false)}>×</button>
             </header>
-            <form className="form" onSubmit={handleCreate}>
-              <label>Hình thức
-                <select value={form.match_type} onChange={(e) => updateForm('match_type', e.target.value)}>
-                  <option value="singles">Đánh đơn</option>
-                  <option value="doubles">Đánh đôi</option>
-                </select>
-              </label>
-              <label>Đối thủ *
-                <select value={form.opponent_id} onChange={(e) => updateForm('opponent_id', e.target.value)} required>
-                  <option value="">Chọn đối thủ</option>
-                  {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
-                </select>
-              </label>
-              {form.match_type === 'doubles' && (<>
-                <label>Đồng đội của tôi *
-                  <select value={form.challenger_partner_id} onChange={(e) => updateForm('challenger_partner_id', e.target.value)} required>
-                    <option value="">Chọn đồng đội</option>
-                    {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+            <form onSubmit={handleCreate}>
+
+              {/* ── Hình thức toggle ── */}
+              <div className="ck-type-toggle">
+                <button type="button"
+                  className={`ck-type-btn${form.match_type === 'singles' ? ' ck-type-active' : ''}`}
+                  onClick={() => updateForm('match_type', 'singles')}>
+                  <span className="ck-type-icon">⚔️</span>
+                  <strong>Đánh đơn</strong>
+                  <small>1 vs 1</small>
+                </button>
+                <button type="button"
+                  className={`ck-type-btn${form.match_type === 'doubles' ? ' ck-type-active' : ''}`}
+                  onClick={() => updateForm('match_type', 'doubles')}>
+                  <span className="ck-type-icon">🤝</span>
+                  <strong>Đánh đôi</strong>
+                  <small>2 vs 2</small>
+                </button>
+              </div>
+
+              {/* ── Chọn đội ── */}
+              <div className="ck-vs-row">
+                <div className="ck-team">
+                  <div className="ck-team-label ck-label-blue">🧑 Bên tôi</div>
+                  <div className="ck-team-me">
+                    <span className="ck-me-name">{activePerson?.full_name || 'Tôi'}</span>
+                  </div>
+                  {form.match_type === 'doubles' && (
+                    <select className="ck-select" value={form.challenger_partner_id}
+                      onChange={(e) => updateForm('challenger_partner_id', e.target.value)} required>
+                      <option value="">+ Chọn đồng đội</option>
+                      {otherPeople.filter((p) => p.id !== form.opponent_id && p.id !== form.opponent_partner_id)
+                        .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+                    </select>
+                  )}
+                </div>
+
+                <div className="ck-vs-badge">VS</div>
+
+                <div className="ck-team">
+                  <div className="ck-team-label ck-label-red">🎯 Đối thủ</div>
+                  <select className="ck-select" value={form.opponent_id}
+                    onChange={(e) => updateForm('opponent_id', e.target.value)} required>
+                    <option value="">Chọn đối thủ</option>
+                    {otherPeople.filter((p) => p.id !== form.challenger_partner_id)
+                      .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
                   </select>
+                  {form.match_type === 'doubles' && (
+                    <select className="ck-select" value={form.opponent_partner_id}
+                      onChange={(e) => updateForm('opponent_partner_id', e.target.value)} required>
+                      <option value="">+ Đồng đội đối thủ</option>
+                      {otherPeople.filter((p) => p.id !== form.opponent_id && p.id !== form.challenger_partner_id)
+                        .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
+                    </select>
+                  )}
+                </div>
+              </div>
+
+              {/* ── Chi tiết ── */}
+              <div className="ck-details">
+                <label className="ck-field">
+                  <span className="ck-field-label">🎁 Vật phẩm cược</span>
+                  <input className="ck-input" type="text" value={form.bet_items}
+                    onChange={(e) => updateForm('bet_items', e.target.value)}
+                    placeholder="VD: 2 chai nước, 1 ổ bánh mì" />
                 </label>
-                <label>Đồng đội đối thủ *
-                  <select value={form.opponent_partner_id} onChange={(e) => updateForm('opponent_partner_id', e.target.value)} required>
-                    <option value="">Chọn đồng đội đối thủ</option>
-                    {otherPeople.map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
-                  </select>
-                </label>
-              </>)}
-              <label>Vật phẩm cược
-                <input type="text" value={form.bet_items} onChange={(e) => updateForm('bet_items', e.target.value)} placeholder="VD: 2 chai nước, 1 ổ bánh mì" />
-              </label>
-              <label>Ngày đấu *
-                <input type="date" value={form.played_at} onChange={(e) => updateForm('played_at', e.target.value)} required />
-              </label>
-              <label>Ghi chú
-                <input type="text" value={form.note} onChange={(e) => updateForm('note', e.target.value)} placeholder="Tuỳ chọn" />
-              </label>
-              <footer className="modal-actions">
-                <button type="button" onClick={() => setShowCreate(false)}>Hủy</button>
-                <button type="submit">Tạo kèo</button>
+                <div className="ck-row-2">
+                  <label className="ck-field">
+                    <span className="ck-field-label">📅 Ngày đấu *</span>
+                    <input className="ck-input" type="date" value={form.played_at}
+                      onChange={(e) => updateForm('played_at', e.target.value)} required />
+                  </label>
+                  <label className="ck-field">
+                    <span className="ck-field-label">📝 Ghi chú</span>
+                    <input className="ck-input" type="text" value={form.note}
+                      onChange={(e) => updateForm('note', e.target.value)} placeholder="Tuỳ chọn" />
+                  </label>
+                </div>
+              </div>
+
+              <footer className="ck-footer">
+                <button type="button" className="ck-btn-cancel" onClick={() => setShowCreate(false)}>Hủy</button>
+                <button type="submit" className="ck-btn-submit">⚔️ Tạo kèo</button>
               </footer>
             </form>
           </section>
