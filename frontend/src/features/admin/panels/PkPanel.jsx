@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Modal, Panel } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
@@ -158,6 +158,8 @@ export function PkPanel() {
   const [editing, setEditing]     = useState(null)
   const [deleting, setDeleting]   = useState(null)
   const [showRandom, setShowRandom] = useState(false)
+  const [matchSearch, setMatchSearch] = useState('')
+  const [dateFilter, setDateFilter]   = useState('all')
 
   useEffect(() => { loadAll() }, [])
   useEffect(() => {
@@ -200,9 +202,30 @@ export function PkPanel() {
     } catch (err) { setToast(err.message) }
   }
 
-  const filtered = sortByDate(
-    filter === 'all' ? matches : matches.filter((m) => m.status === filter)
-  )
+  function matchInDateRange(m) {
+    const d = new Date(m.played_at || m.created_at)
+    const now = new Date()
+    if (dateFilter === 'today') return d.toDateString() === now.toDateString()
+    if (dateFilter === 'week') { const s = new Date(now); s.setDate(now.getDate() - now.getDay()); return d >= s }
+    if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    return true
+  }
+
+  function matchNameSearch(m) {
+    if (!matchSearch.trim()) return true
+    const q = matchSearch.toLowerCase()
+    const names = [
+      m.challenger?.full_name, m.challenger?.nickname,
+      m.opponent?.full_name, m.opponent?.nickname,
+      m.challenger_partner?.full_name, m.opponent_partner?.full_name,
+    ].filter(Boolean).map((s) => s.toLowerCase())
+    return names.some((n) => n.includes(q))
+  }
+
+  const filtered = useMemo(() => sortByDate(
+    (filter === 'all' ? matches : matches.filter((m) => m.status === filter))
+      .filter((m) => matchInDateRange(m) && matchNameSearch(m))
+  ), [matches, filter, matchSearch, dateFilter])
 
   return (
     <>
@@ -239,14 +262,33 @@ export function PkPanel() {
 
         {/* All matches */}
         <Panel title="Tất cả kèo đấu" action={<button className="pk-create-btn" onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>}>
-          {/* Status filter */}
-          <div className="pk-filter-tabs" style={{ marginBottom: 16 }}>
+          <div className="pk-filter-tabs" style={{ marginBottom: 12 }}>
             {['all', 'pending', 'active', 'completed', 'cancelled'].map((s) => (
               <button key={s} className={filter === s ? 'active' : ''} onClick={() => setFilter(s)}>
                 {s === 'all' ? 'Tất cả' : STATUS_LABEL[s]}
                 {s !== 'all' && <span className="pk-count">{matches.filter((m) => m.status === s).length}</span>}
               </button>
             ))}
+          </div>
+
+          <div className="pk-match-filters">
+            <div className="pk-search-wrap">
+              <span className="pk-search-icon">🔍</span>
+              <input
+                className="pk-search-input"
+                placeholder="Tìm theo tên người chơi..."
+                value={matchSearch}
+                onChange={(e) => setMatchSearch(e.target.value)}
+              />
+              {matchSearch && <button className="pk-search-clear" onClick={() => setMatchSearch('')}>×</button>}
+            </div>
+            <div className="pk-filter-row">
+              {['all','today','week','month'].map((d) => (
+                <button key={d} className={`pk-chip${dateFilter === d ? ' pk-chip-active' : ''}`} onClick={() => setDateFilter(d)}>
+                  {d === 'all' ? 'Tất cả ngày' : d === 'today' ? 'Hôm nay' : d === 'week' ? 'Tuần này' : 'Tháng này'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? <p className="muted">Đang tải...</p> : filtered.length === 0 ? (

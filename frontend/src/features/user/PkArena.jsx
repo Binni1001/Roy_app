@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react'
+﻿import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api/client'
 import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
@@ -269,6 +269,9 @@ export function PkArena({ activePerson }) {
   const [showCreate, setShowCreate] = useState(false)
   const [showRandom, setShowRandom] = useState(false)
   const [showGuide, setShowGuide]   = useState(false)
+  const [myMatchesOnly, setMyMatchesOnly] = useState(false)
+  const [matchSearch, setMatchSearch]     = useState('')
+  const [dateFilter, setDateFilter]       = useState('all')
   const [showResult, setShowResult] = useState(null)
   const [cancelId, setCancelId]   = useState(null)
   const [form, setForm] = useState({
@@ -355,10 +358,49 @@ export function PkArena({ activePerson }) {
     } catch (err) { setToast(err.message) }
   }
 
+  const myId = activePerson?.id
+
+  function matchInDateRange(m) {
+    const d = new Date(m.played_at || m.created_at)
+    const now = new Date()
+    if (dateFilter === 'today') return d.toDateString() === now.toDateString()
+    if (dateFilter === 'week') {
+      const start = new Date(now); start.setDate(now.getDate() - now.getDay())
+      return d >= start
+    }
+    if (dateFilter === 'month') return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear()
+    return true
+  }
+
+  function matchInvolvesMe(m) {
+    return m.challenger_id === myId || m.opponent_id === myId ||
+      m.challenger_partner_id === myId || m.opponent_partner_id === myId
+  }
+
+  function matchNameSearch(m) {
+    if (!matchSearch.trim()) return true
+    const q = matchSearch.toLowerCase()
+    const names = [
+      m.challenger?.full_name, m.challenger?.nickname,
+      m.opponent?.full_name, m.opponent?.nickname,
+      m.challenger_partner?.full_name, m.opponent_partner?.full_name,
+    ].filter(Boolean).map((s) => s.toLowerCase())
+    return names.some((n) => n.includes(q))
+  }
+
+  function applyFilters(arr) {
+    return arr.filter((m) =>
+      matchInDateRange(m) &&
+      (!myMatchesOnly || matchInvolvesMe(m)) &&
+      matchNameSearch(m)
+    )
+  }
+
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
   const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
   const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
-  const filteredMatches = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
+  const baseList  = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
+  const filteredMatches = useMemo(() => applyFilters(baseList), [baseList, myMatchesOnly, matchSearch, dateFilter])
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
   return (
@@ -422,6 +464,29 @@ export function PkArena({ activePerson }) {
             <button className={matchFilter === 'cancelled' ? 'active' : ''} onClick={() => setMatchFilter('cancelled')}>
               Đã hủy {cancelled.length > 0 && <span className="pk-count">{cancelled.length}</span>}
             </button>
+          </div>
+
+          <div className="pk-match-filters">
+            <div className="pk-search-wrap">
+              <span className="pk-search-icon">🔍</span>
+              <input
+                className="pk-search-input"
+                placeholder="Tìm theo tên người chơi..."
+                value={matchSearch}
+                onChange={(e) => setMatchSearch(e.target.value)}
+              />
+              {matchSearch && <button className="pk-search-clear" onClick={() => setMatchSearch('')}>×</button>}
+            </div>
+            <div className="pk-filter-row">
+              <button className={`pk-chip${myMatchesOnly ? ' pk-chip-active' : ''}`} onClick={() => setMyMatchesOnly((v) => !v)}>
+                👤 Của tôi
+              </button>
+              {['all','today','week','month'].map((d) => (
+                <button key={d} className={`pk-chip${dateFilter === d ? ' pk-chip-active' : ''}`} onClick={() => setDateFilter(d)}>
+                  {d === 'all' ? 'Tất cả ngày' : d === 'today' ? 'Hôm nay' : d === 'week' ? 'Tuần này' : 'Tháng này'}
+                </button>
+              ))}
+            </div>
           </div>
 
           {loading ? <p className="muted">Đang tải...</p> : filteredMatches.length === 0 ? (
