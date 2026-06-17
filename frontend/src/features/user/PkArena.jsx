@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
+import { RandomMatchmaker } from './RandomMatchmaker'
 
 const STATUS_LABEL = {
   pending: 'Chờ xác nhận',
@@ -137,6 +138,7 @@ export function PkArena({ activePerson }) {
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState('')
   const [showCreate, setShowCreate] = useState(false)
+  const [showRandom, setShowRandom] = useState(false)
   const [showResult, setShowResult] = useState(null)
   const [cancelId, setCancelId]   = useState(null)
   const [form, setForm] = useState({
@@ -203,6 +205,17 @@ export function PkArena({ activePerson }) {
     } catch (err) { setToast(err.message) }
   }
 
+  function handleRandomResult(prefill) {
+    setForm((f) => ({
+      ...f,
+      match_type: prefill.match_type || 'singles',
+      opponent_id: prefill.opponent_id || '',
+      challenger_partner_id: prefill.challenger_partner_id || '',
+      opponent_partner_id: prefill.opponent_partner_id || '',
+    }))
+    setShowCreate(true)
+  }
+
   async function handleCancel(matchId) {
     try {
       await api.pk.update(matchId, { status: 'cancelled' })
@@ -267,7 +280,12 @@ export function PkArena({ activePerson }) {
       {/* ── ALL MATCHES ── */}
       {tab === 'matches' && (
         <Panel title="Kèo đấu"
-          action={<button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>}
+          action={
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="pk-create-btn" onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
+              <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
+            </div>
+          }
         >
           <div className="pk-filter-tabs">
             <button className={matchFilter === 'upcoming'  ? 'active' : ''} onClick={() => setMatchFilter('upcoming')}>
@@ -335,6 +353,15 @@ export function PkArena({ activePerson }) {
       )}
 
       {/* ── MODALS ── */}
+      {showRandom && (
+        <RandomMatchmaker
+          people={people}
+          leaderboard={leaderboard}
+          onClose={() => setShowRandom(false)}
+          onCreate={handleRandomResult}
+        />
+      )}
+
       {showCreate && (
         <div className="modal-backdrop" role="presentation" onMouseDown={() => setShowCreate(false)}>
           <section className="modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>

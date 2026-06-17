@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Modal, Panel } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
+import { RandomMatchmaker } from '../../user/RandomMatchmaker'
 
 const STATUS_LABEL = { pending: 'Chờ', active: 'Đang đấu', completed: 'Xong', cancelled: 'Đã hủy' }
 const STATUS_OPTIONS = ['pending', 'active', 'completed', 'cancelled']
@@ -97,11 +98,13 @@ function AdminMatchCard({ m, onEdit, onDelete }) {
 export function PkPanel() {
   const [matches, setMatches]     = useState([])
   const [leaderboard, setLeaderboard] = useState([])
+  const [people, setPeople]       = useState([])
   const [filter, setFilter]       = useState('all')
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState('')
   const [editing, setEditing]     = useState(null)
   const [deleting, setDeleting]   = useState(null)
+  const [showRandom, setShowRandom] = useState(false)
 
   useEffect(() => { loadAll() }, [])
   useEffect(() => {
@@ -113,12 +116,14 @@ export function PkPanel() {
   async function loadAll() {
     setLoading(true)
     try {
-      const [ms, lb] = await Promise.all([
+      const [ms, lb, pp] = await Promise.all([
         api.pk.matches().catch(() => []),
         api.pk.leaderboard().catch(() => []),
+        api.pk.people().catch(() => []),
       ])
       setMatches(ms)
       setLeaderboard(lb)
+      setPeople(pp)
     } finally {
       setLoading(false)
     }
@@ -179,7 +184,7 @@ export function PkPanel() {
         </Panel>
 
         {/* All matches */}
-        <Panel title="Tất cả kèo đấu">
+        <Panel title="Tất cả kèo đấu" action={<button className="pk-create-btn" onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>}>
           {/* Status filter */}
           <div className="pk-filter-tabs" style={{ marginBottom: 16 }}>
             {['all', 'pending', 'active', 'completed', 'cancelled'].map((s) => (
@@ -206,6 +211,15 @@ export function PkPanel() {
           )}
         </Panel>
       </section>
+
+      {showRandom && (
+        <RandomMatchmaker
+          people={people}
+          leaderboard={leaderboard}
+          onClose={() => setShowRandom(false)}
+          onCreate={() => setShowRandom(false)}
+        />
+      )}
 
       {editing && (
         <PkEditModal
