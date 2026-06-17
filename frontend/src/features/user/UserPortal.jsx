@@ -8,6 +8,7 @@ import { PkNotificationToast } from './PkNotificationToast'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserContent } from './UserContent'
+import { UserBottomNav } from './UserBottomNav'
 import { UserSidebar } from './UserSidebar'
 import { useUserPortalData } from './useUserPortalData'
 
@@ -51,6 +52,12 @@ export function UserPortal({ session, role, onSignOut }) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         pkBadge={notifications.length}
+      />
+      <UserBottomNav
+        activeTab={activeTab}
+        setActiveTab={(tab) => { setActiveTab(tab); sessionStorage.setItem('user_tab', tab) }}
+        pkBadge={notifications.length}
+        totalDebt={totalDebt}
       />
       <main className="workspace user-workspace">
         <Topbar

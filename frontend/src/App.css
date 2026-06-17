@@ -2314,6 +2314,131 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-close-btn:hover { color: #8a94a0; }
 
 /* ════════════════════════════════
+   MOBILE UX — BOTTOM NAV
+   ════════════════════════════════ */
+.bottom-nav {
+  display: none; /* hidden on desktop */
+}
+
+@media (max-width: 860px) {
+  /* Bottom nav bar */
+  .bottom-nav {
+    display: flex;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+    background: rgba(16, 20, 27, 0.97);
+    border-top: 1px solid rgba(239, 231, 210, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
+    gap: 0;
+  }
+
+  .bottom-nav-item {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    background: none;
+    border: none;
+    padding: 6px 2px;
+    cursor: pointer;
+    transition: opacity 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .bottom-nav-item:active { opacity: 0.6; }
+
+  .bottom-nav-icon {
+    font-size: 1.3rem;
+    line-height: 1;
+    position: relative;
+    display: inline-block;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.6rem;
+    color: #5a6472;
+    transition: color 0.15s;
+    white-space: nowrap;
+  }
+
+  .bottom-nav-item.active .bottom-nav-label { color: #d8ae52; }
+  .bottom-nav-item.active .bottom-nav-icon  { filter: drop-shadow(0 0 4px rgba(216,174,82,0.5)); }
+
+  .bottom-nav-badge {
+    position: absolute;
+    top: -3px; right: -6px;
+    min-width: 16px; height: 16px;
+    background: #e57373;
+    color: #fff;
+    border-radius: 8px;
+    font-size: 0.55rem;
+    font-weight: 700;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 3px;
+    line-height: 1;
+  }
+  .bottom-nav-badge-debt {
+    min-width: 8px; height: 8px;
+    padding: 0;
+    border-radius: 50%;
+  }
+
+  /* Push workspace content up so bottom nav doesn't overlap */
+  .user-workspace {
+    padding-bottom: calc(70px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Modal: slide up from bottom on mobile */
+  .modal-backdrop {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  .modal {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90dvh !important;
+    overflow-y: auto !important;
+    animation: mobile-slide-up 0.3s cubic-bezier(0.32, 0.72, 0, 1) !important;
+    padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+  }
+
+  /* Table actions: bigger tap targets */
+  .actions button,
+  .action-group button {
+    min-height: 34px !important;
+    padding: 0 12px !important;
+    font-size: 13px !important;
+  }
+
+  /* PK match card — stack on very small screens */
+  .pk-card-vs-row {
+    gap: 8px;
+  }
+
+  /* RandomMatchmaker modal */
+  .rm-modal { border-radius: 20px 20px 0 0 !important; }
+
+  /* Metric cards: 2 columns on mobile instead of 1 */
+  .metrics {
+    grid-template-columns: repeat(2, 1fr) !important;
+  }
+}
+
+@keyframes mobile-slide-up {
+  from { transform: translateY(100%); opacity: 0.5; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+/* ════════════════════════════════
    SESSION CALENDAR
    ════════════════════════════════ */
 .sc-root { display: flex; flex-direction: column; gap: 14px; }
