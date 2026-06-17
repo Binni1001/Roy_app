@@ -1727,6 +1727,66 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-dot-bottom { background: rgba(180,60,60,0.7); }
 .lb-legend-sep { color: rgba(239,231,210,0.15); }
 .lb-legend-hint { font-style: italic; }
+.lb-guide-btn {
+  margin-left: auto;
+  background: rgba(216,174,82,0.12);
+  border: 1px solid rgba(216,174,82,0.25);
+  color: #d8ae52;
+  border-radius: 6px;
+  padding: 3px 10px;
+  font-size: 0.72rem;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.2s;
+}
+.lb-guide-btn:hover { background: rgba(216,174,82,0.22); }
+
+/* ── Ranking Guide Modal ── */
+.rg-root { display: flex; flex-direction: column; gap: 14px; font-size: 0.85rem; }
+.rg-intro { color: #c8bfa8; line-height: 1.6; }
+.rg-quote {
+  background: rgba(216,174,82,0.08);
+  border-left: 3px solid #d8ae52;
+  padding: 10px 14px;
+  border-radius: 0 8px 8px 0;
+  color: #d8ae52;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+.rg-section-title { font-weight: 700; color: #eee; margin-top: 4px; }
+.rg-example-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+.rg-example-card {
+  border-radius: 10px;
+  padding: 12px 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  border: 1px solid rgba(255,255,255,0.06);
+}
+.rg-card-win  { background: rgba(76,175,125,0.08); border-color: rgba(76,175,125,0.25); }
+.rg-card-mid  { background: rgba(100,181,246,0.06); border-color: rgba(100,181,246,0.2); }
+.rg-card-loss { background: rgba(229,115,115,0.08); border-color: rgba(229,115,115,0.25); }
+.rg-card-name { font-weight: 700; color: #eee; font-size: 0.95rem; }
+.rg-card-record { color: #8a94a0; font-size: 0.78rem; }
+.rg-card-score { color: #d8ae52; font-size: 0.85rem; margin-top: 2px; }
+.rg-card-note { color: #a0a8b0; font-size: 0.75rem; line-height: 1.4; margin-top: 2px; }
+.rg-rules { display: flex; flex-direction: column; gap: 8px; }
+.rg-rule { display: flex; align-items: flex-start; gap: 10px; color: #c8bfa8; line-height: 1.5; }
+.rg-rule-icon { font-size: 1rem; flex-shrink: 0; }
+.rg-footer {
+  font-size: 0.75rem;
+  color: #5a6472;
+  border-top: 1px solid rgba(255,255,255,0.06);
+  padding-top: 10px;
+  font-style: italic;
+}
+@media (max-width: 500px) {
+  .rg-example-grid { grid-template-columns: 1fr; }
+}
 .pk-win { color: #4caf7d; font-weight: 700; }
 .pk-loss { color: #e57373; font-weight: 700; }
 

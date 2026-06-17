@@ -63,7 +63,7 @@ function LeaderboardRow({ row, isMe, total }) {
   )
 }
 
-function LeaderboardLegend({ total }) {
+function LeaderboardLegend({ total, onShowGuide }) {
   return (
     <div className="lb-legend">
       <span className="lb-legend-item"><span className="lb-dot lb-dot-gold" />Top 3</span>
@@ -71,7 +71,65 @@ function LeaderboardLegend({ total }) {
       {total >= 5 && <span className="lb-legend-item"><span className="lb-dot lb-dot-bottom" />Cần cố gắng</span>}
       <span className="lb-legend-sep">|</span>
       <span className="lb-legend-hint">★ Chỉ số Wilson — đánh nhiều trận mới được điểm cao</span>
+      <button className="lb-guide-btn" onClick={onShowGuide}>❓ Cách xếp hạng</button>
     </div>
+  )
+}
+
+function RankingGuideModal({ onClose }) {
+  return (
+    <Modal title="🏆 Cách tính xếp hạng" onClose={onClose}>
+      <div className="rg-root">
+        <p className="rg-intro">
+          Xếp hạng dựa trên <strong>Chỉ số ★</strong> — không phải số trận thắng đơn thuần.
+          Chỉ số này trả lời câu hỏi:
+        </p>
+        <div className="rg-quote">
+          "Nếu người này đánh lâu dài, tỷ lệ thắng tối thiểu của họ là bao nhiêu?"
+        </div>
+
+        <p className="rg-section-title">📌 Ví dụ thực tế</p>
+
+        <div className="rg-example-grid">
+          <div className="rg-example-card rg-card-win">
+            <div className="rg-card-name">Anh Lâm</div>
+            <div className="rg-card-record">2 thắng · 0 thua</div>
+            <div className="rg-card-score">Chỉ số: <strong>34%</strong></div>
+            <div className="rg-card-note">Chưa thua lần nào → chỉ số cao → <strong>#1</strong></div>
+          </div>
+          <div className="rg-example-card rg-card-mid">
+            <div className="rg-card-name">Anh Thế</div>
+            <div className="rg-card-record">3 thắng · 1 thua</div>
+            <div className="rg-card-score">Chỉ số: <strong>30%</strong></div>
+            <div className="rg-card-note">Thắng nhiều hơn nhưng đã thua 1 lần → chỉ số thấp hơn Lâm</div>
+          </div>
+          <div className="rg-example-card rg-card-mid">
+            <div className="rg-card-name">Bin</div>
+            <div className="rg-card-record">2 thắng · 2 thua</div>
+            <div className="rg-card-score">Chỉ số: <strong>15%</strong></div>
+            <div className="rg-card-note">Tỷ lệ thắng 50/50 → chỉ số trung bình</div>
+          </div>
+          <div className="rg-example-card rg-card-loss">
+            <div className="rg-card-name">Anh Khanh</div>
+            <div className="rg-card-record">2 thắng · 3 thua</div>
+            <div className="rg-card-score">Chỉ số: <strong>11%</strong></div>
+            <div className="rg-card-note">Thua nhiều hơn thắng → chỉ số thấp nhất</div>
+          </div>
+        </div>
+
+        <p className="rg-section-title">💡 Quy tắc đơn giản</p>
+        <div className="rg-rules">
+          <div className="rg-rule"><span className="rg-rule-icon">📈</span><span>Đánh <strong>càng nhiều trận</strong>, chỉ số càng chính xác và tăng lên</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🔥</span><span>Thắng liên tiếp → leo hạng nhanh</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">📉</span><span>Thua nhiều → chỉ số tụt ngay dù trước đó thắng nhiều</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🆕</span><span>Mới vào thắng 1 trận <strong>không thể leo #1</strong> — phải chứng minh qua nhiều trận</span></div>
+        </div>
+
+        <div className="rg-footer">
+          Điểm (+3 thắng / -1 thua) chỉ dùng để phân biệt khi 2 người có chỉ số bằng nhau.
+        </div>
+      </div>
+    </Modal>
   )
 }
 
@@ -210,6 +268,7 @@ export function PkArena({ activePerson }) {
   const [toast, setToast]         = useState('')
   const [showCreate, setShowCreate] = useState(false)
   const [showRandom, setShowRandom] = useState(false)
+  const [showGuide, setShowGuide]   = useState(false)
   const [showResult, setShowResult] = useState(null)
   const [cancelId, setCancelId]   = useState(null)
   const [form, setForm] = useState({
@@ -319,7 +378,8 @@ export function PkArena({ activePerson }) {
             <p className="muted">Chưa có dữ liệu xếp hạng. Hãy tạo kèo đầu tiên!</p>
           ) : (
             <>
-              <LeaderboardLegend total={leaderboard.length} />
+              <LeaderboardLegend total={leaderboard.length} onShowGuide={() => setShowGuide(true)} />
+              {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
               <div className="table-wrap">
               <table>
                 <thead>
