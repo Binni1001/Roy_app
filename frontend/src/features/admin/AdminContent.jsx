@@ -1,4 +1,5 @@
 import { DashboardPanel } from './panels/DashboardPanel'
+import { AnalyticsPanel } from './panels/AnalyticsPanel'
 import { PkPanel } from './panels/PkPanel'
 import { DebtsPanel } from './panels/DebtsPanel'
 import { FundPanel } from './panels/FundPanel'
@@ -10,6 +11,7 @@ import { ShuttlePanel } from './panels/ShuttlePanel'
 export function AdminContent(props) {
   const {
     activeTab,
+    activePeriod,
     summary,
     people,
     periods,
@@ -40,6 +42,18 @@ export function AdminContent(props) {
         adminUserForm={forms.adminUser}
         setForm={setForm}
         submit={submitGlobal}
+      />
+    )
+  }
+
+  if (activeTab === 'analytics') {
+    return (
+      <AnalyticsPanel
+        debts={data.debts}
+        fund={data.fund}
+        shuttleExpenses={data.shuttleExpenses}
+        members={data.members}
+        activePeriod={props.activePeriod}
       />
     )
   }

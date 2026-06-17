@@ -17,6 +17,7 @@ export const emptyPeriod = {
 
 export const adminTabs = [
   ['dashboard', 'Tổng quan', 'Bức tranh chung'],
+  ['analytics', 'Thống kê', 'Báo cáo chi tiết'],
   ['people', 'Nhân sự', 'Người trong câu lạc bộ'],
   ['periods', 'Kỳ quỹ', 'Kỳ sinh hoạt'],
   ['sessions', 'Buổi cầu', 'Lịch đã ghi nhận'],

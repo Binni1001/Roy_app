@@ -55,6 +55,7 @@ export function AdminPortal({ session, role, onSignOut }) {
         <StatusLine text={toast} />
         <AdminContent
           activeTab={activeTab}
+          activePeriod={activePeriod}
           summary={summary}
           people={people}
           periods={periods}
