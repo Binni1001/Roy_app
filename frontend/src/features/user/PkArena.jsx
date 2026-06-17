@@ -4,6 +4,77 @@ import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
 
+/* ── Leaderboard tier helpers ── */
+const TIERS = [
+  { label: '🥇', cls: 'lb-tier-gold',    min: 1, max: 1 },
+  { label: '🥈', cls: 'lb-tier-silver',  min: 2, max: 2 },
+  { label: '🥉', cls: 'lb-tier-bronze',  min: 3, max: 3 },
+]
+
+function getTierCls(rank, total) {
+  if (rank === 1) return 'lb-tier-gold'
+  if (rank === 2) return 'lb-tier-silver'
+  if (rank === 3) return 'lb-tier-bronze'
+  if (total >= 5 && rank >= total - 1) return 'lb-tier-bottom'
+  return ''
+}
+
+function RankBadge({ rank, total }) {
+  if (rank === 1) return <span className="lb-rank-badge lb-gold">🥇</span>
+  if (rank === 2) return <span className="lb-rank-badge lb-silver">🥈</span>
+  if (rank === 3) return <span className="lb-rank-badge lb-bronze">🥉</span>
+  if (total >= 5 && rank === total) return <span className="lb-rank-badge lb-last">💀</span>
+  if (total >= 5 && rank === total - 1) return <span className="lb-rank-badge lb-near-last">😅</span>
+  return <span className="lb-rank-num">{rank}</span>
+}
+
+function WilsonBar({ score }) {
+  const pct = Math.min(100, Math.max(0, score || 0))
+  let cls = 'lb-bar-low'
+  if (pct >= 60) cls = 'lb-bar-high'
+  else if (pct >= 40) cls = 'lb-bar-mid'
+  return (
+    <div className="lb-bar-wrap" title={`${score}%`}>
+      <div className={`lb-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
+      <span className="lb-bar-label">{score}%</span>
+    </div>
+  )
+}
+
+function LeaderboardRow({ row, isMe, total }) {
+  const tierCls = getTierCls(row.rank, total)
+  return (
+    <tr className={`${isMe ? 'pk-row-me' : ''} ${tierCls}`}>
+      <td><RankBadge rank={row.rank} total={total} /></td>
+      <td>
+        <div className="pk-person-cell">
+          {row.avatar_url
+            ? <img src={row.avatar_url} className="avatar avatar-img pk-avatar" alt={row.full_name} />
+            : <span className="avatar pk-avatar">{initials(row.full_name)}</span>}
+          <span>{row.full_name}{row.nickname ? <small className="muted"> · {row.nickname}</small> : null}</span>
+        </div>
+      </td>
+      <td className="pk-win">{row.wins}</td>
+      <td className="pk-loss">{row.losses}</td>
+      <td className="lb-total">{row.total_matches}</td>
+      <td className="lb-points"><span className="lb-points-chip">{row.points ?? '—'}</span></td>
+      <td><WilsonBar score={row.wilson_score} /></td>
+    </tr>
+  )
+}
+
+function LeaderboardLegend({ total }) {
+  return (
+    <div className="lb-legend">
+      <span className="lb-legend-item"><span className="lb-dot lb-dot-gold" />Top 3</span>
+      <span className="lb-legend-item"><span className="lb-dot lb-dot-mid" />Trung bình</span>
+      {total >= 5 && <span className="lb-legend-item"><span className="lb-dot lb-dot-bottom" />Cần cố gắng</span>}
+      <span className="lb-legend-sep">|</span>
+      <span className="lb-legend-hint">★ Chỉ số Wilson — đánh nhiều trận mới được điểm cao</span>
+    </div>
+  )
+}
+
 const STATUS_LABEL = {
   pending: 'Chờ xác nhận',
   active: 'Đang diễn ra',
@@ -247,32 +318,26 @@ export function PkArena({ activePerson }) {
           {loading ? <p className="muted">Đang tải...</p> : leaderboard.length === 0 ? (
             <p className="muted">Chưa có dữ liệu xếp hạng. Hãy tạo kèo đầu tiên!</p>
           ) : (
-            <div className="table-wrap">
+            <>
+              <LeaderboardLegend total={leaderboard.length} />
+              <div className="table-wrap">
               <table>
                 <thead>
-                  <tr><th>#</th><th>Người chơi</th><th>Thắng</th><th>Thua</th><th>Tổng</th><th>Tỉ lệ</th></tr>
+                  <tr>
+                    <th>#</th><th>Người chơi</th>
+                    <th>Thắng</th><th>Thua</th><th>Tổng</th>
+                    <th title="Điểm tích lũy: +3 mỗi trận thắng, -1 mỗi trận thua">Điểm</th>
+                    <th title="Wilson Score: xếp hạng thống kê, người ít trận bị kéo về trung bình">Chỉ số ★</th>
+                  </tr>
                 </thead>
                 <tbody>
                   {leaderboard.map((row) => (
-                    <tr key={row.id} className={row.id === activePerson?.id ? 'pk-row-me' : ''}>
-                      <td><strong className={row.rank <= 3 ? 'pk-rank-top' : ''}>{row.rank}</strong></td>
-                      <td>
-                        <div className="pk-person-cell">
-                          {row.avatar_url
-                            ? <img src={row.avatar_url} className="avatar avatar-img pk-avatar" alt={row.full_name} />
-                            : <span className="avatar pk-avatar">{initials(row.full_name)}</span>}
-                          <span>{row.full_name}{row.nickname ? <small className="muted"> · {row.nickname}</small> : null}</span>
-                        </div>
-                      </td>
-                      <td className="pk-win">{row.wins}</td>
-                      <td className="pk-loss">{row.losses}</td>
-                      <td>{row.total_matches}</td>
-                      <td>{row.win_rate}%</td>
-                    </tr>
+                    <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={leaderboard.length} />)
                   ))}
                 </tbody>
               </table>
             </div>
+            </>
           )}
         </Panel>
       )}
