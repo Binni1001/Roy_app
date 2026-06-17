@@ -1,8 +1,21 @@
 import { Panel, SimpleTable } from '../../components/common'
 import { CheckoutBox, DebtTable } from '../../components/finance'
+import { SessionCalendar } from '../../components/SessionCalendar'
 import { formatDate, formatMoney } from '../../utils/appUtils'
 
 export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, checkout }) {
+  if (activeTab === 'schedule') {
+    return (
+      <div className="tab-scene" style={{ '--tab-img': 'url(/images/court.jpg)' }}>
+        <section className="grid one">
+          <Panel title="📅 Lịch buổi đánh">
+            <SessionCalendar sessions={sessions} />
+          </Panel>
+        </section>
+      </div>
+    )
+  }
+
   if (activeTab === 'debts') {
     return (
       <div className="tab-scene" style={{ '--tab-img': 'url(/images/player-fist.jpg)' }}>
@@ -46,8 +59,8 @@ export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessi
         <Panel title="Lịch sử gần đây">
           <SimpleTable rows={transactions.slice(0, 5)} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
         </Panel>
-        <Panel title="Lịch chơi">
-          <SimpleTable rows={sessions.slice(0, 5)} columns={[['play_date', 'Ngày', formatDate], ['shuttle_used_count', 'Số cầu'], ['note', 'Ghi chú']]} />
+        <Panel title="📅 Lịch chơi">
+          <SessionCalendar sessions={sessions} />
         </Panel>
       </section>
     </div>

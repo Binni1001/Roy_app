@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
+import { ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
+import { SessionCalendar } from '../../../components/SessionCalendar'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
 
 export function SessionsPanel({ people, sessions, sessionForm, guestForm, selectedPeriodId, setForm, submit }) {
@@ -15,7 +16,7 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
     <>
       <section className="grid one">
         <Panel
-          title="Danh sách buổi cầu"
+          title="Lịch buổi cầu"
           action={
             <div style={{ display: 'flex', gap: 8 }}>
               <button onClick={() => setShowAddGuest(true)}>+ Ghi khách</button>
@@ -23,24 +24,19 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
             </div>
           }
         >
-          <SimpleTable
-            rows={sessions}
-            columns={[['play_date', 'Ngày', formatDate], ['shuttle_used_count', 'Số cầu'], ['note', 'Ghi chú']]}
-            actions={(session) => (
-              <ActionGroup>
-                <button onClick={() => {
-                  api.guests.bySession(session.id).then((result) => {
-                    setGuests(Array.isArray(result) ? result : [])
-                    setViewingGuests(session)
-                  }).catch(() => {
-                    setGuests([])
-                    setViewingGuests(session)
-                  })
-                }}>Khách</button>
-                <button onClick={() => setEditingSession(session)}>Sửa</button>
-                <button className="danger" onClick={() => setDeletingSession(session)}>Xóa</button>
-              </ActionGroup>
-            )}
+          <SessionCalendar
+            sessions={sessions}
+            onEdit={(session) => setEditingSession(session)}
+            onDelete={(session) => setDeletingSession(session)}
+            onViewGuests={(session) => {
+              api.guests.bySession(session.id).then((result) => {
+                setGuests(Array.isArray(result) ? result : [])
+                setViewingGuests(session)
+              }).catch(() => {
+                setGuests([])
+                setViewingGuests(session)
+              })
+            }}
           />
         </Panel>
       </section>
