@@ -334,6 +334,12 @@ function ResultModal({ match, onClose, onSubmit }) {
   function updateScore(i, side, val) {
     setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
   }
+  function addSet() {
+    setScores((prev) => [...prev, { challenger: '', opponent: '' }])
+  }
+  function removeSet(i) {
+    setScores((prev) => prev.filter((_, idx) => idx !== i))
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
@@ -387,8 +393,12 @@ function ResultModal({ match, onClose, onSubmit }) {
               <input className="rs-score-input" type="number" min="0" max="99"
                 value={s.opponent} onChange={(e) => updateScore(i, 'opponent', e.target.value)}
                 placeholder="0" />
+              {scores.length > 1 && (
+                <button type="button" className="rs-remove-set" onClick={() => removeSet(i)} title="Xóa set này">×</button>
+              )}
             </div>
           ))}
+          <button type="button" className="rs-add-set" onClick={addSet}>+ Thêm set</button>
         </div>
 
         <footer className="modal-actions">

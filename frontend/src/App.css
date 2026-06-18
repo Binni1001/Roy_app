@@ -3532,3 +3532,27 @@ textarea:focus {
 }
 .rs-submit-btn:hover { opacity: 0.88; }
 .rs-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.rs-add-set {
+  width: 100%;
+  margin-top: 6px;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px dashed #3a4558;
+  background: transparent;
+  color: #8a94a0;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+}
+.rs-add-set:hover { color: #c8d0dc; border-color: #5a6578; }
+.rs-remove-set {
+  padding: 0 6px;
+  background: transparent;
+  border: none;
+  color: #6a7080;
+  font-size: 1rem;
+  cursor: pointer;
+  line-height: 1;
+}
+.rs-remove-set:hover { color: #e57373; }
+.rs-score-row { grid-template-columns: 40px 1fr 20px 1fr 24px; }
