@@ -1632,6 +1632,16 @@ button.danger:hover {
   font-weight: 600;
 }
 
+.pk-create-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+.pk-locked-hint {
+  font-size: 0.75rem;
+  color: #e57373;
+  white-space: nowrap;
+}
+
 /* ── Leaderboard type toggle ── */
 .lb-type-toggle {
   display: flex;
