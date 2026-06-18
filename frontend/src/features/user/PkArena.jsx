@@ -248,6 +248,23 @@ function TeamBlock({ main, partner, label, isWinner }) {
   )
 }
 
+/* ── Set score display ── */
+function SetScores({ scores, challenger, opponent }) {
+  if (!scores || scores.length === 0) return null
+  return (
+    <div className="pk-set-scores">
+      {scores.map((s, i) => (
+        <div key={i} className="pk-set-row">
+          <span className="pk-set-label">Set {i + 1}</span>
+          <span className={`pk-set-score${s.challenger > s.opponent ? ' pk-score-win' : ' pk-score-lose'}`}>{s.challenger}</span>
+          <span className="pk-set-dash">–</span>
+          <span className={`pk-set-score${s.opponent > s.challenger ? ' pk-score-win' : ' pk-score-lose'}`}>{s.opponent}</span>
+        </div>
+      ))}
+    </div>
+  )
+}
+
 function MatchCard({ m, activePerson, onSetResult, onCancel }) {
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
@@ -275,9 +292,7 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
         <div className="pk-vs-center">
           <span className="pk-vs-text">VS</span>
           {m.status === 'completed' && (
-            <span className="pk-score-label">
-              {challengerWon ? '1 – 0' : '0 – 1'}
-            </span>
+            <SetScores scores={m.set_scores} />
           )}
         </div>
         <TeamBlock
@@ -306,6 +321,82 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
         </div>
       )}
     </div>
+  )
+}
+
+function ResultModal({ match, onClose, onSubmit }) {
+  const sets = match.sets || 1
+  const [winner, setWinner] = useState('')
+  const [scores, setScores] = useState(
+    Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
+  )
+
+  function updateScore(i, side, val) {
+    setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
+  }
+
+  function handleSubmit(e) {
+    e.preventDefault()
+    if (!winner) return
+    const parsed = scores.map((s) => ({
+      challenger: Number(s.challenger) || 0,
+      opponent: Number(s.opponent) || 0,
+    })).filter((s) => s.challenger > 0 || s.opponent > 0)
+    onSubmit(winner, parsed)
+  }
+
+  const cName = `${match.challenger?.full_name || '?'}${match.challenger_partner ? ` & ${match.challenger_partner.full_name}` : ''}`
+  const oName = `${match.opponent?.full_name || '?'}${match.opponent_partner ? ` & ${match.opponent_partner.full_name}` : ''}`
+
+  return (
+    <Modal title="🏆 Ghi nhận kết quả" onClose={onClose}>
+      <form className="rs-root" onSubmit={handleSubmit}>
+        <p className="rs-hint">Chọn bên thắng</p>
+        <div className="rs-winner-row">
+          <button type="button"
+            className={`rs-side-btn${winner === 'challenger' ? ' rs-side-active' : ''}`}
+            onClick={() => setWinner('challenger')}>
+            <span className="rs-side-name">{cName}</span>
+            <small>Bên thách đấu</small>
+            {winner === 'challenger' && <span className="rs-crown">🏆</span>}
+          </button>
+          <span className="rs-vs">VS</span>
+          <button type="button"
+            className={`rs-side-btn${winner === 'opponent' ? ' rs-side-active' : ''}`}
+            onClick={() => setWinner('opponent')}>
+            <span className="rs-side-name">{oName}</span>
+            <small>Bên đối thủ</small>
+            {winner === 'opponent' && <span className="rs-crown">🏆</span>}
+          </button>
+        </div>
+
+        <div className="rs-scores">
+          <div className="rs-scores-header">
+            <span>Set</span>
+            <span>{match.challenger?.full_name?.split(' ').pop() || 'Thách đấu'}</span>
+            <span></span>
+            <span>{match.opponent?.full_name?.split(' ').pop() || 'Đối thủ'}</span>
+          </div>
+          {scores.map((s, i) => (
+            <div key={i} className="rs-score-row">
+              <span className="rs-set-num">Set {i + 1}</span>
+              <input className="rs-score-input" type="number" min="0" max="99"
+                value={s.challenger} onChange={(e) => updateScore(i, 'challenger', e.target.value)}
+                placeholder="0" />
+              <span className="rs-dash">–</span>
+              <input className="rs-score-input" type="number" min="0" max="99"
+                value={s.opponent} onChange={(e) => updateScore(i, 'opponent', e.target.value)}
+                placeholder="0" />
+            </div>
+          ))}
+        </div>
+
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit" disabled={!winner}>Xác nhận kết quả</button>
+        </footer>
+      </form>
+    </Modal>
   )
 }
 
@@ -385,9 +476,13 @@ export function PkArena({ activePerson }) {
     } catch (err) { setToast(err.message) }
   }
 
-  async function handleSetWinner(matchId, winnerSide) {
+  async function handleSetWinner(matchId, winnerSide, setScores) {
     try {
-      await api.pk.update(matchId, { winner_side: winnerSide, status: 'completed' })
+      await api.pk.update(matchId, {
+        winner_side: winnerSide,
+        status: 'completed',
+        set_scores: setScores?.length ? setScores : null,
+      })
       setToast('Đã ghi nhận kết quả!')
       setShowResult(null)
       void loadAll()
@@ -752,21 +847,11 @@ export function PkArena({ activePerson }) {
       )}
 
       {showResult && (
-        <Modal title="Ghi nhận kết quả" onClose={() => setShowResult(null)}>
-          <div className="form">
-            <p>Ai thắng?</p>
-            <div className="pk-winner-choice">
-              <button onClick={() => handleSetWinner(showResult.id, 'challenger')}>
-                {showResult.challenger?.full_name}{showResult.challenger_partner ? ` & ${showResult.challenger_partner.full_name}` : ''}
-                <small> (bên thách đấu)</small>
-              </button>
-              <button onClick={() => handleSetWinner(showResult.id, 'opponent')}>
-                {showResult.opponent?.full_name}{showResult.opponent_partner ? ` & ${showResult.opponent_partner.full_name}` : ''}
-                <small> (bên đối thủ)</small>
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <ResultModal
+          match={showResult}
+          onClose={() => setShowResult(null)}
+          onSubmit={(winnerSide, setScores) => handleSetWinner(showResult.id, winnerSide, setScores)}
+        />
       )}
 
       {cancelId && (

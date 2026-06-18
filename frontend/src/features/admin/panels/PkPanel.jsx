@@ -130,6 +130,24 @@ function TeamBlock({ main, partner, label, isWinner }) {
   )
 }
 
+function SetScores({ scores }) {
+  if (!scores?.length) return null
+  return (
+    <div className="pk-set-scores">
+      {scores.map((s, i) => {
+        const cWins = s.challenger > s.opponent
+        return (
+          <div key={i} className="pk-set-row">
+            <span className={`pk-set-score ${cWins ? 'pk-score-win' : 'pk-score-lose'}`}>{s.challenger}</span>
+            <span className="pk-set-label">–</span>
+            <span className={`pk-set-score ${!cWins ? 'pk-score-win' : 'pk-score-lose'}`}>{s.opponent}</span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
 function AdminMatchCard({ m, onEdit, onDelete }) {
   const challengerWon = m.winner_side === 'challenger'
   const opponentWon   = m.winner_side === 'opponent'
@@ -153,7 +171,9 @@ function AdminMatchCard({ m, onEdit, onDelete }) {
         <div className="pk-vs-center">
           <span className="pk-vs-text">VS</span>
           {m.status === 'completed' && (
-            <span className="pk-score-label">{challengerWon ? '1 – 0' : '0 – 1'}</span>
+            m.set_scores?.length
+              ? <SetScores scores={m.set_scores} />
+              : <span className="pk-score-label">{challengerWon ? '1 – 0' : '0 – 1'}</span>
           )}
         </div>
         <TeamBlock
@@ -595,6 +615,7 @@ function AdminCreateMatchModal({ people, onClose, onSubmit }) {
 }
 
 function PkEditModal({ match, onClose, onSubmit }) {
+  const sets = match.sets || 1
   const [draft, setDraft] = useState({
     status:      match.status      || 'pending',
     winner_side: match.winner_side || '',
@@ -602,17 +623,30 @@ function PkEditModal({ match, onClose, onSubmit }) {
     played_at:   match.played_at   ? match.played_at.slice(0, 10) : '',
     note:        match.note        || '',
   })
+  const [scores, setScores] = useState(
+    match.set_scores?.length
+      ? match.set_scores.map((s) => ({ challenger: s.challenger ?? '', opponent: s.opponent ?? '' }))
+      : Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
+  )
 
   function update(k, v) { setDraft((d) => ({ ...d, [k]: v })) }
+  function updateScore(i, side, val) {
+    setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
+  }
 
   function handleSubmit(e) {
     e.preventDefault()
+    const parsed = scores.map((s) => ({
+      challenger: Number(s.challenger) || 0,
+      opponent: Number(s.opponent) || 0,
+    })).filter((s) => s.challenger > 0 || s.opponent > 0)
     onSubmit({
       status:      draft.status,
       winner_side: draft.winner_side || null,
       bet_items:   draft.bet_items   || null,
       played_at:   draft.played_at   || null,
       note:        draft.note        || null,
+      set_scores:  parsed.length ? parsed : null,
     })
   }
 
@@ -629,6 +663,25 @@ function PkEditModal({ match, onClose, onSubmit }) {
             {WINNER_OPTIONS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
           </select>
         </label>
+        <div>
+          <p style={{ fontSize: '0.8rem', color: '#8a94a0', marginBottom: 8 }}>📊 Điểm từng set</p>
+          <div className="rs-scores-header">
+            <span>Set</span>
+            <span>{match.challenger?.full_name?.split(' ').pop() || 'Thách đấu'}</span>
+            <span></span>
+            <span>{match.opponent?.full_name?.split(' ').pop() || 'Đối thủ'}</span>
+          </div>
+          {scores.map((s, i) => (
+            <div key={i} className="rs-score-row">
+              <span className="rs-set-num">Set {i + 1}</span>
+              <input className="rs-score-input" type="number" min="0" max="99"
+                value={s.challenger} onChange={(e) => updateScore(i, 'challenger', e.target.value)} placeholder="0" />
+              <span className="rs-dash">–</span>
+              <input className="rs-score-input" type="number" min="0" max="99"
+                value={s.opponent} onChange={(e) => updateScore(i, 'opponent', e.target.value)} placeholder="0" />
+            </div>
+          ))}
+        </div>
         <label>Vật phẩm cược
           <input type="text" value={draft.bet_items} onChange={(e) => update('bet_items', e.target.value)} />
         </label>
