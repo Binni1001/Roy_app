@@ -1632,6 +1632,33 @@ button.danger:hover {
   font-weight: 600;
 }
 
+/* ── Leaderboard type toggle ── */
+.lb-type-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+}
+.lb-type-toggle button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 18px;
+  border-radius: 20px;
+  border: 1px solid rgba(239,231,210,0.12);
+  background: rgba(255,255,255,0.03);
+  color: #8a94a0;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.lb-type-toggle button:hover { border-color: rgba(216,174,82,0.3); color: #c8bfa8; }
+.lb-type-toggle button.active {
+  background: rgba(216,174,82,0.12);
+  border-color: rgba(216,174,82,0.5);
+  color: #d8ae52;
+  font-weight: 700;
+}
+
 /* ── PK match extra filters ── */
 .pk-match-filters {
   display: flex;

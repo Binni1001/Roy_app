@@ -4,6 +4,56 @@ import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
 
+/* ── Compute leaderboard from matches by type ── */
+function wilsonScore(wins, total) {
+  if (total === 0) return 0
+  const p = wins / total
+  const z = 1.96
+  const z2 = z * z
+  const num = p + z2 / (2 * total) - z * Math.sqrt(p * (1 - p) / total + z2 / (4 * total * total))
+  const den = 1 + z2 / total
+  return Math.max(0, Math.round((num / den) * 1000) / 10)
+}
+
+function computeLeaderboard(matches, matchType, people) {
+  const completed = matches.filter((m) => m.status === 'completed' && m.match_type === matchType)
+  const stats = {}
+  completed.forEach((m) => {
+    const challengers = [m.challenger_id, m.challenger_partner_id].filter(Boolean)
+    const opponents   = [m.opponent_id,   m.opponent_partner_id  ].filter(Boolean)
+    ;[...challengers, ...opponents].forEach((pid) => {
+      if (!stats[pid]) stats[pid] = { wins: 0, losses: 0 }
+    })
+    challengers.forEach((pid) => {
+      if (m.winner_side === 'challenger') stats[pid].wins++
+      else stats[pid].losses++
+    })
+    opponents.forEach((pid) => {
+      if (m.winner_side === 'opponent') stats[pid].wins++
+      else stats[pid].losses++
+    })
+  })
+  const rows = Object.entries(stats).map(([id, s]) => {
+    const total = s.wins + s.losses
+    const p = people.find((x) => x.id === id) || {}
+    return {
+      id,
+      full_name: p.full_name || '?',
+      nickname: p.nickname || null,
+      avatar_url: p.avatar_url || null,
+      wins: s.wins,
+      losses: s.losses,
+      total_matches: total,
+      win_rate: total > 0 ? Math.round(s.wins / total * 1000) / 10 : 0,
+      wilson_score: wilsonScore(s.wins, total),
+      points: Math.max(0, s.wins * 3 - s.losses),
+    }
+  })
+  rows.sort((a, b) => b.wilson_score - a.wilson_score || b.points - a.points || b.wins - a.wins)
+  rows.forEach((r, i) => { r.rank = i + 1 })
+  return rows
+}
+
 /* ── Leaderboard tier helpers ── */
 const TIERS = [
   { label: '🥇', cls: 'lb-tier-gold',    min: 1, max: 1 },
@@ -269,6 +319,7 @@ export function PkArena({ activePerson }) {
   const [showCreate, setShowCreate] = useState(false)
   const [showRandom, setShowRandom] = useState(false)
   const [showGuide, setShowGuide]   = useState(false)
+  const [lbType, setLbType]         = useState('singles')
   const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [matchSearch, setMatchSearch]     = useState('')
   const [dateFilter, setDateFilter]       = useState('all')
@@ -398,6 +449,10 @@ export function PkArena({ activePerson }) {
     )
   }
 
+  const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
+  const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
+  const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
+
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
   const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
   const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
@@ -418,29 +473,39 @@ export function PkArena({ activePerson }) {
       {/* ── LEADERBOARD ── */}
       {tab === 'leaderboard' && (
         <Panel title="Bảng xếp hạng PK">
-          {loading ? <p className="muted">Đang tải...</p> : leaderboard.length === 0 ? (
-            <p className="muted">Chưa có dữ liệu xếp hạng. Hãy tạo kèo đầu tiên!</p>
+          {/* Type toggle */}
+          <div className="lb-type-toggle">
+            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
+              ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
+            </button>
+            <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
+              🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
+            </button>
+          </div>
+
+          {loading ? <p className="muted">Đang tải...</p> : activeLb.length === 0 ? (
+            <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}. Hãy tạo kèo đầu tiên!</p>
           ) : (
             <>
-              <LeaderboardLegend total={leaderboard.length} onShowGuide={() => setShowGuide(true)} />
+              <LeaderboardLegend total={activeLb.length} onShowGuide={() => setShowGuide(true)} />
               {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
               <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>#</th><th>Người chơi</th>
-                    <th>Thắng</th><th>Thua</th><th>Tổng</th>
-                    <th title="Điểm tích lũy: +3 mỗi trận thắng, -1 mỗi trận thua">Điểm</th>
-                    <th title="Wilson Score: xếp hạng thống kê, người ít trận bị kéo về trung bình">Chỉ số ★</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {leaderboard.map((row) => (
-                    <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={leaderboard.length} />
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                <table>
+                  <thead>
+                    <tr>
+                      <th>#</th><th>Người chơi</th>
+                      <th>Thắng</th><th>Thua</th><th>Tổng</th>
+                      <th title="Điểm tích lũy: +3 mỗi trận thắng, -1 mỗi trận thua">Điểm</th>
+                      <th title="Wilson Score: xếp hạng thống kê, người ít trận bị kéo về trung bình">Chỉ số ★</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {activeLb.map((row) => (
+                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={activeLb.length} />
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </>
           )}
         </Panel>

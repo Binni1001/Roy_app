@@ -58,6 +58,35 @@ function AdminLeaderboardLegend({ total }) {
     </div>
   )
 }
+function wilsonScore(wins, total) {
+  if (total === 0) return 0
+  const p = wins / total, z = 1.96, z2 = z * z
+  const num = p + z2 / (2 * total) - z * Math.sqrt(p * (1 - p) / total + z2 / (4 * total * total))
+  return Math.max(0, Math.round((num / (1 + z2 / total)) * 1000) / 10)
+}
+function computeLeaderboard(matches, matchType, people) {
+  const completed = matches.filter((m) => m.status === 'completed' && m.match_type === matchType)
+  const stats = {}
+  completed.forEach((m) => {
+    const ch = [m.challenger_id, m.challenger_partner_id].filter(Boolean)
+    const op = [m.opponent_id,   m.opponent_partner_id  ].filter(Boolean)
+    ;[...ch, ...op].forEach((pid) => { if (!stats[pid]) stats[pid] = { wins: 0, losses: 0 } })
+    ch.forEach((pid) => { if (m.winner_side === 'challenger') stats[pid].wins++; else stats[pid].losses++ })
+    op.forEach((pid) => { if (m.winner_side === 'opponent')   stats[pid].wins++; else stats[pid].losses++ })
+  })
+  const rows = Object.entries(stats).map(([id, s]) => {
+    const total = s.wins + s.losses
+    const p = people.find((x) => x.id === id) || {}
+    return { id, full_name: p.full_name || '?', nickname: p.nickname || null, avatar_url: p.avatar_url || null,
+      wins: s.wins, losses: s.losses, total_matches: total,
+      win_rate: total > 0 ? Math.round(s.wins / total * 1000) / 10 : 0,
+      wilson_score: wilsonScore(s.wins, total), points: Math.max(0, s.wins * 3 - s.losses) }
+  })
+  rows.sort((a, b) => b.wilson_score - a.wilson_score || b.points - a.points || b.wins - a.wins)
+  rows.forEach((r, i) => { r.rank = i + 1 })
+  return rows
+}
+
 const STATUS_OPTIONS = ['pending', 'active', 'completed', 'cancelled']
 const WINNER_OPTIONS = [{ value: '', label: '—' }, { value: 'challenger', label: 'Bên thách đấu' }, { value: 'opponent', label: 'Bên đối thủ' }]
 
@@ -158,6 +187,7 @@ export function PkPanel() {
   const [editing, setEditing]     = useState(null)
   const [deleting, setDeleting]   = useState(null)
   const [showRandom, setShowRandom]     = useState(false)
+  const [lbType, setLbType]             = useState('singles')
   const [showCreate, setShowCreate]     = useState(false)
   const [matchSearch, setMatchSearch]   = useState('')
   const [dateFilter, setDateFilter]     = useState('all')
@@ -234,6 +264,10 @@ export function PkPanel() {
     return names.some((n) => n.includes(q))
   }
 
+  const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
+  const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
+  const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
+
   const filtered = useMemo(() => sortByDate(
     (filter === 'all' ? matches : matches.filter((m) => m.status === filter))
       .filter((m) => matchInDateRange(m) && matchNameSearch(m))
@@ -246,11 +280,19 @@ export function PkPanel() {
       <section className="grid one">
         {/* Leaderboard */}
         <Panel title="Bảng xếp hạng PK">
-          {loading ? <p className="muted">Đang tải...</p> : leaderboard.length === 0 ? (
-            <p className="muted">Chưa có dữ liệu.</p>
+          <div className="lb-type-toggle">
+            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
+              ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
+            </button>
+            <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
+              🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
+            </button>
+          </div>
+          {loading ? <p className="muted">Đang tải...</p> : activeLb.length === 0 ? (
+            <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}.</p>
           ) : (
             <>
-              <AdminLeaderboardLegend total={leaderboard.length} />
+              <AdminLeaderboardLegend total={activeLb.length} />
               <div className="table-wrap">
                 <table>
                   <thead>
@@ -262,8 +304,8 @@ export function PkPanel() {
                     </tr>
                   </thead>
                   <tbody>
-                    {leaderboard.map((row) => (
-                      <AdminLeaderboardRow key={row.id} row={row} total={leaderboard.length} />
+                    {activeLb.map((row) => (
+                      <AdminLeaderboardRow key={row.id} row={row} total={activeLb.length} />
                     ))}
                   </tbody>
                 </table>
