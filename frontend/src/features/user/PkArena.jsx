@@ -365,7 +365,7 @@ export function PkArena({ activePerson }) {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!isCreateAllowed()) { setToast('Đã hết giờ đặt kèo hôm nay (trước 5:30 sáng)'); return }
+    if (!isCreateAllowed()) { setToast('Đã hết giờ đặt kèo hôm nay (trước 17:30)'); return }
     if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
     if (form.opponent_id === activePerson?.id) { setToast('Không thể thách đấu chính mình'); return }
     try {
@@ -453,7 +453,7 @@ export function PkArena({ activePerson }) {
   function isCreateAllowed() {
     const now = new Date()
     const h = now.getHours(), m = now.getMinutes()
-    return h < 5 || (h === 5 && m < 30)
+    return h < 17 || (h === 17 && m < 30)
   }
   const canCreate = isCreateAllowed()
 
@@ -524,8 +524,8 @@ export function PkArena({ activePerson }) {
         <Panel title="Kèo đấu"
           action={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 5:30 sáng' : ''} onClick={() => canCreate && setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
-              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 5:30 sáng' : ''} onClick={() => canCreate && setShowCreate(true)}>+ Thách đấu mới</button>
+              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
+              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowCreate(true)}>+ Thách đấu mới</button>
               {!canCreate && <span className="pk-locked-hint">🔒 Hết giờ đặt kèo hôm nay</span>}
             </div>
           }
