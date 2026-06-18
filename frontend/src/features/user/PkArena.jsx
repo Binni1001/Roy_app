@@ -260,6 +260,7 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
       <div className="pk-card-header">
         <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
         <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
+        {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
         {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
       </div>
 
@@ -331,6 +332,7 @@ export function PkArena({ activePerson }) {
     opponent_id: '',
     challenger_partner_id: '',
     opponent_partner_id: '',
+    sets: 1,
     bet_items: '',
     played_at: '',
     note: '',
@@ -372,12 +374,13 @@ export function PkArena({ activePerson }) {
       await api.pk.create({
         ...form,
         challenger_id: activePerson.id,
+        sets: Number(form.sets) || 1,
         challenger_partner_id: form.match_type === 'doubles' ? form.challenger_partner_id : undefined,
         opponent_partner_id:   form.match_type === 'doubles' ? form.opponent_partner_id   : undefined,
       })
       setToast('Đã tạo kèo thách đấu!')
       setShowCreate(false)
-      setForm({ match_type: 'singles', opponent_id: '', challenger_partner_id: '', opponent_partner_id: '', bet_items: '', played_at: '', note: '' })
+      setForm({ match_type: 'singles', opponent_id: '', challenger_partner_id: '', opponent_partner_id: '', sets: 1, bet_items: '', played_at: '', note: '' })
       void loadAll()
     } catch (err) { setToast(err.message) }
   }
@@ -663,6 +666,20 @@ export function PkArena({ activePerson }) {
                   <strong>Đánh đôi</strong>
                   <small>2 vs 2</small>
                 </button>
+              </div>
+
+              {/* ── Số set ── */}
+              <div className="ck-sets-row">
+                <span className="ck-sets-label">🏸 Số set</span>
+                <div className="ck-sets-options">
+                  {[1, 3, 5].map((s) => (
+                    <button key={s} type="button"
+                      className={`ck-set-btn${form.sets === s ? ' ck-set-active' : ''}`}
+                      onClick={() => updateForm('sets', s)}>
+                      {s} set
+                    </button>
+                  ))}
+                </div>
               </div>
 
               {/* ── Chọn đội ── */}

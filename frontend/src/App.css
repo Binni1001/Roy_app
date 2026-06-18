@@ -1669,6 +1669,39 @@ button.danger:hover {
   font-weight: 700;
 }
 
+/* ── Sets selector in create modal ── */
+.ck-sets-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 20px;
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.ck-sets-label { font-size: 0.82rem; color: #8a94a0; white-space: nowrap; }
+.ck-sets-options { display: flex; gap: 8px; }
+.ck-set-btn {
+  padding: 5px 16px;
+  border-radius: 16px;
+  border: 1px solid rgba(239,231,210,0.12);
+  background: rgba(255,255,255,0.03);
+  color: #8a94a0;
+  font-size: 0.82rem;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.ck-set-btn:hover { border-color: rgba(216,174,82,0.3); color: #c8bfa8; }
+.ck-set-active {
+  background: rgba(216,174,82,0.15);
+  border-color: #d8ae52;
+  color: #d8ae52;
+  font-weight: 700;
+}
+.pk-badge-sets {
+  background: rgba(100,181,246,0.15);
+  color: #64b5f6;
+  border: 1px solid rgba(100,181,246,0.3);
+}
+
 /* ── PK match extra filters ── */
 .pk-match-filters {
   display: flex;
