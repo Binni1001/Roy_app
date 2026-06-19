@@ -2,11 +2,11 @@ import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Modal, Panel } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
+import { computeLeaderboard } from '../../../utils/leaderboardUtils'
 import { RandomMatchmaker } from '../../user/RandomMatchmaker'
 
 const STATUS_LABEL = { pending: 'Chờ', active: 'Đang đấu', completed: 'Xong', cancelled: 'Đã hủy' }
 
-/* ── Leaderboard helpers (shared logic with PkArena) ── */
 function getTierCls(rank, total) {
   if (rank === 1) return 'lb-tier-gold'
   if (rank === 2) return 'lb-tier-silver'
@@ -23,14 +23,15 @@ function RankBadge({ rank, total }) {
   return <span className="lb-rank-num">{rank}</span>
 }
 function WilsonBar({ score }) {
-  const pct = Math.min(100, Math.max(0, score || 0))
+  const pct = Math.min(100, Math.max(0, (score || 0) * 100))
   let cls = 'lb-bar-low'
   if (pct >= 60) cls = 'lb-bar-high'
   else if (pct >= 40) cls = 'lb-bar-mid'
+  const display = Math.round(pct)
   return (
-    <div className="lb-bar-wrap" title={`${score}%`}>
+    <div className="lb-bar-wrap" title={`${display}%`}>
       <div className={`lb-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
-      <span className="lb-bar-label">{score}%</span>
+      <span className="lb-bar-label">{display}%</span>
     </div>
   )
 }
@@ -42,7 +43,6 @@ function AdminLeaderboardRow({ row, total }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td className="lb-points"><span className="lb-points-chip">{row.points ?? '—'}</span></td>
       <td><WilsonBar score={row.wilson_score} /></td>
     </tr>
   )
@@ -57,34 +57,6 @@ function AdminLeaderboardLegend({ total }) {
       <span className="lb-legend-hint">★ Wilson Score — đánh nhiều trận mới cao</span>
     </div>
   )
-}
-function wilsonScore(wins, total) {
-  if (total === 0) return 0
-  const p = wins / total, z = 1.96, z2 = z * z
-  const num = p + z2 / (2 * total) - z * Math.sqrt(p * (1 - p) / total + z2 / (4 * total * total))
-  return Math.max(0, Math.round((num / (1 + z2 / total)) * 1000) / 10)
-}
-function computeLeaderboard(matches, matchType, people) {
-  const completed = matches.filter((m) => m.status === 'completed' && m.match_type === matchType)
-  const stats = {}
-  completed.forEach((m) => {
-    const ch = [m.challenger_id, m.challenger_partner_id].filter(Boolean)
-    const op = [m.opponent_id,   m.opponent_partner_id  ].filter(Boolean)
-    ;[...ch, ...op].forEach((pid) => { if (!stats[pid]) stats[pid] = { wins: 0, losses: 0 } })
-    ch.forEach((pid) => { if (m.winner_side === 'challenger') stats[pid].wins++; else stats[pid].losses++ })
-    op.forEach((pid) => { if (m.winner_side === 'opponent')   stats[pid].wins++; else stats[pid].losses++ })
-  })
-  const rows = Object.entries(stats).map(([id, s]) => {
-    const total = s.wins + s.losses
-    const p = people.find((x) => x.id === id) || {}
-    return { id, full_name: p.full_name || '?', nickname: p.nickname || null, avatar_url: p.avatar_url || null,
-      wins: s.wins, losses: s.losses, total_matches: total,
-      win_rate: total > 0 ? Math.round(s.wins / total * 1000) / 10 : 0,
-      wilson_score: wilsonScore(s.wins, total), points: Math.max(0, s.wins * 3 - s.losses) }
-  })
-  rows.sort((a, b) => b.wilson_score - a.wilson_score || b.points - a.points || b.wins - a.wins)
-  rows.forEach((r, i) => { r.rank = i + 1 })
-  return rows
 }
 
 const STATUS_OPTIONS = ['pending', 'active', 'completed', 'cancelled']

@@ -3539,6 +3539,34 @@ textarea:focus {
 }
 .rs-submit-btn:hover { opacity: 0.88; }
 .rs-submit-btn:disabled { opacity: 0.4; cursor: not-allowed; }
+.rs-confirm-box {
+  background: rgba(216,174,82,0.07);
+  border: 1px solid rgba(216,174,82,0.2);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.rs-confirm-winner {
+  font-size: 1rem;
+  color: #e8d898;
+  text-align: center;
+}
+.rs-confirm-warn {
+  font-size: 0.82rem;
+  color: #8a94a0;
+  text-align: center;
+  line-height: 1.5;
+}
+.btn-danger {
+  background: linear-gradient(135deg, #e05252, #b83232) !important;
+  color: #fff !important;
+}
+.pk-countdown {
+  color: #4caf7d;
+  font-size: 0.78rem;
+}
 .rs-add-set {
   width: 100%;
   margin-top: 6px;

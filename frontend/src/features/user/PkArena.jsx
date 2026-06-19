@@ -2,57 +2,8 @@
 import { api } from '../../api/client'
 import { ConfirmModal, Modal, Panel } from '../../components/common'
 import { formatDate, initials } from '../../utils/appUtils'
+import { computeLeaderboard } from '../../utils/leaderboardUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
-
-/* ── Compute leaderboard from matches by type ── */
-function wilsonScore(wins, total) {
-  if (total === 0) return 0
-  const p = wins / total
-  const z = 1.96
-  const z2 = z * z
-  const num = p + z2 / (2 * total) - z * Math.sqrt(p * (1 - p) / total + z2 / (4 * total * total))
-  const den = 1 + z2 / total
-  return Math.max(0, Math.round((num / den) * 1000) / 10)
-}
-
-function computeLeaderboard(matches, matchType, people) {
-  const completed = matches.filter((m) => m.status === 'completed' && m.match_type === matchType)
-  const stats = {}
-  completed.forEach((m) => {
-    const challengers = [m.challenger_id, m.challenger_partner_id].filter(Boolean)
-    const opponents   = [m.opponent_id,   m.opponent_partner_id  ].filter(Boolean)
-    ;[...challengers, ...opponents].forEach((pid) => {
-      if (!stats[pid]) stats[pid] = { wins: 0, losses: 0 }
-    })
-    challengers.forEach((pid) => {
-      if (m.winner_side === 'challenger') stats[pid].wins++
-      else stats[pid].losses++
-    })
-    opponents.forEach((pid) => {
-      if (m.winner_side === 'opponent') stats[pid].wins++
-      else stats[pid].losses++
-    })
-  })
-  const rows = Object.entries(stats).map(([id, s]) => {
-    const total = s.wins + s.losses
-    const p = people.find((x) => x.id === id) || {}
-    return {
-      id,
-      full_name: p.full_name || '?',
-      nickname: p.nickname || null,
-      avatar_url: p.avatar_url || null,
-      wins: s.wins,
-      losses: s.losses,
-      total_matches: total,
-      win_rate: total > 0 ? Math.round(s.wins / total * 1000) / 10 : 0,
-      wilson_score: wilsonScore(s.wins, total),
-      points: Math.max(0, s.wins * 3 - s.losses),
-    }
-  })
-  rows.sort((a, b) => b.wilson_score - a.wilson_score || b.points - a.points || b.wins - a.wins)
-  rows.forEach((r, i) => { r.rank = i + 1 })
-  return rows
-}
 
 /* ── Leaderboard tier helpers ── */
 const TIERS = [
@@ -330,20 +281,21 @@ function ResultModal({ match, onClose, onSubmit }) {
   const [scores, setScores] = useState(
     Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
   )
+  const [confirming, setConfirming] = useState(false)
 
   function updateScore(i, side, val) {
     setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
   }
-  function addSet() {
-    setScores((prev) => [...prev, { challenger: '', opponent: '' }])
-  }
-  function removeSet(i) {
-    setScores((prev) => prev.filter((_, idx) => idx !== i))
-  }
+  function addSet() { setScores((prev) => [...prev, { challenger: '', opponent: '' }]) }
+  function removeSet(i) { setScores((prev) => prev.filter((_, idx) => idx !== i)) }
 
   function handleSubmit(e) {
     e.preventDefault()
     if (!winner) return
+    setConfirming(true)
+  }
+
+  function handleConfirm() {
     const parsed = scores.map((s) => ({
       challenger: Number(s.challenger) || 0,
       opponent: Number(s.opponent) || 0,
@@ -353,6 +305,24 @@ function ResultModal({ match, onClose, onSubmit }) {
 
   const cName = `${match.challenger?.full_name || '?'}${match.challenger_partner ? ` & ${match.challenger_partner.full_name}` : ''}`
   const oName = `${match.opponent?.full_name || '?'}${match.opponent_partner ? ` & ${match.opponent_partner.full_name}` : ''}`
+  const winnerName = winner === 'challenger' ? cName : winner === 'opponent' ? oName : ''
+
+  if (confirming) {
+    return (
+      <Modal title="⚠️ Xác nhận kết quả" onClose={() => setConfirming(false)}>
+        <div className="rs-root">
+          <div className="rs-confirm-box">
+            <p className="rs-confirm-winner">🏆 <strong>{winnerName}</strong> thắng</p>
+            <p className="rs-confirm-warn">Sau khi xác nhận, kết quả sẽ bị khoá sau <strong>24 giờ</strong> và không thể chỉnh sửa.</p>
+          </div>
+          <footer className="modal-actions">
+            <button type="button" onClick={() => setConfirming(false)}>Quay lại</button>
+            <button type="button" className="btn-danger" onClick={handleConfirm}>Xác nhận</button>
+          </footer>
+        </div>
+      </Modal>
+    )
+  }
 
   return (
     <Modal title="🏆 Ghi nhận kết quả" onClose={onClose}>
@@ -403,7 +373,7 @@ function ResultModal({ match, onClose, onSubmit }) {
 
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit" disabled={!winner}>Xác nhận kết quả</button>
+          <button type="submit" disabled={!winner}>Tiếp theo →</button>
         </footer>
       </form>
     </Modal>
@@ -413,7 +383,6 @@ function ResultModal({ match, onClose, onSubmit }) {
 export function PkArena({ activePerson }) {
   const [tab, setTab]             = useState('leaderboard')
   const [matchFilter, setMatchFilter] = useState('upcoming')
-  const [leaderboard, setLeaderboard] = useState([])
   const [matches, setMatches]     = useState([])
   const [people, setPeople]       = useState([])
   const [loading, setLoading]     = useState(false)
@@ -428,6 +397,7 @@ export function PkArena({ activePerson }) {
   const [specificDate, setSpecificDate]   = useState('')
   const [showResult, setShowResult] = useState(null)
   const [cancelId, setCancelId]   = useState(null)
+  const [memberSearch, setMemberSearch] = useState('')
   const [form, setForm] = useState({
     match_type: 'singles',
     opponent_id: '',
@@ -449,12 +419,10 @@ export function PkArena({ activePerson }) {
   async function loadAll() {
     setLoading(true)
     try {
-      const [lb, ms, pp] = await Promise.all([
-        api.pk.leaderboard().catch(() => []),
-        api.pk.matches().catch(() => []),   // tất cả kèo, không chỉ của mình
+      const [ms, pp] = await Promise.all([
+        api.pk.matches().catch(() => []),
         api.pk.people().catch(() => []),
       ])
-      setLeaderboard(lb)
       setMatches(ms)
       setPeople(pp)
     } finally {
@@ -565,6 +533,19 @@ export function PkArena({ activePerson }) {
   }
   const canCreate = isCreateAllowed()
 
+  function timeUntilLock() {
+    const now = new Date()
+    const lock = new Date()
+    lock.setHours(17, 30, 0, 0)
+    if (now >= lock) return null
+    const diff = Math.floor((lock - now) / 1000)
+    const h = Math.floor(diff / 3600)
+    const m = Math.floor((diff % 3600) / 60)
+    if (h > 0) return `còn ${h} giờ ${m} phút`
+    return `còn ${m} phút`
+  }
+  const lockCountdown = timeUntilLock()
+
   const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
   const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
   const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
@@ -634,6 +615,7 @@ export function PkArena({ activePerson }) {
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
               <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
               <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowCreate(true)}>+ Thách đấu mới</button>
+              {canCreate && lockCountdown && <span className="pk-locked-hint pk-countdown">⏱ {lockCountdown}</span>}
               {!canCreate && <span className="pk-locked-hint">🔒 Hết giờ đặt kèo hôm nay</span>}
             </div>
           }
@@ -708,9 +690,15 @@ export function PkArena({ activePerson }) {
       {/* ── PLAYERS ── */}
       {tab === 'players' && (
         <Panel title="Thành viên câu lạc bộ">
+          <div className="pk-search-wrap" style={{ marginBottom: 12 }}>
+            <span className="pk-search-icon">🔍</span>
+            <input className="pk-search-input" placeholder="Tìm theo tên..."
+              value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} />
+            {memberSearch && <button className="pk-search-clear" onClick={() => setMemberSearch('')}>×</button>}
+          </div>
           {loading ? <p className="muted">Đang tải...</p> : (
             <div className="pk-player-grid">
-              {people.map((p) => (
+              {people.filter((p) => !memberSearch || p.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) || p.nickname?.toLowerCase().includes(memberSearch.toLowerCase())).map((p) => (
                 <div key={p.id} className={`pk-player-card${p.id === activePerson?.id ? ' pk-player-me' : ''}`}>
                   {p.avatar_url
                     ? <img src={p.avatar_url} alt={p.full_name} className="avatar large avatar-img pk-player-avatar" />

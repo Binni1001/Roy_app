@@ -71,6 +71,7 @@ export function UserPortal({ session, role, onSignOut }) {
         setActiveTab={(tab) => { setActiveTab(tab); sessionStorage.setItem('user_tab', tab) }}
         pkBadge={pkBadge}
         totalDebt={totalDebt}
+        debtCount={unpaidDebts.length}
       />
       <main className="workspace user-workspace">
         <Topbar
