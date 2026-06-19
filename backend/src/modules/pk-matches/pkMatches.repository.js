@@ -1,7 +1,7 @@
 import { supabase } from "../../config/supabase.js";
 
 const MATCH_SELECT = `
-  id, match_type, status, bet_items, winner_side, played_at, note, created_at, updated_at,
+  id, match_type, status, bet_items, winner_side, played_at, note, sets, set_scores, created_at, updated_at,
   challenger_id, challenger_partner_id, opponent_id, opponent_partner_id,
   challenger:people!challenger_id(id, full_name, nickname, avatar_url),
   challenger_partner:people!challenger_partner_id(id, full_name, nickname, avatar_url),
