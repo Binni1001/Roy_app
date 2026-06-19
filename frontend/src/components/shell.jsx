@@ -31,7 +31,7 @@ export function AccountBox({ session, role, onSignOut, showRole = true }) {
   )
 }
 
-export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, onMenuToggle, avatarPerson, children }) {
+export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, periods, onPeriodChange, onMenuToggle, avatarPerson, children, notificationBell }) {
   return (
     <header className="topbar">
       <div className="topbar-title">
@@ -53,6 +53,7 @@ export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, period
       </div>
       <div className="toolbar">
         {children}
+        {notificationBell}
         <select value={periodValue} onChange={(event) => onPeriodChange(event.target.value)}>
           <option value="">Chọn kỳ</option>
           {periods.map((period) => (

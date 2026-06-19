@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { StatusLine } from '../../components/common'
+import { NotificationBell } from '../../components/NotificationBell'
 import { Topbar } from '../../components/shell'
-import { usePkNotifications } from '../../hooks/usePkNotifications'
+import { useNotificationCenter } from '../../hooks/useNotificationCenter'
 import { MemberHero } from './MemberHero'
 import { PkArena } from './PkArena'
-import { PkNotificationToast } from './PkNotificationToast'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserContent } from './UserContent'
@@ -38,7 +38,23 @@ export function UserPortal({ session, role, onSignOut }) {
     updateAttendanceType,
   } = useUserPortalData(session, setActiveTab)
 
-  const { notifications, dismiss, dismissAll } = usePkNotifications(activePerson)
+  const { notifications, unreadCount, markAllRead, dismiss } = useNotificationCenter(
+    activePerson,
+    { unpaidDebts }
+  )
+
+  const pkBadge = notifications.filter((n) => !n.read && n.action === 'pk').length
+
+  function handleNotifAction(action) {
+    if (action === 'pk') {
+      setActiveTab('pk')
+      sessionStorage.setItem('user_tab', 'pk')
+      if (window.innerWidth <= 860) setSidebarOpen(false)
+    } else if (action === 'home') {
+      setActiveTab('home')
+      sessionStorage.setItem('user_tab', 'home')
+    }
+  }
 
   return (
     <div className={`user-shell${sidebarOpen ? '' : ' sidebar-collapsed'}`}>
@@ -51,12 +67,12 @@ export function UserPortal({ session, role, onSignOut }) {
         onSignOut={onSignOut}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
-        pkBadge={notifications.length}
+        pkBadge={pkBadge}
       />
       <UserBottomNav
         activeTab={activeTab}
         setActiveTab={(tab) => { setActiveTab(tab); sessionStorage.setItem('user_tab', tab) }}
-        pkBadge={notifications.length}
+        pkBadge={pkBadge}
         totalDebt={totalDebt}
       />
       <main className="workspace user-workspace">
@@ -70,19 +86,19 @@ export function UserPortal({ session, role, onSignOut }) {
           onPeriodChange={setSelectedPeriodId}
           onMenuToggle={() => setSidebarOpen((v) => !v)}
           avatarPerson={activePerson}
+          notificationBell={
+            activePerson && (
+              <NotificationBell
+                notifications={notifications}
+                unreadCount={unreadCount}
+                onMarkAllRead={markAllRead}
+                onDismiss={dismiss}
+                onAction={handleNotifAction}
+              />
+            )
+          }
         />
         <StatusLine text={toast} />
-
-        <PkNotificationToast
-          notifications={notifications}
-          onDismiss={dismiss}
-          onDismissAll={dismissAll}
-          onGoToPk={() => {
-            setActiveTab('pk')
-            dismissAll()
-            if (window.innerWidth <= 860) setSidebarOpen(false)
-          }}
-        />
 
         {loading && !activePerson ? null : !activePerson ? (
           <ProfileSetup
