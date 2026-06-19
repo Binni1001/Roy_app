@@ -38,10 +38,7 @@ export function UserPortal({ session, role, onSignOut }) {
     updateAttendanceType,
   } = useUserPortalData(session, setActiveTab)
 
-  const { notifications, unreadCount, markAllRead, dismiss } = useNotificationCenter(
-    activePerson,
-    { unpaidDebts }
-  )
+  const { notifications, unreadCount, markAllRead, dismiss } = useNotificationCenter(activePerson)
 
   const pkBadge = notifications.filter((n) => !n.read && n.action === 'pk').length
 

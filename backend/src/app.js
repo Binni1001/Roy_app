@@ -24,6 +24,7 @@ import dashboardRoutes from "./modules/dashboard/dashboard.routes.js";
 import paymentsRoutes from "./modules/payments/payments.routes.js";
 import adminUsersRoutes from "./modules/admin-users/adminUsers.routes.js";
 import pkMatchesRoutes from "./modules/pk-matches/pkMatches.routes.js";
+import notificationsRoutes from "./modules/notifications/notifications.routes.js";
 
 const app = express();
 
@@ -68,5 +69,6 @@ app.use("/api/dashboard", dashboardRoutes);
 app.use("/api/payments", paymentsRoutes);
 app.use("/api/admin-users", adminUsersRoutes);
 app.use("/api/pk-matches", pkMatchesRoutes);
+app.use("/api/notifications", notificationsRoutes);
 
 export default app;

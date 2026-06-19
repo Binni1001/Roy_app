@@ -180,6 +180,15 @@ export const api = {
     leaderboard: () => request({ url: '/api/pk-matches/leaderboard' }),
     people: () => request({ url: '/api/pk-matches/people' }),
   },
+
+  notifications: {
+    list:       ()         => request({ url: '/api/notifications' }),
+    create:     (payload)  => request({ url: '/api/notifications', method: 'POST', data: payload }),
+    markRead:   (id)       => request({ url: `/api/notifications/${id}/read`, method: 'PUT' }),
+    markAllRead: ()        => request({ url: '/api/notifications/read-all', method: 'PUT' }),
+    remove:     (id)       => request({ url: `/api/notifications/${id}`, method: 'DELETE' }),
+    removeAll:  ()         => request({ url: '/api/notifications/all', method: 'DELETE' }),
+  },
 }
 
 export default http

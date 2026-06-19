@@ -34,7 +34,7 @@ export function NotificationBell({ notifications, unreadCount, onMarkAllRead, on
     <div className="nb-wrap" ref={ref}>
       <button
         className={`nb-bell${unreadCount > 0 ? ' nb-has-unread' : ''}`}
-        onClick={() => { setOpen((v) => !v); if (!open && unreadCount > 0) onMarkAllRead() }}
+        onClick={() => setOpen((v) => !v)}
         aria-label="Thông báo"
       >
         🔔
