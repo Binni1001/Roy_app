@@ -3715,3 +3715,104 @@ textarea:focus {
 @media (max-width: 500px) {
   .nb-dropdown { width: calc(100vw - 24px); right: -8px; }
 }
+
+/* ══════════════════════════════════════
+   MOBILE RESPONSIVE — new feature fixes
+   ══════════════════════════════════════ */
+
+/* ── 480px: ResultModal, SetScores, filters, lb-toggle ── */
+@media (max-width: 480px) {
+  /* Leaderboard type toggle */
+  .lb-type-toggle { gap: 4px; }
+  .lb-type-toggle button { padding: 5px 10px; font-size: 0.78rem; }
+
+  /* Match filters chips */
+  .pk-filter-row { gap: 4px; }
+  .pk-chip { padding: 4px 8px; font-size: 0.74rem; }
+  .pk-date-input { font-size: 0.74rem; padding: 4px 6px; }
+  .pk-date-clear { right: -14px; }
+
+  /* ResultModal scores grid — shrink set label */
+  .rs-scores-header { grid-template-columns: 32px 1fr 16px 1fr; gap: 4px; font-size: 0.68rem; }
+  .rs-score-row     { grid-template-columns: 32px 1fr 16px 1fr 22px; gap: 4px; }
+  .rs-set-num       { font-size: 0.68rem; }
+  .rs-score-input   { padding: 8px 2px; font-size: 0.85rem; min-height: 40px; }
+  .rs-dash          { font-size: 0.8rem; }
+
+  /* Winner buttons in ResultModal */
+  .rs-winner-row { gap: 6px; }
+  .rs-side-btn   { padding: 10px 4px; font-size: 0.78rem; }
+  .rs-crown      { font-size: 1rem; }
+
+  /* Set scores on match card */
+  .pk-set-row   { gap: 3px; }
+  .pk-set-score { font-size: 0.72rem; min-width: 14px; }
+  .pk-set-label { font-size: 0.65rem; }
+
+  /* Random matchmaker hero */
+  .rm-hero    { height: 120px; }
+  .rm-title   { font-size: 1.1rem; }
+  .rm-subtitle { font-size: 0.72rem; }
+  .rm-dice    { font-size: 1.5rem; }
+
+  /* Random matchmaker mode picker */
+  .rm-mode-btn strong { font-size: 0.82rem; }
+  .rm-mode-btn small  { font-size: 0.68rem; }
+
+  /* Notification bell items */
+  .nb-item    { padding: 10px 10px; gap: 8px; }
+  .nb-icon    { font-size: 1.1rem; }
+  .nb-title   { font-size: 0.8rem; }
+  .nb-body    { font-size: 0.72rem; }
+
+  /* Create kèo modal VS row */
+  .ck-vs-row  { gap: 6px; }
+  .ck-vs-badge { width: 30px; height: 30px; font-size: 0.7rem; }
+
+  /* Ranking guide */
+  .rg-root    { gap: 10px; }
+}
+
+/* ── 380px: extra tight ── */
+@media (max-width: 380px) {
+  /* ResultModal winner buttons stack vertically */
+  .rs-winner-row { flex-direction: column; }
+  .rs-vs         { display: none; }
+
+  /* Scores grid tighter */
+  .rs-scores-header { grid-template-columns: 28px 1fr 14px 1fr; }
+  .rs-score-row     { grid-template-columns: 28px 1fr 14px 1fr 20px; }
+
+  /* Notification dropdown — full width anchored left */
+  .nb-dropdown { right: auto; left: -60px; width: calc(100vw - 16px); }
+
+  /* Create kèo VS row collapse */
+  .ck-vs-row { flex-direction: column; gap: 4px; }
+  .ck-vs-badge { display: none; }
+
+  /* Random matchmaker slots compact */
+  .rm-slot        { min-width: 70px; }
+  .rm-slot-avatar { width: 44px; height: 44px; }
+  .rm-slot-name   { font-size: 0.68rem; }
+
+  /* Chips single smaller */
+  .pk-chip { padding: 3px 6px; font-size: 0.7rem; }
+
+  /* lb toggle text-only */
+  .lb-type-toggle button { padding: 4px 8px; }
+
+  /* Badge sets smaller */
+  .pk-badge-sets { font-size: 0.64rem; padding: 1px 5px; }
+}
+
+/* ── 320px: absolute minimum ── */
+@media (max-width: 320px) {
+  .rs-score-row { grid-template-columns: 24px 1fr 12px 1fr; }
+  .rs-remove-set { display: none; }
+  .pk-match-filters .pk-search-input { font-size: 0.76rem; }
+  .nb-dropdown { left: -40px; }
+  .rm-hero { height: 90px; }
+  .rm-slots-row { flex-direction: column; gap: 8px; }
+  .rm-vs-divider { padding: 0; }
+  .rm-vs-anim { font-size: 1rem; }
+}
