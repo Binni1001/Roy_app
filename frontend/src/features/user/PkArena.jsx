@@ -743,6 +743,7 @@ export function PkArena({ activePerson }) {
           leaderboard={leaderboard}
           onClose={() => setShowRandom(false)}
           onCreate={handleRandomResult}
+          lockedPerson={activePerson}
         />
       )}
 

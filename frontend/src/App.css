@@ -2472,6 +2472,13 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-info-icon { font-size: 1.1rem; margin-top: 2px; }
 .rm-info-row strong { font-size: 0.87rem; color: #efe7d2; }
 .rm-info-row p { margin: 2px 0 0; font-size: 0.76rem; }
+.rm-info-self {
+  background: rgba(216,174,82,0.08);
+  border: 1px solid rgba(216,174,82,0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.rm-info-self strong { color: #d8ae52; }
 
 /* Spin button */
 .rm-spin-btn {

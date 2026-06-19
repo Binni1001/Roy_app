@@ -401,6 +401,7 @@ export function PkPanel() {
       {showCreate && (
         <AdminCreateMatchModal
           people={people}
+          prefill={showCreate?.prefill}
           onClose={() => setShowCreate(false)}
           onSubmit={handleCreate}
         />
@@ -411,7 +412,10 @@ export function PkPanel() {
           people={people}
           leaderboard={leaderboard}
           onClose={() => setShowRandom(false)}
-          onCreate={() => setShowRandom(false)}
+          onCreate={(prefill) => {
+            setShowRandom(false)
+            setShowCreate({ prefill })
+          }}
         />
       )}
 
@@ -437,14 +441,14 @@ export function PkPanel() {
   )
 }
 
-function AdminCreateMatchModal({ people, onClose, onSubmit }) {
+function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
   const today = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState({
-    match_type: 'singles',
-    challenger_id: '',
-    opponent_id: '',
-    challenger_partner_id: '',
-    opponent_partner_id: '',
+    match_type: prefill?.match_type || 'singles',
+    challenger_id: prefill?.challenger_id || '',
+    opponent_id: prefill?.opponent_id || '',
+    challenger_partner_id: prefill?.challenger_partner_id || '',
+    opponent_partner_id: prefill?.opponent_partner_id || '',
     sets: 1,
     bet_items: '',
     played_at: today,

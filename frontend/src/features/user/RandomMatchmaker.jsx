@@ -8,6 +8,35 @@ function getRankedPool(people, leaderboard) {
   return [...people].sort((a, b) => (rankMap[a.id] || 999) - (rankMap[b.id] || 999))
 }
 
+/* User mode: self is always included, always challenger */
+function balancedSinglesWithSelf(ranked, self) {
+  const others = ranked.filter((p) => p.id !== self.id)
+  if (others.length < 1) return null
+  const opponent = others[Math.floor(Math.random() * others.length)]
+  return { match_type: 'singles', challenger: self, opponent, challenger_partner: null, opponent_partner: null }
+}
+
+function balancedDoublesWithSelf(ranked, self) {
+  const others = ranked.filter((p) => p.id !== self.id)
+  if (others.length < 3) return null
+  // Pick 3 others randomly from pool (up to top 7)
+  const pool = others.slice(0, Math.min(others.length, 7))
+  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 3)
+  // Sort picked 3 by rank
+  const rankIdx = {}
+  ranked.forEach((p, i) => { rankIdx[p.id] = i })
+  shuffled.sort((a, b) => (rankIdx[a.id] ?? 99) - (rankIdx[b.id] ?? 99))
+  const [r1, r2, r3] = shuffled
+  // Self + weakest on challenger team vs the two middle ones
+  // Balance: self + r3 vs r1 + r2
+  return {
+    match_type: 'doubles',
+    challenger: self, challenger_partner: r3,
+    opponent: r1, opponent_partner: r2,
+  }
+}
+
+/* Admin mode: fully random, no constraint */
 function balancedSingles(ranked) {
   if (ranked.length < 2) return null
   const mid = Math.ceil(ranked.length / 2)
@@ -60,20 +89,32 @@ function PlayerSlot({ person, spinning, spinPool }) {
   )
 }
 
-/* ── main component ── */
-export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
+/* ── main component ──
+   lockedPerson: nếu có → user mode (bản thân luôn được include, luôn là challenger)
+   lockedPerson: undefined → admin mode (random tự do)
+*/
+export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, lockedPerson }) {
   const [mode, setMode] = useState('singles')
   const [phase, setPhase] = useState('config')   // config | spinning | result
   const [result, setResult] = useState(null)
   const [spinning, setSpinning] = useState(false)
   const ranked = getRankedPool(people, leaderboard)
 
+  const isUserMode = !!lockedPerson
+
   function spin() {
     setPhase('spinning')
     setSpinning(true)
 
     setTimeout(() => {
-      const r = mode === 'singles' ? balancedSingles(ranked) : balancedDoubles(ranked)
+      let r
+      if (isUserMode) {
+        r = mode === 'singles'
+          ? balancedSinglesWithSelf(ranked, lockedPerson)
+          : balancedDoublesWithSelf(ranked, lockedPerson)
+      } else {
+        r = mode === 'singles' ? balancedSingles(ranked) : balancedDoubles(ranked)
+      }
       setResult(r)
       setSpinning(false)
       setTimeout(() => setPhase('result'), 300)
@@ -97,7 +138,13 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
     onClose()
   }
 
-  const insufficientPlayers = mode === 'singles' ? ranked.length < 2 : ranked.length < 4
+  const minPlayers = mode === 'singles' ? 2 : 4
+  const poolSize = isUserMode
+    ? ranked.filter((p) => p.id !== lockedPerson?.id).length + 1
+    : ranked.length
+  const insufficient = isUserMode
+    ? ranked.filter((p) => p.id !== lockedPerson?.id).length < minPlayers - 1
+    : ranked.length < minPlayers
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -109,7 +156,11 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
           <div className="rm-hero-content">
             <div className="rm-dice">🎲</div>
             <h2 className="rm-title">Ghép Đội Ngẫu Nhiên</h2>
-            <p className="rm-subtitle">Hệ thống ghép đội cân bằng theo xếp hạng</p>
+            <p className="rm-subtitle">
+              {isUserMode
+                ? `Bạn luôn được include · ghép cân bằng xếp hạng`
+                : 'Hệ thống ghép đội cân bằng theo xếp hạng'}
+            </p>
           </div>
         </div>
 
@@ -137,6 +188,15 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
               </div>
 
               <div className="rm-balance-info">
+                {isUserMode && (
+                  <div className="rm-info-row rm-info-self">
+                    <span className="rm-info-icon">👤</span>
+                    <div>
+                      <strong>Bạn luôn có mặt</strong>
+                      <p className="muted">{lockedPerson?.full_name} sẽ là bên thách đấu</p>
+                    </div>
+                  </div>
+                )}
                 <div className="rm-info-row">
                   <span className="rm-info-icon">🏆</span>
                   <div>
@@ -151,13 +211,13 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
                 <div className="rm-info-row">
                   <span className="rm-info-icon">👥</span>
                   <div>
-                    <strong>{ranked.length} người trong pool</strong>
-                    <p className="muted">Cần tối thiểu {mode === 'singles' ? 2 : 4} người</p>
+                    <strong>{poolSize} người trong pool</strong>
+                    <p className="muted">Cần tối thiểu {minPlayers} người</p>
                   </div>
                 </div>
               </div>
 
-              {insufficientPlayers ? (
+              {insufficient ? (
                 <p className="rm-error">Không đủ người chơi để ghép {mode === 'singles' ? 'đơn' : 'đôi'}</p>
               ) : (
                 <button className="rm-spin-btn" onClick={spin}>
@@ -174,7 +234,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate }) {
               <div className="rm-slots-row">
                 <div className="rm-team-slots">
                   <span className="rm-team-tag">Đội A</span>
-                  <PlayerSlot person={null} spinning spinPool={ranked} />
+                  <PlayerSlot person={isUserMode ? lockedPerson : null} spinning={!isUserMode} spinPool={ranked} />
                   {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={ranked} />}
                 </div>
                 <div className="rm-vs-divider">
