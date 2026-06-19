@@ -5,7 +5,7 @@ async function getPersonId(authUser) {
   const { data } = await supabase
     .from('people')
     .select('id')
-    .eq('auth_user_id', authUser.id)
+    .eq('email', authUser.email)
     .single()
   if (!data) throw new Error('Không tìm thấy hồ sơ người chơi')
   return data.id
