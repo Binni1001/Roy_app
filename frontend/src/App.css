@@ -3716,6 +3716,27 @@ textarea:focus {
   .nb-dropdown { width: calc(100vw - 24px); right: -8px; }
 }
 
+/* ── Notification bell: desktop vs mobile placement ── */
+.topbar-title { position: relative; }
+.topbar-title-text { flex: 1; }
+.topbar-bell-mobile  { display: none; }
+.topbar-bell-desktop { display: flex; align-items: center; }
+
+@media (max-width: 860px) {
+  .topbar-bell-mobile {
+    display: flex;
+    align-items: center;
+    margin-left: auto;
+  }
+  .topbar-bell-desktop { display: none; }
+
+  /* dropdown opens to the left on mobile so it doesn't go off-screen */
+  .nb-dropdown {
+    right: 0;
+    left: auto;
+  }
+}
+
 /* ══════════════════════════════════════
    MOBILE RESPONSIVE — new feature fixes
    ══════════════════════════════════════ */

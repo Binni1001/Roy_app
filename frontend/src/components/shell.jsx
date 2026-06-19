@@ -46,14 +46,19 @@ export function Topbar({ eyebrow, title, loading, onRefresh, periodValue, period
             )}
           </button>
         )}
-        <div>
+        <div className="topbar-title-text">
           <p className="eyebrow">{eyebrow}</p>
           <h1>{title}</h1>
         </div>
+        {notificationBell && (
+          <div className="topbar-bell-mobile">{notificationBell}</div>
+        )}
       </div>
       <div className="toolbar">
         {children}
-        {notificationBell}
+        {notificationBell && (
+          <div className="topbar-bell-desktop">{notificationBell}</div>
+        )}
         <select value={periodValue} onChange={(event) => onPeriodChange(event.target.value)}>
           <option value="">Chọn kỳ</option>
           {periods.map((period) => (
