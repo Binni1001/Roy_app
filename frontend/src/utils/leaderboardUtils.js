@@ -39,6 +39,7 @@ export function computeLeaderboard(matches, matchType, people) {
       wins:         s.wins,
       losses:       s.losses,
       total_matches: total,
+      points:       Math.max(0, s.wins * 3 - s.losses),
       win_rate:     total > 0 ? s.wins / total : 0,
       wilson_score: wilsonScore(s.wins, total),
     }
