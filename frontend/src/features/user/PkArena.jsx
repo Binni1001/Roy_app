@@ -30,20 +30,22 @@ function RankBadge({ rank, total }) {
 }
 
 function WilsonBar({ score }) {
-  const pct = Math.min(100, Math.max(0, score || 0))
+  const pct = Math.min(100, Math.max(0, (score || 0) * 100))
+  const display = Math.round(pct)
   let cls = 'lb-bar-low'
   if (pct >= 60) cls = 'lb-bar-high'
   else if (pct >= 40) cls = 'lb-bar-mid'
   return (
-    <div className="lb-bar-wrap" title={`${score}%`}>
+    <div className="lb-bar-wrap" title={`${display}%`}>
       <div className={`lb-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
-      <span className="lb-bar-label">{score}%</span>
+      <span className="lb-bar-label">{display}%</span>
     </div>
   )
 }
 
 function LeaderboardRow({ row, isMe, total }) {
   const tierCls = getTierCls(row.rank, total)
+  const winRatePct = row.total_matches > 0 ? Math.round(row.wins / row.total_matches * 100) : 0
   return (
     <tr className={`${isMe ? 'pk-row-me' : ''} ${tierCls}`}>
       <td><RankBadge rank={row.rank} total={total} /></td>
@@ -58,7 +60,7 @@ function LeaderboardRow({ row, isMe, total }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td className="lb-points"><span className="lb-points-chip">{row.points ?? '—'}</span></td>
+      <td className="lb-points"><span className="lb-points-chip">{winRatePct}%</span></td>
       <td><WilsonBar score={row.wilson_score} /></td>
     </tr>
   )

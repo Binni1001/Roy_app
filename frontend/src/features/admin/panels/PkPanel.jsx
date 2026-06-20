@@ -36,6 +36,7 @@ function WilsonBar({ score }) {
   )
 }
 function AdminLeaderboardRow({ row, total }) {
+  const winRatePct = row.total_matches > 0 ? Math.round(row.wins / row.total_matches * 100) : 0
   return (
     <tr className={getTierCls(row.rank, total)}>
       <td><RankBadge rank={row.rank} total={total} /></td>
@@ -43,6 +44,7 @@ function AdminLeaderboardRow({ row, total }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
+      <td className="lb-points"><span className="lb-points-chip">{winRatePct}%</span></td>
       <td><WilsonBar score={row.wilson_score} /></td>
     </tr>
   )
