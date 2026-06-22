@@ -39,7 +39,8 @@ export const pkMatchesController = {
 
   async create(req, res) {
     try {
-      const data = await pkMatchesService.create(req.body);
+      const isAdmin = req.authUser?.role === 'admin' || req.authUser?.role === 'owner';
+      const data = await pkMatchesService.create(req.body, isAdmin);
       res.status(201).json(data);
     } catch (error) {
       res.status(400).json({ message: error.message });

@@ -39,8 +39,8 @@ export const pkMatchesService = {
     return data;
   },
 
-  async create(payload) {
-    const { match_type, challenger_id, opponent_id, challenger_partner_id, opponent_partner_id, bet_items, played_at, note } = payload;
+  async create(payload, isAdmin = false) {
+    const { match_type, challenger_id, opponent_id, challenger_partner_id, opponent_partner_id, bet_items, played_at, note, status, winner_side, set_scores, sets } = payload;
 
     if (!match_type || !['singles', 'doubles'].includes(match_type)) {
       throw new Error("match_type phải là 'singles' hoặc 'doubles'");
@@ -50,10 +50,11 @@ export const pkMatchesService = {
     if (challenger_id === opponent_id) throw new Error("Không thể thách đấu chính mình");
     if (!played_at) throw new Error("Vui lòng chọn ngày đấu");
 
-    // Ngày đấu không được là ngày trong quá khứ (trước hôm nay)
-    const today = startOfDay(new Date());
-    const matchDay = startOfDay(new Date(played_at));
-    if (matchDay < today) throw new Error("Ngày đấu không được là ngày trong quá khứ");
+    if (!isAdmin) {
+      const today = startOfDay(new Date());
+      const matchDay = startOfDay(new Date(played_at));
+      if (matchDay < today) throw new Error("Ngày đấu không được là ngày trong quá khứ");
+    }
 
     if (match_type === 'doubles') {
       if (!challenger_partner_id) throw new Error("Đánh đôi cần chọn đồng đội phía thách đấu");
@@ -62,16 +63,20 @@ export const pkMatchesService = {
 
     await assertPeopleActive([challenger_id, opponent_id, challenger_partner_id, opponent_partner_id]);
 
+    const resolvedStatus = isAdmin && status ? status : 'pending';
     const insert = {
       match_type,
       challenger_id,
       opponent_id,
       challenger_partner_id: match_type === 'doubles' ? challenger_partner_id : null,
       opponent_partner_id:   match_type === 'doubles' ? opponent_partner_id   : null,
+      sets:       Number(sets) || 1,
       bet_items:  bet_items  || null,
       played_at:  played_at  || null,
       note:       note       || null,
-      status: 'pending',
+      status:     resolvedStatus,
+      winner_side: resolvedStatus === 'completed' ? (winner_side || null) : null,
+      set_scores:  resolvedStatus === 'completed' && set_scores?.length ? set_scores : null,
     };
 
     const { data, error } = await pkMatchesRepository.create(insert);
@@ -144,9 +149,19 @@ export const pkMatchesService = {
       allowed.winner_side = payload.winner_side;
       if (payload.winner_side) allowed.status = 'completed';
     }
-    if (payload.bet_items !== undefined) allowed.bet_items = payload.bet_items;
-    if (payload.played_at !== undefined) allowed.played_at = payload.played_at;
-    if (payload.note      !== undefined) allowed.note      = payload.note;
+    if (payload.bet_items  !== undefined) allowed.bet_items  = payload.bet_items;
+    if (payload.played_at  !== undefined) allowed.played_at  = payload.played_at;
+    if (payload.note       !== undefined) allowed.note       = payload.note;
+    if (payload.set_scores !== undefined) allowed.set_scores = payload.set_scores;
+
+    if (isAdmin) {
+      if (payload.match_type          !== undefined) allowed.match_type          = payload.match_type;
+      if (payload.sets                !== undefined) allowed.sets                = Number(payload.sets) || 1;
+      if (payload.challenger_id       !== undefined) allowed.challenger_id       = payload.challenger_id;
+      if (payload.opponent_id         !== undefined) allowed.opponent_id         = payload.opponent_id;
+      if (payload.challenger_partner_id !== undefined) allowed.challenger_partner_id = payload.challenger_partner_id || null;
+      if (payload.opponent_partner_id   !== undefined) allowed.opponent_partner_id   = payload.opponent_partner_id   || null;
+    }
 
     const { data, error } = await pkMatchesRepository.update(id, allowed);
     if (error) throw new Error(error.message);
