@@ -39,7 +39,7 @@ export const pkMatchesController = {
 
   async create(req, res) {
     try {
-      const isAdmin = req.authUser?.role === 'admin' || req.authUser?.role === 'owner';
+      const isAdmin = req.authRole === 'admin' || req.authRole === 'owner';
       const data = await pkMatchesService.create(req.body, isAdmin);
       res.status(201).json(data);
     } catch (error) {
@@ -49,7 +49,7 @@ export const pkMatchesController = {
 
   async update(req, res) {
     try {
-      const isAdmin = req.authUser?.role === 'admin' || req.authUser?.role === 'owner';
+      const isAdmin = req.authRole === 'admin' || req.authRole === 'owner';
       const data = await pkMatchesService.update(req.params.id, req.body, isAdmin, req.authUser);
       res.json(data);
     } catch (error) {
