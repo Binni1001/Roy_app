@@ -437,8 +437,7 @@ export function PkArena({ activePerson }) {
 
   async function handleCreate(e) {
     e.preventDefault()
-    if (!isCreateAllowed()) { setToast('Đã hết giờ đặt kèo hôm nay (trước 17:30)'); return }
-    if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
+if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
     if (form.opponent_id === activePerson?.id) { setToast('Không thể thách đấu chính mình'); return }
     try {
       await api.pk.create({
@@ -527,25 +526,6 @@ export function PkArena({ activePerson }) {
     )
   }
 
-  function isCreateAllowed() {
-    const now = new Date()
-    const h = now.getHours(), m = now.getMinutes()
-    return h < 17 || (h === 17 && m < 30)
-  }
-  const canCreate = isCreateAllowed()
-
-  function timeUntilLock() {
-    const now = new Date()
-    const lock = new Date()
-    lock.setHours(17, 30, 0, 0)
-    if (now >= lock) return null
-    const diff = Math.floor((lock - now) / 1000)
-    const h = Math.floor(diff / 3600)
-    const m = Math.floor((diff % 3600) / 60)
-    if (h > 0) return `còn ${h} giờ ${m} phút`
-    return `còn ${m} phút`
-  }
-  const lockCountdown = timeUntilLock()
 
   const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
   const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
@@ -614,10 +594,8 @@ export function PkArena({ activePerson }) {
         <Panel title="Kèo đấu"
           action={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
-              <button className="pk-create-btn" disabled={!canCreate} title={!canCreate ? 'Chỉ tạo kèo trước 17:30' : ''} onClick={() => canCreate && setShowCreate(true)}>+ Thách đấu mới</button>
-              {canCreate && lockCountdown && <span className="pk-locked-hint pk-countdown">⏱ {lockCountdown}</span>}
-              {!canCreate && <span className="pk-locked-hint">🔒 Hết giờ đặt kèo hôm nay</span>}
+              <button className="pk-create-btn" onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
+              <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
             </div>
           }
         >
