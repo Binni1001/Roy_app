@@ -707,7 +707,7 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
       {showRandom && (
         <RandomMatchmaker
           people={people}
-          leaderboard={leaderboard}
+          leaderboard={lbSingles}
           onClose={() => setShowRandom(false)}
           onCreate={handleRandomResult}
           lockedPerson={activePerson}

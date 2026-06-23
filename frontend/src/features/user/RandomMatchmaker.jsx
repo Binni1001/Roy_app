@@ -105,7 +105,7 @@ function PersonPicker({ people, selected, onToggle, onSelectAll, onClearAll, ran
   return (
     <div className="rm-picker">
       <div className="rm-picker-header">
-        <span className="rm-picker-count">{selected.length} người được chọn</span>
+        <span className="rm-picker-count">{selected.length + (lockedPerson ? 1 : 0)} người trong pool</span>
         <div className="rm-picker-actions">
           <button type="button" className="rm-picker-btn" onClick={onSelectAll}>Chọn tất cả</button>
           <button type="button" className="rm-picker-btn" onClick={onClearAll}>Bỏ chọn</button>
@@ -159,7 +159,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
   const rankMap = buildRankMap(leaderboard || [])
   const isUserMode = !!lockedPerson
 
-  // People available to pick (exclude self if user mode)
+  // Exclude self from pickable list — self is always locked in
   const pickable = isUserMode ? people.filter((p) => p.id !== lockedPerson.id) : people
 
   const minNeeded = mode === 'singles'
