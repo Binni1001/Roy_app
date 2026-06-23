@@ -153,10 +153,10 @@ export const pkMatchesService = {
     if (payload.played_at  !== undefined) allowed.played_at  = payload.played_at;
     if (payload.note       !== undefined) allowed.note       = payload.note;
     if (payload.set_scores !== undefined) allowed.set_scores = payload.set_scores;
+    if (payload.sets       !== undefined) allowed.sets       = Number(payload.sets) || 1;
 
     if (isAdmin) {
       if (payload.match_type          !== undefined) allowed.match_type          = payload.match_type;
-      if (payload.sets                !== undefined) allowed.sets                = Number(payload.sets) || 1;
       if (payload.challenger_id       !== undefined) allowed.challenger_id       = payload.challenger_id;
       if (payload.opponent_id         !== undefined) allowed.opponent_id         = payload.opponent_id;
       if (payload.challenger_partner_id !== undefined) allowed.challenger_partner_id = payload.challenger_partner_id || null;

@@ -286,15 +286,22 @@ function MatchCard({ m, activePerson, onSetResult, onCancel, onStart, onEdit }) 
           {m.bet_items && <span className="pk-bet">🎁 {m.bet_items}</span>}
           {m.note      && <span className="pk-note muted">{m.note}</span>}
 
-          {amParticipant && (m.status === 'pending' || m.status === 'active') && (
+          {amParticipant && m.status !== 'cancelled' && (
             <div className="pk-match-actions">
               {m.status === 'pending' && (
                 <button className="btn-start" onClick={() => onStart(m.id)}>▶ Bắt đầu đấu</button>
               )}
-              <span title={!canRecord ? reason : undefined}>
-                <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
-              </span>
-              {!canRecord && reason && <small className="muted pk-lock-hint">{reason}</small>}
+              {(m.status === 'pending' || m.status === 'active') && (
+                <span title={!canRecord ? reason : undefined}>
+                  <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
+                </span>
+              )}
+              {(m.status === 'pending' || m.status === 'active') && !canRecord && reason && (
+                <small className="muted pk-lock-hint">{reason}</small>
+              )}
+              {m.status === 'completed' && canRecord && (
+                <button onClick={() => onSetResult(m)}>Sửa kết quả</button>
+              )}
               <button onClick={() => onEdit(m)}>Sửa kèo</button>
               {m.status === 'pending' && (
                 <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
