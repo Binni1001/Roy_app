@@ -4370,6 +4370,11 @@ textarea:focus {
   .home-chip-value { font-size: 13px; }
 }
 
+@media (max-width: 480px) {
+  /* 2 chips per row so 3rd chip doesn't stretch full width alone */
+  .home-summary-chip { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
+
 /* ════════════════════════════════════════════════════════
    LOGIN — feature list overlay
    ════════════════════════════════════════════════════════ */
