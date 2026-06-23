@@ -67,6 +67,15 @@ temp/
 *.db
 
 # =========================
+# Debug / test screenshots
+# =========================
+*.png
+*.jpg
+!frontend/public/**
+!frontend/src/**
+!logo.png
+
+# =========================
 # Mac/Linux
 # =========================
 *.swp
