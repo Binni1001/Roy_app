@@ -62,11 +62,15 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
         <Modal title="Tạo kỳ mới" onClose={() => setShowAddPeriod(false)}>
           <form className="form" onSubmit={(e) => {
             e.preventDefault()
+            if (periodForm.end_date && periodForm.start_date && periodForm.end_date < periodForm.start_date) {
+              alert('Ngày kết thúc phải sau ngày bắt đầu.')
+              return
+            }
             submit(
               () => api.periods.create({
                 ...periodForm,
-                fixed_member_fee: Number(periodForm.fixed_member_fee || 0),
-                guest_fee_per_session: Number(periodForm.guest_fee_per_session || 0),
+                fixed_member_fee: Math.max(0, Number(periodForm.fixed_member_fee || 0)),
+                guest_fee_per_session: Math.max(0, Number(periodForm.guest_fee_per_session || 0)),
               }),
               'Đã tạo kỳ mới.',
             )
@@ -159,7 +163,11 @@ function PeriodEditModal({ period, onClose, onSubmit }) {
     <Modal title="Sửa kỳ đánh" onClose={onClose}>
       <form className="form" onSubmit={(e) => {
         e.preventDefault()
-        onSubmit({ ...draft, fixed_member_fee: Number(draft.fixed_member_fee || 0), guest_fee_per_session: Number(draft.guest_fee_per_session || 0) })
+        if (draft.end_date && draft.start_date && draft.end_date < draft.start_date) {
+          alert('Ngày kết thúc phải sau ngày bắt đầu.')
+          return
+        }
+        onSubmit({ ...draft, fixed_member_fee: Math.max(0, Number(draft.fixed_member_fee || 0)), guest_fee_per_session: Math.max(0, Number(draft.guest_fee_per_session || 0)) })
       }}>
         <Input label="Tên kỳ" value={draft.name} onChange={(v) => update('name', v)} required />
         <Input label="Ngày bắt đầu" type="date" value={draft.start_date} onChange={(v) => update('start_date', v)} required />

@@ -17,6 +17,7 @@ export function useUserPortalData(session, setActiveTab) {
   const [data, setData] = useState({ debts: [], balance: null, transactions: [], sessions: [] })
   const [checkout, setCheckout] = useState(null)
   const [toast, setToast] = useState('')
+  const [toastType, setToastType] = useState('success')
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
 
@@ -39,7 +40,7 @@ export function useUserPortalData(session, setActiveTab) {
         transactions: asArray(transactions),
       }))
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
     }
   }, [])
 
@@ -70,7 +71,7 @@ export function useUserPortalData(session, setActiveTab) {
       )
       setToast('Đã sẵn sàng đồng bộ dữ liệu cá nhân.')
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
     } finally {
       setLoading(false)
     }
@@ -121,7 +122,7 @@ export function useUserPortalData(session, setActiveTab) {
       }
       return result
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
       return null
     } finally {
       setSubmitting(false)
@@ -149,7 +150,7 @@ export function useUserPortalData(session, setActiveTab) {
       setToast('Đã tạo hồ sơ người chơi.')
       void boot()
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
     } finally {
       setSubmitting(false)
     }
@@ -186,7 +187,7 @@ export function useUserPortalData(session, setActiveTab) {
       setAttendanceType(updated.attendance_type)
       setToast('Đã cập nhật hồ sơ thành công.')
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
     } finally {
       setSubmitting(false)
     }
@@ -203,7 +204,7 @@ export function useUserPortalData(session, setActiveTab) {
       setToast('Đã cập nhật hình thức chơi.')
     } catch (error) {
       setAttendanceType(activePerson.attendance_type || 'fixed')
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
     } finally {
       setSubmitting(false)
     }
@@ -226,6 +227,7 @@ export function useUserPortalData(session, setActiveTab) {
     setProfileForm,
     setSelectedPeriodId,
     toast,
+    toastType,
     totalDebt,
     unpaidDebts,
     updateAttendanceType,

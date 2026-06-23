@@ -13,6 +13,7 @@ export function useAdminPortalData(role) {
   const [forms, setForms] = useState(defaultForms())
   const [adminUsers, setAdminUsers] = useState([])
   const [toast, setToast] = useState('')
+  const [toastType, setToastType] = useState('success')
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [checkout, setCheckout] = useState(null)
@@ -130,7 +131,7 @@ export function useAdminPortalData(role) {
     setSubmitting(true)
     try {
       const result = await action()
-      setToast(successMessage)
+      setToastType('success'); setToast(successMessage)
       // Refresh data in background — không block UI
       if (scope === 'global') {
         void boot()
@@ -139,7 +140,7 @@ export function useAdminPortalData(role) {
       }
       return result
     } catch (error) {
-      setToast(errorText(error))
+      setToastType('error'); setToast(errorText(error))
       return null
     } finally {
       setSubmitting(false)
@@ -179,6 +180,7 @@ export function useAdminPortalData(role) {
     submit,
     summary,
     toast,
+    toastType,
   }
 }
 

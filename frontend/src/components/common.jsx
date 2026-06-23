@@ -1,3 +1,5 @@
+import { useRef, useState } from 'react'
+
 export function Panel({ title, children, wide = false, action }) {
   return (
     <article className={wide ? 'panel wide' : 'panel'}>
@@ -30,9 +32,9 @@ export function ActionGroup({ children }) {
   return <div className="actions">{children}</div>
 }
 
-export function StatusLine({ text }) {
+export function StatusLine({ text, type = 'success' }) {
   if (!text) return null
-  return <div className="toast" role="alert">{text}</div>
+  return <div className={`toast toast-${type}`} role="alert">{text}</div>
 }
 
 export function Modal({ title, children, onClose }) {
@@ -78,18 +80,33 @@ export function ConfirmModal({
 }
 
 export function SearchBox({ value, onChange, placeholder = 'Tìm kiếm...' }) {
+  const [local, setLocal] = useState(value)
+  const timer = useRef(null)
+
+  function handleChange(v) {
+    setLocal(v)
+    clearTimeout(timer.current)
+    timer.current = setTimeout(() => onChange(v), 200)
+  }
+
+  function handleClear() {
+    setLocal('')
+    clearTimeout(timer.current)
+    onChange('')
+  }
+
   return (
     <div className="search-box">
       <span className="search-icon">🔍</span>
       <input
         type="text"
         className="search-input"
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
+        value={local}
+        onChange={(e) => handleChange(e.target.value)}
         placeholder={placeholder}
       />
-      {value && (
-        <button className="search-clear" onClick={() => onChange('')} type="button">×</button>
+      {local && (
+        <button className="search-clear" onClick={handleClear} type="button">×</button>
       )}
     </div>
   )

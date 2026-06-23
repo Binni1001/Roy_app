@@ -56,7 +56,7 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
             setShowAddSession(false)
           }}>
             <Input label="Ngày chơi" type="date" value={sessionForm.play_date} onChange={(v) => setForm('session', { play_date: v })} required />
-            <Input label="Số cầu đã dùng" type="number" value={sessionForm.shuttle_used_count} onChange={(v) => setForm('session', { shuttle_used_count: v })} />
+            <label>Số cầu đã dùng<input type="number" min="0" value={sessionForm.shuttle_used_count || ''} onChange={(e) => setForm('session', { shuttle_used_count: e.target.value })} /></label>
             <Input label="Ghi chú" value={sessionForm.note} onChange={(v) => setForm('session', { note: v })} />
             <footer className="modal-actions">
               <button type="button" onClick={() => setShowAddSession(false)}>Hủy</button>
@@ -152,7 +152,7 @@ function SessionEditModal({ session, onClose, onSubmit }) {
         onSubmit({ play_date: draft.play_date, shuttle_used_count: Number(draft.shuttle_used_count || 0), note: draft.note })
       }}>
         <Input label="Ngày chơi" type="date" value={draft.play_date} onChange={(v) => update('play_date', v)} required />
-        <Input label="Số cầu đã dùng" type="number" value={draft.shuttle_used_count} onChange={(v) => update('shuttle_used_count', v)} />
+        <label>Số cầu đã dùng<input type="number" min="0" value={draft.shuttle_used_count || ''} onChange={(e) => update('shuttle_used_count', e.target.value)} /></label>
         <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>

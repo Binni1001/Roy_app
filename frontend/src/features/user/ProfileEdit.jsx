@@ -121,6 +121,9 @@ export function ProfileEdit({ activePerson, submitting, onSave }) {
                 maxLength={500}
                 placeholder="Chia sẻ đôi điều về bản thân..."
               />
+              <span style={{ fontSize: 11, color: form.bio.length > 450 ? '#ff8c8c' : '#6a748a', alignSelf: 'flex-end' }}>
+                {form.bio.length}/500
+              </span>
             </label>
 
             <div className="profile-readonly">

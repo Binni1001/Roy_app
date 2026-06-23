@@ -33,6 +33,7 @@ export function UserPortal({ session, role, onSignOut }) {
     setProfileForm,
     setSelectedPeriodId,
     toast,
+    toastType,
     totalDebt,
     unpaidDebts,
     updateAttendanceType,
@@ -96,7 +97,7 @@ export function UserPortal({ session, role, onSignOut }) {
             )
           }
         />
-        <StatusLine text={toast} />
+        <StatusLine text={toast} type={toastType} />
 
         {loading && !activePerson ? (
           <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>

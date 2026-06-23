@@ -15,6 +15,7 @@ export function PkArena({ activePerson }) {
   const [people, setPeople]       = useState([])
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState('')
+  const [toastType, setToastType] = useState('success')
   const [showCreate, setShowCreate] = useState(false)
   const [showRandom, setShowRandom] = useState(false)
   const [showGuide, setShowGuide]   = useState(false)
@@ -76,11 +77,11 @@ export function PkArena({ activePerson }) {
         challenger_partner_id: form.match_type === 'doubles' ? form.challenger_partner_id : undefined,
         opponent_partner_id:   form.match_type === 'doubles' ? form.opponent_partner_id   : undefined,
       })
-      setToast('Đã tạo kèo thách đấu!')
+      setToastType('success'); setToast('Đã tạo kèo thách đấu!')
       setShowCreate(false)
       setForm({ match_type: 'singles', opponent_id: '', challenger_partner_id: '', opponent_partner_id: '', sets: 1, bet_items: '', played_at: '', note: '' })
       void loadAll()
-    } catch (err) { setToast(err.message) }
+    } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
   async function handleSetWinner(matchId, winnerSide, setScores) {
@@ -90,10 +91,10 @@ export function PkArena({ activePerson }) {
         status: 'completed',
         set_scores: setScores?.length ? setScores : null,
       })
-      setToast('Đã ghi nhận kết quả!')
+      setToastType('success'); setToast('Đã ghi nhận kết quả!')
       setShowResult(null)
       void loadAll()
-    } catch (err) { setToast(err.message) }
+    } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
   function handleRandomResult(prefill) {
@@ -110,28 +111,28 @@ export function PkArena({ activePerson }) {
   async function handleCancel(matchId) {
     try {
       await api.pk.update(matchId, { status: 'cancelled' })
-      setToast('Đã hủy kèo.')
+      setToastType('success'); setToast('Đã hủy kèo.')
       setCancelId(null)
       void loadAll()
-    } catch (err) { setToast(err.message) }
+    } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
   async function handleStart(matchId) {
     try {
       await api.pk.update(matchId, { status: 'active' })
-      setToast('Kèo đấu đã bắt đầu!')
+      setToastType('success'); setToast('Kèo đấu đã bắt đầu!')
       setStartingId(null)
       void loadAll()
-    } catch (err) { setToast(err.message) }
+    } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
   async function handleEditMatch(matchId, payload) {
     try {
       await api.pk.update(matchId, payload)
-      setToast('Đã cập nhật kèo.')
+      setToastType('success'); setToast('Đã cập nhật kèo.')
       setEditingMatch(null)
       void loadAll()
-    } catch (err) { setToast(err.message) }
+    } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
   const myId = activePerson?.id
@@ -186,7 +187,7 @@ export function PkArena({ activePerson }) {
 
   return (
     <div className="tab-scene" style={{ '--tab-img': 'url(/images/rackets-court.jpg)' }}>
-      {toast && <div className="toast" role="alert">{toast}</div>}
+      {toast && <div className={`toast toast-${toastType}`} role="alert">{toast}</div>}
 
       {/* Arena hero banner */}
       <div className="pk-arena-hero">

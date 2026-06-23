@@ -28,6 +28,7 @@ export function AdminPortal({ session, role, onSignOut }) {
     submit,
     summary,
     toast,
+    toastType,
   } = useAdminPortalData(role)
 
   return (
@@ -52,7 +53,7 @@ export function AdminPortal({ session, role, onSignOut }) {
           onPeriodChange={setSelectedPeriodId}
           onMenuToggle={() => setSidebarOpen((v) => !v)}
         />
-        <StatusLine text={toast} />
+        <StatusLine text={toast} type={toastType} />
         <AdminContent
           activeTab={activeTab}
           activePeriod={activePeriod}
