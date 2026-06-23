@@ -1,75 +1,86 @@
 import { useState, useEffect, useRef } from 'react'
 import { initials } from '../../utils/appUtils'
 
-/* ── helpers ── */
-function getRankedPool(people, leaderboard) {
-  const rankMap = {}
-  leaderboard.forEach((lb) => { rankMap[lb.id] = lb.rank || 999 })
-  return [...people].sort((a, b) => (rankMap[a.id] || 999) - (rankMap[b.id] || 999))
+/* ── Rank helpers ── */
+function buildRankMap(leaderboard) {
+  const map = {}
+  leaderboard.forEach((lb) => { map[lb.id] = lb.rank || 999 })
+  return map
 }
 
-/* User mode: self is always included, always challenger */
-function balancedSinglesWithSelf(ranked, self) {
-  const others = ranked.filter((p) => p.id !== self.id)
-  if (others.length < 1) return null
-  const opponent = others[Math.floor(Math.random() * others.length)]
-  return { match_type: 'singles', challenger: self, opponent, challenger_partner: null, opponent_partner: null }
+function sortByRank(people, rankMap) {
+  return [...people].sort((a, b) => (rankMap[a.id] || 500) - (rankMap[b.id] || 500))
 }
 
-function balancedDoublesWithSelf(ranked, self) {
-  const others = ranked.filter((p) => p.id !== self.id)
-  if (others.length < 3) return null
-  // Pick 3 others randomly from pool (up to top 7)
-  const pool = others.slice(0, Math.min(others.length, 7))
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 3)
-  // Sort picked 3 by rank
-  const rankIdx = {}
-  ranked.forEach((p, i) => { rankIdx[p.id] = i })
-  shuffled.sort((a, b) => (rankIdx[a.id] ?? 99) - (rankIdx[b.id] ?? 99))
-  const [r1, r2, r3] = shuffled
-  // Self + weakest on challenger team vs the two middle ones
-  // Balance: self + r3 vs r1 + r2
-  return {
-    match_type: 'doubles',
-    challenger: self, challenger_partner: r3,
-    opponent: r1, opponent_partner: r2,
+function shuffle(arr) {
+  const a = [...arr]
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]]
   }
+  return a
 }
 
-/* Admin mode: fully random, no constraint */
-function balancedSingles(ranked) {
-  if (ranked.length < 2) return null
-  const mid = Math.ceil(ranked.length / 2)
-  const top = ranked.slice(0, mid)
-  const bot = ranked.slice(mid)
-  const c = top[Math.floor(Math.random() * top.length)]
-  const o = bot[Math.floor(Math.random() * bot.length)]
-  return { match_type: 'singles', challenger: c, opponent: o, challenger_partner: null, opponent_partner: null }
+/* ── Pairing algorithms ── */
+// Singles: sort selected by rank → snake pairs (1 vs N, 2 vs N-1, ...) → pick one random pair
+function pairSingles(selected, rankMap, lockedPerson) {
+  const sorted = sortByRank(selected, rankMap)
+  const n = sorted.length
+  const pairs = []
+  for (let i = 0; i < Math.floor(n / 2); i++) {
+    pairs.push([sorted[i], sorted[n - 1 - i]])
+  }
+  const pair = pairs[Math.floor(Math.random() * pairs.length)]
+  if (lockedPerson) {
+    const other = pair[0].id === lockedPerson.id ? pair[1] : pair[0]
+    return { match_type: 'singles', challenger: lockedPerson, opponent: other, challenger_partner: null, opponent_partner: null }
+  }
+  const [a, b] = Math.random() > 0.5 ? pair : [pair[1], pair[0]]
+  return { match_type: 'singles', challenger: a, opponent: b, challenger_partner: null, opponent_partner: null }
 }
 
-function balancedDoubles(ranked) {
-  if (ranked.length < 4) return null
-  const pool = ranked.slice(0, Math.min(ranked.length, 8))
-  const shuffled = [...pool].sort(() => Math.random() - 0.5).slice(0, 4)
-  const rankIdx = {}
-  ranked.forEach((p, i) => { rankIdx[p.id] = i })
-  shuffled.sort((a, b) => (rankIdx[a.id] ?? 99) - (rankIdx[b.id] ?? 99))
-  const [r1, r2, r3, r4] = shuffled
+// Doubles: pick 4 from selected (equal probability), sort by rank → r1+r4 vs r2+r3
+function pairDoubles(selected, rankMap, lockedPerson) {
+  let pool
+  if (lockedPerson) {
+    const others = shuffle(selected.filter((p) => p.id !== lockedPerson.id)).slice(0, 3)
+    pool = [lockedPerson, ...others]
+  } else {
+    pool = shuffle(selected).slice(0, 4)
+  }
+  const sorted = sortByRank(pool, rankMap)
+  const [r1, r2, r3, r4] = sorted
+
+  if (lockedPerson) {
+    // lockedPerson always challenger — pair them with weakest (r4)
+    const selfIdx = sorted.findIndex((p) => p.id === lockedPerson.id)
+    const rest = sorted.filter((p) => p.id !== lockedPerson.id) // r of others sorted
+    // self + weakest of others vs 2 middle
+    return {
+      match_type: 'doubles',
+      challenger: lockedPerson, challenger_partner: rest[2],
+      opponent: rest[0], opponent_partner: rest[1],
+    }
+  }
+
+  // Admin mode: randomly assign which pair is challenger
   if (Math.random() > 0.5) {
     return { match_type: 'doubles', challenger: r1, challenger_partner: r4, opponent: r2, opponent_partner: r3 }
   }
   return { match_type: 'doubles', challenger: r2, challenger_partner: r3, opponent: r1, opponent_partner: r4 }
 }
 
+/* ── PlayerSlot ── */
 function PlayerSlot({ person, spinning, spinPool }) {
   const [display, setDisplay] = useState(person)
   const intervalRef = useRef(null)
 
   useEffect(() => {
     if (spinning && spinPool.length > 0) {
+      const pool = shuffle(spinPool)
       let i = 0
       intervalRef.current = setInterval(() => {
-        setDisplay(spinPool[i % spinPool.length])
+        setDisplay(pool[i % pool.length])
         i++
       }, 80)
     } else {
@@ -89,34 +100,94 @@ function PlayerSlot({ person, spinning, spinPool }) {
   )
 }
 
-/* ── main component ──
-   lockedPerson: nếu có → user mode (bản thân luôn được include, luôn là challenger)
-   lockedPerson: undefined → admin mode (random tự do)
-*/
+/* ── PersonPicker ── */
+function PersonPicker({ people, selected, onToggle, onSelectAll, onClearAll, rankMap, lockedPerson }) {
+  return (
+    <div className="rm-picker">
+      <div className="rm-picker-header">
+        <span className="rm-picker-count">{selected.length} người được chọn</span>
+        <div className="rm-picker-actions">
+          <button type="button" className="rm-picker-btn" onClick={onSelectAll}>Chọn tất cả</button>
+          <button type="button" className="rm-picker-btn" onClick={onClearAll}>Bỏ chọn</button>
+        </div>
+      </div>
+      <div className="rm-picker-list">
+        {lockedPerson && (
+          <div className="rm-picker-item rm-picker-locked">
+            <div className="rm-picker-avatar">
+              {lockedPerson.avatar_url
+                ? <img src={lockedPerson.avatar_url} alt={lockedPerson.full_name} className="avatar-img" />
+                : <span>{initials(lockedPerson.full_name)}</span>}
+            </div>
+            <span className="rm-picker-name">{lockedPerson.full_name}</span>
+            {rankMap[lockedPerson.id] && rankMap[lockedPerson.id] < 999 && (
+              <span className="rm-picker-rank">#{rankMap[lockedPerson.id]}</span>
+            )}
+            <span className="rm-picker-lock-tag">Bạn</span>
+          </div>
+        )}
+        {people.map((p) => {
+          const isSelected = selected.some((s) => s.id === p.id)
+          const rank = rankMap[p.id]
+          return (
+            <label key={p.id} className={`rm-picker-item${isSelected ? ' rm-picker-checked' : ''}`}>
+              <input type="checkbox" checked={isSelected} onChange={() => onToggle(p)} />
+              <div className="rm-picker-avatar">
+                {p.avatar_url
+                  ? <img src={p.avatar_url} alt={p.full_name} className="avatar-img" />
+                  : <span>{initials(p.full_name)}</span>}
+              </div>
+              <span className="rm-picker-name">{p.full_name}{p.nickname ? ` · ${p.nickname}` : ''}</span>
+              {rank && rank < 999
+                ? <span className="rm-picker-rank">#{rank}</span>
+                : <span className="rm-picker-rank rm-picker-unranked">–</span>}
+            </label>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/* ── Main component ── */
 export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, lockedPerson }) {
   const [mode, setMode] = useState('singles')
-  const [phase, setPhase] = useState('config')   // config | spinning | result
+  const [phase, setPhase] = useState('config')
   const [result, setResult] = useState(null)
-  const [spinning, setSpinning] = useState(false)
-  const ranked = getRankedPool(people, leaderboard)
+  const [selected, setSelected] = useState([])
 
+  const rankMap = buildRankMap(leaderboard || [])
   const isUserMode = !!lockedPerson
+
+  // People available to pick (exclude self if user mode)
+  const pickable = isUserMode ? people.filter((p) => p.id !== lockedPerson.id) : people
+
+  const minNeeded = mode === 'singles'
+    ? (isUserMode ? 1 : 2)
+    : (isUserMode ? 3 : 4)
+
+  const insufficient = selected.length < minNeeded
+
+  function togglePerson(p) {
+    setSelected((prev) =>
+      prev.some((s) => s.id === p.id) ? prev.filter((s) => s.id !== p.id) : [...prev, p]
+    )
+  }
+
+  function selectAll() { setSelected(pickable) }
+  function clearAll()  { setSelected([]) }
+
+  // Full pool for spin animation = selected + lockedPerson if user mode
+  const spinPool = isUserMode ? [lockedPerson, ...selected] : selected
 
   function spin() {
     setPhase('spinning')
-    setSpinning(true)
-
     setTimeout(() => {
-      let r
-      if (isUserMode) {
-        r = mode === 'singles'
-          ? balancedSinglesWithSelf(ranked, lockedPerson)
-          : balancedDoublesWithSelf(ranked, lockedPerson)
-      } else {
-        r = mode === 'singles' ? balancedSingles(ranked) : balancedDoubles(ranked)
-      }
+      const pool = isUserMode ? [lockedPerson, ...selected] : selected
+      const r = mode === 'singles'
+        ? pairSingles(pool, rankMap, lockedPerson)
+        : pairDoubles(pool, rankMap, lockedPerson)
       setResult(r)
-      setSpinning(false)
       setTimeout(() => setPhase('result'), 300)
     }, 2200)
   }
@@ -138,87 +209,78 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
     onClose()
   }
 
-  const minPlayers = mode === 'singles' ? 2 : 4
-  const poolSize = isUserMode
-    ? ranked.filter((p) => p.id !== lockedPerson?.id).length + 1
-    : ranked.length
-  const insufficient = isUserMode
-    ? ranked.filter((p) => p.id !== lockedPerson?.id).length < minPlayers - 1
-    : ranked.length < minPlayers
-
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="modal rm-modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
 
-        {/* hero banner */}
+        {/* Hero */}
         <div className="rm-hero" style={{ backgroundImage: 'url(/images/player-spotlight.jpg)' }}>
           <div className="rm-hero-overlay" />
           <div className="rm-hero-content">
             <div className="rm-dice">🎲</div>
             <h2 className="rm-title">Ghép Đội Ngẫu Nhiên</h2>
-            <p className="rm-subtitle">
-              {isUserMode
-                ? `Bạn luôn được include · ghép cân bằng xếp hạng`
-                : 'Hệ thống ghép đội cân bằng theo xếp hạng'}
-            </p>
+            <p className="rm-subtitle">Chọn người vào pool → hệ thống ghép cặp cân bằng</p>
           </div>
         </div>
 
         <div className="rm-body">
+
           {/* ── CONFIG ── */}
           {phase === 'config' && (
             <>
+              {/* Mode picker */}
               <div className="rm-mode-picker">
-                <button
-                  className={`rm-mode-btn${mode === 'singles' ? ' active' : ''}`}
-                  onClick={() => setMode('singles')}
-                >
+                <button className={`rm-mode-btn${mode === 'singles' ? ' active' : ''}`} onClick={() => setMode('singles')}>
                   <span className="rm-mode-icon">⚔️</span>
                   <strong>Đánh Đơn</strong>
-                  <small>2 người · 1 vs 1</small>
+                  <small>1 vs 1</small>
                 </button>
-                <button
-                  className={`rm-mode-btn${mode === 'doubles' ? ' active' : ''}`}
-                  onClick={() => setMode('doubles')}
-                >
+                <button className={`rm-mode-btn${mode === 'doubles' ? ' active' : ''}`} onClick={() => setMode('doubles')}>
                   <span className="rm-mode-icon">🤝</span>
                   <strong>Đánh Đôi</strong>
-                  <small>4 người · 2 vs 2</small>
+                  <small>2 vs 2</small>
                 </button>
               </div>
 
+              {/* Pairing rule info */}
               <div className="rm-balance-info">
                 {isUserMode && (
                   <div className="rm-info-row rm-info-self">
                     <span className="rm-info-icon">👤</span>
                     <div>
                       <strong>Bạn luôn có mặt</strong>
-                      <p className="muted">{lockedPerson?.full_name} sẽ là bên thách đấu</p>
+                      <p className="muted">{lockedPerson?.full_name} · bên thách đấu</p>
                     </div>
                   </div>
                 )}
                 <div className="rm-info-row">
                   <span className="rm-info-icon">🏆</span>
                   <div>
-                    <strong>Cân bằng theo xếp hạng</strong>
+                    <strong>{mode === 'singles' ? 'Ghép snake: top vs bottom' : 'Ghép đôi: r1+r4 vs r2+r3'}</strong>
                     <p className="muted">
                       {mode === 'singles'
-                        ? 'Người xếp hạng cao ghép với người xếp hạng thấp'
-                        : 'Mỗi đội có 1 người mạnh + 1 người yếu'}
+                        ? 'Xếp hạng 1 gặp xếp hạng cuối, 2 gặp áp chót... random chọn 1 cặp'
+                        : 'Mạnh nhất + Yếu nhất vs 2 người giữa — tổng sức cân bằng'}
                     </p>
-                  </div>
-                </div>
-                <div className="rm-info-row">
-                  <span className="rm-info-icon">👥</span>
-                  <div>
-                    <strong>{poolSize} người trong pool</strong>
-                    <p className="muted">Cần tối thiểu {minPlayers} người</p>
                   </div>
                 </div>
               </div>
 
+              {/* Player picker */}
+              <PersonPicker
+                people={pickable}
+                selected={selected}
+                onToggle={togglePerson}
+                onSelectAll={selectAll}
+                onClearAll={clearAll}
+                rankMap={rankMap}
+                lockedPerson={isUserMode ? lockedPerson : null}
+              />
+
               {insufficient ? (
-                <p className="rm-error">Không đủ người chơi để ghép {mode === 'singles' ? 'đơn' : 'đôi'}</p>
+                <p className="rm-error">
+                  Cần chọn thêm {minNeeded - selected.length} người nữa để ghép {mode === 'singles' ? 'đơn' : 'đôi'}
+                </p>
               ) : (
                 <button className="rm-spin-btn" onClick={spin}>
                   🎲 Tung xúc xắc!
@@ -234,16 +296,16 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
               <div className="rm-slots-row">
                 <div className="rm-team-slots">
                   <span className="rm-team-tag">Đội A</span>
-                  <PlayerSlot person={isUserMode ? lockedPerson : null} spinning={!isUserMode} spinPool={ranked} />
-                  {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={ranked} />}
+                  <PlayerSlot person={isUserMode ? lockedPerson : null} spinning={!isUserMode} spinPool={spinPool} />
+                  {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
                 </div>
                 <div className="rm-vs-divider">
                   <span className="rm-vs-anim">VS</span>
                 </div>
                 <div className="rm-team-slots">
                   <span className="rm-team-tag">Đội B</span>
-                  <PlayerSlot person={null} spinning spinPool={ranked} />
-                  {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={ranked} />}
+                  <PlayerSlot person={null} spinning spinPool={spinPool} />
+                  {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
                 </div>
               </div>
             </div>
@@ -252,7 +314,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
           {/* ── RESULT ── */}
           {phase === 'result' && result && (
             <div className="rm-result">
-              <div className="rm-result-banner">✨ Kèo đấu đã được tạo!</div>
+              <div className="rm-result-banner">✨ Cặp đấu đã được chọn!</div>
 
               <div className="rm-result-card">
                 <div className="rm-result-team">
@@ -262,14 +324,10 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
                     <PlayerSlot person={result.challenger_partner} spinning={false} spinPool={[]} />
                   )}
                 </div>
-
                 <div className="rm-result-vs">
                   <span className="rm-vs-big">VS</span>
-                  <span className="rm-match-type-tag">
-                    {result.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}
-                  </span>
+                  <span className="rm-match-type-tag">{result.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
                 </div>
-
                 <div className="rm-result-team">
                   <span className="rm-result-team-label">Đối thủ</span>
                   <PlayerSlot person={result.opponent} spinning={false} spinPool={[]} />

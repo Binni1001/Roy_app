@@ -2480,6 +2480,45 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 }
 .rm-info-self strong { color: #d8ae52; }
 
+/* Person picker */
+.rm-picker { margin: 12px 0; }
+.rm-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rm-picker-count { font-size: 0.82rem; color: #8a94a0; }
+.rm-picker-actions { display: flex; gap: 6px; }
+.rm-picker-btn {
+  font-size: 0.76rem; padding: 3px 10px; border-radius: 6px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  color: #efe7d2; cursor: pointer;
+}
+.rm-picker-btn:hover { background: rgba(255,255,255,0.12); }
+.rm-picker-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 240px; overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px;
+}
+.rm-picker-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; transition: background 0.15s;
+}
+.rm-picker-item:hover { background: rgba(255,255,255,0.05); }
+.rm-picker-item input[type="checkbox"] { accent-color: #d8ae52; width: 15px; height: 15px; flex-shrink: 0; }
+.rm-picker-checked { background: rgba(216,174,82,0.08) !important; border-color: rgba(216,174,82,0.3) !important; }
+.rm-picker-avatar {
+  width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: #2a2f3a; display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #d8ae52;
+}
+.rm-picker-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rm-picker-name { flex: 1; font-size: 0.84rem; color: #efe7d2; }
+.rm-picker-rank { font-size: 0.75rem; color: #8a94a0; flex-shrink: 0; }
+.rm-picker-unranked { color: #4a5260; }
+.rm-picker-locked { background: rgba(216,174,82,0.06); border: 1px solid rgba(216,174,82,0.2); cursor: default; }
+.rm-picker-lock-tag {
+  font-size: 0.7rem; padding: 2px 7px; border-radius: 4px;
+  background: rgba(216,174,82,0.2); color: #d8ae52; flex-shrink: 0;
+}
+
 /* Spin button */
 .rm-spin-btn {
   width: 100%;
