@@ -3602,6 +3602,11 @@ textarea:focus {
   background: linear-gradient(135deg, #e05252, #b83232) !important;
   color: #fff !important;
 }
+.btn-start {
+  background: linear-gradient(135deg, #4caf7d, #2e7d52) !important;
+  color: #fff !important;
+  font-weight: 600;
+}
 .pk-countdown {
   color: #4caf7d;
   font-size: 0.78rem;

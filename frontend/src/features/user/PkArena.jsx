@@ -6,12 +6,6 @@ import { computeLeaderboard } from '../../utils/leaderboardUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
 
 /* ── Leaderboard tier helpers ── */
-const TIERS = [
-  { label: '🥇', cls: 'lb-tier-gold',    min: 1, max: 1 },
-  { label: '🥈', cls: 'lb-tier-silver',  min: 2, max: 2 },
-  { label: '🥉', cls: 'lb-tier-bronze',  min: 3, max: 3 },
-]
-
 function getTierCls(rank, total) {
   if (rank === 1) return 'lb-tier-gold'
   if (rank === 2) return 'lb-tier-silver'
@@ -217,7 +211,50 @@ function SetScores({ scores, challenger, opponent }) {
   )
 }
 
-function MatchCard({ m, activePerson, onSetResult, onCancel }) {
+function UserEditModal({ match, onClose, onSubmit }) {
+  const [draft, setDraft] = useState({
+    played_at: match.played_at ? match.played_at.slice(0, 10) : '',
+    bet_items: match.bet_items || '',
+    note:      match.note      || '',
+    sets:      match.sets      || 1,
+  })
+  function upd(k, v) { setDraft((d) => ({ ...d, [k]: v })) }
+  function handleSubmit(e) {
+    e.preventDefault()
+    onSubmit({ played_at: draft.played_at || null, bet_items: draft.bet_items || null, note: draft.note || null, sets: Number(draft.sets) || 1 })
+  }
+  return (
+    <Modal title="✏️ Sửa kèo" onClose={onClose}>
+      <form className="form" onSubmit={handleSubmit}>
+        <label>📅 Ngày đấu
+          <input type="date" value={draft.played_at} onChange={(e) => upd('played_at', e.target.value)} />
+        </label>
+        <div className="ck-sets-row" style={{ margin: '10px 0' }}>
+          <span className="ck-sets-label">🏸 Số set</span>
+          <div className="ck-sets-options">
+            {[1, 3, 5].map((s) => (
+              <button key={s} type="button"
+                className={`ck-set-btn${draft.sets === s ? ' ck-set-active' : ''}`}
+                onClick={() => upd('sets', s)}>{s} set</button>
+            ))}
+          </div>
+        </div>
+        <label>🎁 Vật phẩm cược
+          <input type="text" value={draft.bet_items} onChange={(e) => upd('bet_items', e.target.value)} placeholder="VD: 2 chai nước" />
+        </label>
+        <label>📝 Ghi chú
+          <input type="text" value={draft.note} onChange={(e) => upd('note', e.target.value)} placeholder="Tuỳ chọn" />
+        </label>
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Lưu thay đổi</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+function MatchCard({ m, activePerson, onSetResult, onCancel, onStart, onEdit }) {
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
   const challengerWon = m.winner_side === 'challenger'
@@ -235,24 +272,12 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
 
       {/* VS row */}
       <div className="pk-card-vs-row">
-        <TeamBlock
-          main={m.challenger}
-          partner={m.challenger_partner}
-          label="Thách đấu"
-          isWinner={m.status === 'completed' && challengerWon}
-        />
+        <TeamBlock main={m.challenger} partner={m.challenger_partner} label="Thách đấu" isWinner={m.status === 'completed' && challengerWon} />
         <div className="pk-vs-center">
           <span className="pk-vs-text">VS</span>
-          {m.status === 'completed' && (
-            <SetScores scores={m.set_scores} />
-          )}
+          {m.status === 'completed' && <SetScores scores={m.set_scores} />}
         </div>
-        <TeamBlock
-          main={m.opponent}
-          partner={m.opponent_partner}
-          label="Đối thủ"
-          isWinner={m.status === 'completed' && opponentWon}
-        />
+        <TeamBlock main={m.opponent} partner={m.opponent_partner} label="Đối thủ" isWinner={m.status === 'completed' && opponentWon} />
       </div>
 
       {/* Footer */}
@@ -263,11 +288,17 @@ function MatchCard({ m, activePerson, onSetResult, onCancel }) {
 
           {amParticipant && (m.status === 'pending' || m.status === 'active') && (
             <div className="pk-match-actions">
+              {m.status === 'pending' && (
+                <button className="btn-start" onClick={() => onStart(m.id)}>▶ Bắt đầu đấu</button>
+              )}
               <span title={!canRecord ? reason : undefined}>
                 <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
               </span>
               {!canRecord && reason && <small className="muted pk-lock-hint">{reason}</small>}
-              <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
+              <button onClick={() => onEdit(m)}>Sửa kèo</button>
+              {m.status === 'pending' && (
+                <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
+              )}
             </div>
           )}
         </div>
@@ -396,8 +427,10 @@ export function PkArena({ activePerson }) {
   const [matchSearch, setMatchSearch]     = useState('')
   const [dateFilter, setDateFilter]       = useState('all')
   const [specificDate, setSpecificDate]   = useState('')
-  const [showResult, setShowResult] = useState(null)
-  const [cancelId, setCancelId]   = useState(null)
+  const [showResult, setShowResult]   = useState(null)
+  const [cancelId, setCancelId]       = useState(null)
+  const [startingId, setStartingId]   = useState(null)
+  const [editingMatch, setEditingMatch] = useState(null)
   const [memberSearch, setMemberSearch] = useState('')
   const [form, setForm] = useState({
     match_type: 'singles',
@@ -487,6 +520,24 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
     } catch (err) { setToast(err.message) }
   }
 
+  async function handleStart(matchId) {
+    try {
+      await api.pk.update(matchId, { status: 'active' })
+      setToast('Kèo đấu đã bắt đầu!')
+      setStartingId(null)
+      void loadAll()
+    } catch (err) { setToast(err.message) }
+  }
+
+  async function handleEditMatch(matchId, payload) {
+    try {
+      await api.pk.update(matchId, payload)
+      setToast('Đã cập nhật kèo.')
+      setEditingMatch(null)
+      void loadAll()
+    } catch (err) { setToast(err.message) }
+  }
+
   const myId = activePerson?.id
 
   function matchInDateRange(m) {
@@ -535,7 +586,7 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
   const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
   const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
   const baseList  = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
-  const filteredMatches = useMemo(() => applyFilters(baseList), [baseList, myMatchesOnly, matchSearch, dateFilter])
+  const filteredMatches = useMemo(() => applyFilters(baseList), [baseList, myMatchesOnly, matchSearch, dateFilter, specificDate])
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
   return (
@@ -659,6 +710,8 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
                   activePerson={activePerson}
                   onSetResult={setShowResult}
                   onCancel={(id) => setCancelId(id)}
+                  onStart={(id) => setStartingId(id)}
+                  onEdit={(match) => setEditingMatch(match)}
                 />
               ))}
             </div>
@@ -840,6 +893,24 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
           danger
           onClose={() => setCancelId(null)}
           onConfirm={() => handleCancel(cancelId)}
+        />
+      )}
+
+      {startingId && (
+        <ConfirmModal
+          title="Bắt đầu đấu"
+          message="Xác nhận bắt đầu trận đấu? Kèo sẽ chuyển sang trạng thái đang diễn ra."
+          confirmText="▶ Bắt đầu"
+          onClose={() => setStartingId(null)}
+          onConfirm={() => handleStart(startingId)}
+        />
+      )}
+
+      {editingMatch && (
+        <UserEditModal
+          match={editingMatch}
+          onClose={() => setEditingMatch(null)}
+          onSubmit={(payload) => handleEditMatch(editingMatch.id, payload)}
         />
       )}
     </div>
