@@ -166,9 +166,10 @@ export function useUserPortalData(session, setActiveTab) {
         const { error: uploadError } = await supabase.storage
           .from('avatars')
           .upload(path, avatarFile, { upsert: true, contentType: avatarFile.type })
-        if (uploadError) throw new Error(uploadError.message)
+        if (uploadError) throw new Error(`Upload ảnh thất bại: ${uploadError.message}`)
         const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
-        avatar_url = urlData.publicUrl
+        // Append cache-buster so new image shows immediately after re-upload
+        avatar_url = `${urlData.publicUrl}?t=${Date.now()}`
       }
 
       const updated = await api.people.updateMe({
