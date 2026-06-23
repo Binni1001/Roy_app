@@ -2379,13 +2379,17 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 
 .rm-modal {
   max-width: 560px;
+  max-height: 92vh;
   padding: 0;
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 .rm-hero {
   position: relative;
-  height: 160px;
+  height: 110px;
+  flex-shrink: 0;
   background-size: cover;
   background-position: center 30%;
 }
@@ -2422,9 +2426,11 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 }
 
 .rm-body {
-  padding: 24px 24px 20px;
+  padding: 16px 20px 16px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
   gap: 18px;
 }
 
@@ -2432,14 +2438,15 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-mode-picker {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 12px;
+  gap: 8px;
+  margin-bottom: 10px;
 }
 .rm-mode-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
-  padding: 16px 12px;
+  gap: 3px;
+  padding: 10px 12px;
   border-radius: 12px;
   border: 1.5px solid rgba(239,231,210,0.1);
   background: rgba(255,255,255,0.03);
@@ -2458,7 +2465,8 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-balance-info {
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 6px;
+  margin-bottom: 10px;
   background: rgba(255,255,255,0.03);
   border-radius: 10px;
   padding: 14px;
@@ -2493,7 +2501,7 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-picker-btn:hover { background: rgba(255,255,255,0.12); }
 .rm-picker-list {
   display: flex; flex-direction: column; gap: 4px;
-  max-height: 240px; overflow-y: auto;
+  max-height: 200px; overflow-y: auto;
   border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px;
 }
 .rm-picker-item {
@@ -3843,7 +3851,7 @@ textarea:focus {
   .pk-set-label { font-size: 0.65rem; }
 
   /* Random matchmaker hero */
-  .rm-hero    { height: 120px; }
+  .rm-hero    { height: 90px; }
   .rm-title   { font-size: 1.1rem; }
   .rm-subtitle { font-size: 0.72rem; }
   .rm-dice    { font-size: 1.5rem; }
@@ -3904,7 +3912,7 @@ textarea:focus {
   .rs-remove-set { display: none; }
   .pk-match-filters .pk-search-input { font-size: 0.76rem; }
   .nb-dropdown { left: -40px; }
-  .rm-hero { height: 90px; }
+  .rm-hero { height: 70px; }
   .rm-slots-row { flex-direction: column; gap: 8px; }
   .rm-vs-divider { padding: 0; }
   .rm-vs-anim { font-size: 1rem; }
