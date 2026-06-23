@@ -1066,9 +1066,11 @@ button:disabled {
 .panel-header h2 {
   margin: 0;
 }
-.panel-header-action button {
+.panel-header-action button,
+.panel-header-action .pk-create-btn {
   font-size: 0.85rem;
   padding: 5px 12px;
+  min-height: 36px;
 }
 .panel-header-action button {
   color: #c8d4e0;
@@ -1792,6 +1794,30 @@ button.danger:hover {
 @media (max-width: 480px) {
   .lb-strip-sub { display: none; }
   .lb-image-strip { height: 56px; }
+  .lb-strip-content { gap: 10px; padding: 0 14px; }
+  .lb-strip-icon { font-size: 1.4rem; }
+
+  /* PK hero: ẩn deco emoji, giảm kích thước */
+  .pk-arena-hero-deco { display: none; }
+  .pk-arena-hero { height: 96px; }
+  .pk-arena-hero-title { font-size: 18px; }
+  .pk-arena-hero-eyebrow { font-size: 9px; }
+
+  /* Panel header: wrap khi 2 create buttons không đủ chỗ */
+  .panel-header { flex-wrap: wrap; }
+  .panel-header-action {
+    width: 100%;
+    display: flex;
+    gap: 6px;
+  }
+  .panel-header-action button,
+  .panel-header-action .pk-create-btn {
+    flex: 1;
+    font-size: 12px;
+    padding: 4px 8px;
+    text-align: center;
+    justify-content: center;
+  }
 }
 
 /* ── Leaderboard type toggle ── */
