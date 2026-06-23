@@ -1,4 +1,4 @@
-import { formatMoney, initials } from '../../utils/appUtils'
+import { formatMoney } from '../../utils/appUtils'
 
 export function MemberHero({
   activePerson,

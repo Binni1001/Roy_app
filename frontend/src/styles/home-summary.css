@@ -1,0 +1,72 @@
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   HOME SUMMARY ROW â€” quick stats trÃªn trang chá»§
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.home-summary-row {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  flex-wrap: wrap;
+}
+
+.home-summary-chip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid rgba(239,231,210,0.1);
+  background: rgba(255,255,255,0.04);
+  flex: 1;
+  min-width: 140px;
+  transition: background 0.2s;
+}
+
+.home-chip-debt {
+  border-color: rgba(229,115,115,0.2);
+  background: rgba(229,115,115,0.06);
+}
+
+.home-chip-session {
+  border-color: rgba(216,174,82,0.2);
+  background: rgba(216,174,82,0.06);
+}
+
+.home-chip-tx {
+  border-color: rgba(76,175,125,0.2);
+  background: rgba(76,175,125,0.05);
+}
+
+.home-chip-icon {
+  font-size: 1.4rem;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.home-chip-label {
+  display: block;
+  font-size: 11px;
+  color: #7a8490;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  font-weight: 600;
+  margin-bottom: 1px;
+}
+
+.home-chip-value {
+  display: block;
+  font-size: 14px;
+  font-weight: 700;
+  color: #efe7d2;
+}
+
+@media (max-width: 600px) {
+  .home-summary-row { gap: 8px; }
+  .home-summary-chip { padding: 8px 12px; min-width: 120px; }
+  .home-chip-value { font-size: 13px; }
+}
+
+@media (max-width: 480px) {
+  /* 2 chips per row so 3rd chip doesn't stretch full width alone */
+  .home-summary-chip { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
+

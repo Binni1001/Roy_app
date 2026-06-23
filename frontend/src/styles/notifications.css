@@ -1,0 +1,120 @@
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PK NOTIFICATIONS
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.pk-notif-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-width: 340px;
+  width: calc(100vw - 48px);
+}
+
+.pk-notif-actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.pk-notif-dismiss-all {
+  font-size: 12px;
+  padding: 4px 12px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 20px;
+  color: #efe7d2;
+  cursor: pointer;
+}
+
+.pk-notif-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border-left: 4px solid #d8ae52;
+  background: #1a2029;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+  animation: notif-slide-in 0.28s cubic-bezier(0.4,0,0.2,1);
+}
+
+@keyframes notif-slide-in {
+  from { transform: translateX(110%); opacity: 0; }
+  to   { transform: translateX(0);   opacity: 1; }
+}
+
+.pk-notif-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+  line-height: 1;
+}
+
+.pk-notif-body {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.pk-notif-body strong {
+  font-size: 14px;
+  color: #efe7d2;
+}
+
+.pk-notif-body small {
+  font-size: 12px;
+  color: #9a9a8a;
+}
+
+.pk-notif-goto {
+  align-self: flex-start;
+  margin-top: 6px;
+  padding: 4px 12px;
+  font-size: 12px;
+  font-weight: 600;
+  background: rgba(216,174,82,0.15);
+  color: #d8ae52;
+  border: 1px solid rgba(216,174,82,0.3);
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.pk-notif-goto:hover {
+  background: rgba(216,174,82,0.28);
+}
+
+.pk-notif-close {
+  flex-shrink: 0;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.08);
+  border: none;
+  color: #9a9a8a;
+  font-size: 14px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+/* Badge trÃªn nav tab PK */
+.pk-nav-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 5px;
+  border-radius: 9px;
+  background: #e57373;
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  margin-left: 6px;
+  vertical-align: middle;
+}
+

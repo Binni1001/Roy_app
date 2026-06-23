@@ -1,423 +1,12 @@
-﻿import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../api/client'
-import { ConfirmModal, Modal, Panel } from '../../components/common'
-import { formatDate, initials } from '../../utils/appUtils'
+import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonPlayerGrid, SkeletonTable } from '../../components/common'
+import { initials } from '../../utils/appUtils'
 import { computeLeaderboard } from '../../utils/leaderboardUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
-
-/* ── Leaderboard tier helpers ── */
-function getTierCls(rank, total) {
-  if (rank === 1) return 'lb-tier-gold'
-  if (rank === 2) return 'lb-tier-silver'
-  if (rank === 3) return 'lb-tier-bronze'
-  if (total >= 5 && rank >= total - 1) return 'lb-tier-bottom'
-  return ''
-}
-
-function RankBadge({ rank, total }) {
-  if (rank === 1) return <span className="lb-rank-badge lb-gold">🥇</span>
-  if (rank === 2) return <span className="lb-rank-badge lb-silver">🥈</span>
-  if (rank === 3) return <span className="lb-rank-badge lb-bronze">🥉</span>
-  if (total >= 5 && rank === total) return <span className="lb-rank-badge lb-last">💀</span>
-  if (total >= 5 && rank === total - 1) return <span className="lb-rank-badge lb-near-last">😅</span>
-  return <span className="lb-rank-num">{rank}</span>
-}
-
-function WilsonBar({ score }) {
-  const pct = Math.min(100, Math.max(0, (score || 0) * 100))
-  const display = Math.round(pct)
-  let cls = 'lb-bar-low'
-  if (pct >= 60) cls = 'lb-bar-high'
-  else if (pct >= 40) cls = 'lb-bar-mid'
-  return (
-    <div className="lb-bar-wrap" title={`${display}%`}>
-      <div className={`lb-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
-      <span className="lb-bar-label">{display}%</span>
-    </div>
-  )
-}
-
-function LeaderboardRow({ row, isMe, total }) {
-  const tierCls = getTierCls(row.rank, total)
-  return (
-    <tr className={`${isMe ? 'pk-row-me' : ''} ${tierCls}`}>
-      <td><RankBadge rank={row.rank} total={total} /></td>
-      <td>
-        <div className="pk-person-cell">
-          {row.avatar_url
-            ? <img src={row.avatar_url} className="avatar avatar-img pk-avatar" alt={row.full_name} />
-            : <span className="avatar pk-avatar">{initials(row.full_name)}</span>}
-          <span>{row.full_name}{row.nickname ? <small className="muted"> · {row.nickname}</small> : null}</span>
-        </div>
-      </td>
-      <td className="pk-win">{row.wins}</td>
-      <td className="pk-loss">{row.losses}</td>
-      <td className="lb-total">{row.total_matches}</td>
-      <td className="lb-points"><span className="lb-points-chip">{row.points ?? 0}</span></td>
-      <td><WilsonBar score={row.wilson_score} /></td>
-    </tr>
-  )
-}
-
-function LeaderboardLegend({ total, onShowGuide }) {
-  return (
-    <div className="lb-legend">
-      <span className="lb-legend-item"><span className="lb-dot lb-dot-gold" />Top 3</span>
-      <span className="lb-legend-item"><span className="lb-dot lb-dot-mid" />Trung bình</span>
-      {total >= 5 && <span className="lb-legend-item"><span className="lb-dot lb-dot-bottom" />Cần cố gắng</span>}
-      <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">★ Chỉ số Wilson — đánh nhiều trận mới được điểm cao</span>
-      <button className="lb-guide-btn" onClick={onShowGuide}>❓ Cách xếp hạng</button>
-    </div>
-  )
-}
-
-function RankingGuideModal({ onClose }) {
-  return (
-    <Modal title="🏆 Cách tính xếp hạng" onClose={onClose}>
-      <div className="rg-root">
-        <p className="rg-intro">
-          Xếp hạng dựa trên <strong>Chỉ số ★</strong> — không phải số trận thắng đơn thuần.
-          Chỉ số này trả lời câu hỏi:
-        </p>
-        <div className="rg-quote">
-          "Nếu người này đánh lâu dài, tỷ lệ thắng tối thiểu của họ là bao nhiêu?"
-        </div>
-
-        <p className="rg-section-title">📌 Ví dụ thực tế</p>
-
-        <div className="rg-example-grid">
-          <div className="rg-example-card rg-card-win">
-            <div className="rg-card-name">Anh Lâm</div>
-            <div className="rg-card-record">2 thắng · 0 thua</div>
-            <div className="rg-card-score">Chỉ số: <strong>34%</strong></div>
-            <div className="rg-card-note">Chưa thua lần nào → chỉ số cao → <strong>#1</strong></div>
-          </div>
-          <div className="rg-example-card rg-card-mid">
-            <div className="rg-card-name">Anh Thế</div>
-            <div className="rg-card-record">3 thắng · 1 thua</div>
-            <div className="rg-card-score">Chỉ số: <strong>30%</strong></div>
-            <div className="rg-card-note">Thắng nhiều hơn nhưng đã thua 1 lần → chỉ số thấp hơn Lâm</div>
-          </div>
-          <div className="rg-example-card rg-card-mid">
-            <div className="rg-card-name">Bin</div>
-            <div className="rg-card-record">2 thắng · 2 thua</div>
-            <div className="rg-card-score">Chỉ số: <strong>15%</strong></div>
-            <div className="rg-card-note">Tỷ lệ thắng 50/50 → chỉ số trung bình</div>
-          </div>
-          <div className="rg-example-card rg-card-loss">
-            <div className="rg-card-name">Anh Khanh</div>
-            <div className="rg-card-record">2 thắng · 3 thua</div>
-            <div className="rg-card-score">Chỉ số: <strong>11%</strong></div>
-            <div className="rg-card-note">Thua nhiều hơn thắng → chỉ số thấp nhất</div>
-          </div>
-        </div>
-
-        <p className="rg-section-title">💡 Quy tắc đơn giản</p>
-        <div className="rg-rules">
-          <div className="rg-rule"><span className="rg-rule-icon">📈</span><span>Đánh <strong>càng nhiều trận</strong>, chỉ số càng chính xác và tăng lên</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">🔥</span><span>Thắng liên tiếp → leo hạng nhanh</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">📉</span><span>Thua nhiều → chỉ số tụt ngay dù trước đó thắng nhiều</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">🆕</span><span>Mới vào thắng 1 trận <strong>không thể leo #1</strong> — phải chứng minh qua nhiều trận</span></div>
-        </div>
-
-        <div className="rg-footer">
-          Điểm (+3 thắng / -1 thua) chỉ dùng để phân biệt khi 2 người có chỉ số bằng nhau.
-        </div>
-      </div>
-    </Modal>
-  )
-}
-
-const STATUS_LABEL = {
-  pending: 'Chờ xác nhận',
-  active: 'Đang diễn ra',
-  completed: 'Đã kết thúc',
-  cancelled: 'Đã hủy',
-}
-
-function sortByDate(arr) {
-  return [...arr].sort((a, b) => {
-    const da = a.played_at || a.created_at
-    const db = b.played_at || b.created_at
-    return new Date(db) - new Date(da)
-  })
-}
-
-function startOfDay(date) {
-  const d = new Date(date)
-  d.setHours(0, 0, 0, 0)
-  return d
-}
-
-function getResultLock(m) {
-  const now = new Date()
-  const today = startOfDay(now)
-  if (!m.played_at) return { canRecord: false, reason: 'Kèo chưa có ngày đấu' }
-  const matchDay = startOfDay(new Date(m.played_at))
-  if (matchDay > today) return { canRecord: false, reason: `Chưa đến ngày đấu (${formatDate(m.played_at)})` }
-  if (m.status === 'completed' && m.updated_at) {
-    const diffHours = (now - new Date(m.updated_at)) / (1000 * 60 * 60)
-    if (diffHours > 24) return { canRecord: false, reason: 'Kết quả đã khoá sau 24 giờ' }
-  }
-  return { canRecord: true, reason: null }
-}
-
-function isParticipant(m, activePerson) {
-  if (!activePerson) return false
-  return [m.challenger_id, m.opponent_id, m.challenger_partner_id, m.opponent_partner_id]
-    .filter(Boolean)
-    .includes(activePerson.id)
-}
-
-function Avatar({ person, size = 'md' }) {
-  const cls = size === 'lg' ? 'pk-avatar-lg' : 'pk-avatar-sm'
-  if (!person) return <div className={`pk-avatar-circle ${cls} muted`}>?</div>
-  if (person.avatar_url) return <img src={person.avatar_url} alt={person.full_name} className={`pk-avatar-circle ${cls} avatar-img`} />
-  return <div className={`pk-avatar-circle ${cls}`}>{initials(person.full_name)}</div>
-}
-
-function TeamBlock({ main, partner, label, isWinner }) {
-  return (
-    <div className={`pk-team-block${isWinner ? ' pk-winner-side' : ''}`}>
-      <div className="pk-team-avatars">
-        <Avatar person={main} size="lg" />
-        {partner && <Avatar person={partner} size="md" />}
-      </div>
-      <div className="pk-team-names">
-        <strong>{main?.full_name || '?'}</strong>
-        {partner && <span className="pk-partner-name">& {partner.full_name}</span>}
-      </div>
-      <span className="pk-team-label">{label}</span>
-      {isWinner && <span className="pk-crown">🏆</span>}
-    </div>
-  )
-}
-
-/* ── Set score display ── */
-function SetScores({ scores, challenger, opponent }) {
-  if (!scores || scores.length === 0) return null
-  return (
-    <div className="pk-set-scores">
-      {scores.map((s, i) => (
-        <div key={i} className="pk-set-row">
-          <span className="pk-set-label">Set {i + 1}</span>
-          <span className={`pk-set-score${s.challenger > s.opponent ? ' pk-score-win' : ' pk-score-lose'}`}>{s.challenger}</span>
-          <span className="pk-set-dash">–</span>
-          <span className={`pk-set-score${s.opponent > s.challenger ? ' pk-score-win' : ' pk-score-lose'}`}>{s.opponent}</span>
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function UserEditModal({ match, onClose, onSubmit }) {
-  const [draft, setDraft] = useState({
-    played_at: match.played_at ? match.played_at.slice(0, 10) : '',
-    bet_items: match.bet_items || '',
-    note:      match.note      || '',
-    sets:      match.sets      || 1,
-  })
-  function upd(k, v) { setDraft((d) => ({ ...d, [k]: v })) }
-  function handleSubmit(e) {
-    e.preventDefault()
-    onSubmit({ played_at: draft.played_at || null, bet_items: draft.bet_items || null, note: draft.note || null, sets: Number(draft.sets) || 1 })
-  }
-  return (
-    <Modal title="✏️ Sửa kèo" onClose={onClose}>
-      <form className="form" onSubmit={handleSubmit}>
-        <label>📅 Ngày đấu
-          <input type="date" value={draft.played_at} onChange={(e) => upd('played_at', e.target.value)} />
-        </label>
-        <div className="ck-sets-row" style={{ margin: '10px 0' }}>
-          <span className="ck-sets-label">🏸 Số set</span>
-          <div className="ck-sets-options">
-            {[1, 3, 5].map((s) => (
-              <button key={s} type="button"
-                className={`ck-set-btn${draft.sets === s ? ' ck-set-active' : ''}`}
-                onClick={() => upd('sets', s)}>{s} set</button>
-            ))}
-          </div>
-        </div>
-        <label>🎁 Vật phẩm cược
-          <input type="text" value={draft.bet_items} onChange={(e) => upd('bet_items', e.target.value)} placeholder="VD: 2 chai nước" />
-        </label>
-        <label>📝 Ghi chú
-          <input type="text" value={draft.note} onChange={(e) => upd('note', e.target.value)} placeholder="Tuỳ chọn" />
-        </label>
-        <footer className="modal-actions">
-          <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit">Lưu thay đổi</button>
-        </footer>
-      </form>
-    </Modal>
-  )
-}
-
-function MatchCard({ m, activePerson, onSetResult, onCancel, onStart, onEdit }) {
-  const amParticipant = isParticipant(m, activePerson)
-  const { canRecord, reason } = getResultLock(m)
-  const challengerWon = m.winner_side === 'challenger'
-  const opponentWon   = m.winner_side === 'opponent'
-
-  return (
-    <div className={`pk-match-card pk-match-card-v2 pk-status-${m.status}`}>
-      {/* Header row */}
-      <div className="pk-card-header">
-        <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
-        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
-        {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
-        {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
-      </div>
-
-      {/* VS row */}
-      <div className="pk-card-vs-row">
-        <TeamBlock main={m.challenger} partner={m.challenger_partner} label="Thách đấu" isWinner={m.status === 'completed' && challengerWon} />
-        <div className="pk-vs-center">
-          <span className="pk-vs-text">VS</span>
-          {m.status === 'completed' && <SetScores scores={m.set_scores} />}
-        </div>
-        <TeamBlock main={m.opponent} partner={m.opponent_partner} label="Đối thủ" isWinner={m.status === 'completed' && opponentWon} />
-      </div>
-
-      {/* Footer */}
-      {(m.bet_items || m.note || amParticipant) && (
-        <div className="pk-card-footer">
-          {m.bet_items && <span className="pk-bet">🎁 {m.bet_items}</span>}
-          {m.note      && <span className="pk-note muted">{m.note}</span>}
-
-          {amParticipant && m.status !== 'cancelled' && (
-            <div className="pk-match-actions">
-              {m.status === 'pending' && (
-                <button className="btn-start" onClick={() => onStart(m.id)}>▶ Bắt đầu đấu</button>
-              )}
-              {(m.status === 'pending' || m.status === 'active') && (
-                <span title={!canRecord ? reason : undefined}>
-                  <button onClick={() => onSetResult(m)} disabled={!canRecord}>Ghi kết quả</button>
-                </span>
-              )}
-              {(m.status === 'pending' || m.status === 'active') && !canRecord && reason && (
-                <small className="muted pk-lock-hint">{reason}</small>
-              )}
-              {m.status === 'completed' && canRecord && (
-                <button onClick={() => onSetResult(m)}>Sửa kết quả</button>
-              )}
-              <button onClick={() => onEdit(m)}>Sửa kèo</button>
-              {m.status === 'pending' && (
-                <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
-              )}
-            </div>
-          )}
-        </div>
-      )}
-    </div>
-  )
-}
-
-function ResultModal({ match, onClose, onSubmit }) {
-  const sets = match.sets || 1
-  const [winner, setWinner] = useState('')
-  const [scores, setScores] = useState(
-    Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
-  )
-  const [confirming, setConfirming] = useState(false)
-
-  function updateScore(i, side, val) {
-    setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
-  }
-  function addSet() { setScores((prev) => [...prev, { challenger: '', opponent: '' }]) }
-  function removeSet(i) { setScores((prev) => prev.filter((_, idx) => idx !== i)) }
-
-  function handleSubmit(e) {
-    e.preventDefault()
-    if (!winner) return
-    setConfirming(true)
-  }
-
-  function handleConfirm() {
-    const parsed = scores.map((s) => ({
-      challenger: Number(s.challenger) || 0,
-      opponent: Number(s.opponent) || 0,
-    })).filter((s) => s.challenger > 0 || s.opponent > 0)
-    onSubmit(winner, parsed)
-  }
-
-  const cName = `${match.challenger?.full_name || '?'}${match.challenger_partner ? ` & ${match.challenger_partner.full_name}` : ''}`
-  const oName = `${match.opponent?.full_name || '?'}${match.opponent_partner ? ` & ${match.opponent_partner.full_name}` : ''}`
-  const winnerName = winner === 'challenger' ? cName : winner === 'opponent' ? oName : ''
-
-  if (confirming) {
-    return (
-      <Modal title="⚠️ Xác nhận kết quả" onClose={() => setConfirming(false)}>
-        <div className="rs-root">
-          <div className="rs-confirm-box">
-            <p className="rs-confirm-winner">🏆 <strong>{winnerName}</strong> thắng</p>
-            <p className="rs-confirm-warn">Sau khi xác nhận, kết quả sẽ bị khoá sau <strong>24 giờ</strong> và không thể chỉnh sửa.</p>
-          </div>
-          <footer className="modal-actions">
-            <button type="button" onClick={() => setConfirming(false)}>Quay lại</button>
-            <button type="button" className="btn-danger" onClick={handleConfirm}>Xác nhận</button>
-          </footer>
-        </div>
-      </Modal>
-    )
-  }
-
-  return (
-    <Modal title="🏆 Ghi nhận kết quả" onClose={onClose}>
-      <form className="rs-root" onSubmit={handleSubmit}>
-        <p className="rs-hint">Chọn bên thắng</p>
-        <div className="rs-winner-row">
-          <button type="button"
-            className={`rs-side-btn${winner === 'challenger' ? ' rs-side-active' : ''}`}
-            onClick={() => setWinner('challenger')}>
-            <span className="rs-side-name">{cName}</span>
-            <small>Bên thách đấu</small>
-            {winner === 'challenger' && <span className="rs-crown">🏆</span>}
-          </button>
-          <span className="rs-vs">VS</span>
-          <button type="button"
-            className={`rs-side-btn${winner === 'opponent' ? ' rs-side-active' : ''}`}
-            onClick={() => setWinner('opponent')}>
-            <span className="rs-side-name">{oName}</span>
-            <small>Bên đối thủ</small>
-            {winner === 'opponent' && <span className="rs-crown">🏆</span>}
-          </button>
-        </div>
-
-        <div className="rs-scores">
-          <div className="rs-scores-header">
-            <span>Set</span>
-            <span>{match.challenger?.full_name?.split(' ').pop() || 'Thách đấu'}</span>
-            <span></span>
-            <span>{match.opponent?.full_name?.split(' ').pop() || 'Đối thủ'}</span>
-          </div>
-          {scores.map((s, i) => (
-            <div key={i} className="rs-score-row">
-              <span className="rs-set-num">Set {i + 1}</span>
-              <input className="rs-score-input" type="number" min="0" max="99"
-                value={s.challenger} onChange={(e) => updateScore(i, 'challenger', e.target.value)}
-                placeholder="0" />
-              <span className="rs-dash">–</span>
-              <input className="rs-score-input" type="number" min="0" max="99"
-                value={s.opponent} onChange={(e) => updateScore(i, 'opponent', e.target.value)}
-                placeholder="0" />
-              {scores.length > 1 && (
-                <button type="button" className="rs-remove-set" onClick={() => removeSet(i)} title="Xóa set này">×</button>
-              )}
-            </div>
-          ))}
-          <button type="button" className="rs-add-set" onClick={addSet}>+ Thêm set</button>
-        </div>
-
-        <footer className="modal-actions">
-          <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit" disabled={!winner}>Tiếp theo →</button>
-        </footer>
-      </form>
-    </Modal>
-  )
-}
+import { LeaderboardLegend, LeaderboardRow, RankingGuideModal } from './pk/PkLeaderboard'
+import { MatchCard, ResultModal, UserEditModal } from './pk/PkMatch'
+import { sortByDate } from './pk/pkUtils'
 
 export function PkArena({ activePerson }) {
   const [tab, setTab]             = useState('leaderboard')
@@ -477,7 +66,7 @@ export function PkArena({ activePerson }) {
 
   async function handleCreate(e) {
     e.preventDefault()
-if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
+    if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
     if (form.opponent_id === activePerson?.id) { setToast('Không thể thách đấu chính mình'); return }
     try {
       await api.pk.create({
@@ -584,7 +173,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
     )
   }
 
-
   const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
   const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
   const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
@@ -620,7 +208,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
       {/* ── LEADERBOARD ── */}
       {tab === 'leaderboard' && (
         <Panel title="Bảng xếp hạng PK">
-          {/* Leaderboard image strip */}
           <div className="lb-image-strip">
             <div className="lb-strip-bg" />
             <div className="lb-strip-content">
@@ -631,7 +218,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
               </div>
             </div>
           </div>
-          {/* Type toggle */}
           <div className="lb-type-toggle">
             <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
               ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
@@ -641,7 +227,7 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
             </button>
           </div>
 
-          {loading ? <p className="muted">Đang tải...</p> : activeLb.length === 0 ? (
+          {loading ? <SkeletonTable rows={5} cols={7} /> : activeLb.length === 0 ? (
             <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}. Hãy tạo kèo đầu tiên!</p>
           ) : (
             <>
@@ -724,7 +310,7 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
             </div>
           </div>
 
-          {loading ? <p className="muted">Đang tải...</p> : filteredMatches.length === 0 ? (
+          {loading ? <SkeletonMatchCards count={3} /> : filteredMatches.length === 0 ? (
             <div className="pk-empty-state">
               <img src="/images/cat-shuttle.jpg" alt="" className="pk-empty-img" />
               <p className="pk-empty-msg">
@@ -760,7 +346,7 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
               value={memberSearch} onChange={(e) => setMemberSearch(e.target.value)} />
             {memberSearch && <button className="pk-search-clear" onClick={() => setMemberSearch('')}>×</button>}
           </div>
-          {loading ? <p className="muted">Đang tải...</p> : (
+          {loading ? <SkeletonPlayerGrid count={6} /> : (
             <div className="pk-player-grid">
               {people.filter((p) => !memberSearch || p.full_name?.toLowerCase().includes(memberSearch.toLowerCase()) || p.nickname?.toLowerCase().includes(memberSearch.toLowerCase())).map((p) => (
                 <div key={p.id} className={`pk-player-card${p.id === activePerson?.id ? ' pk-player-me' : ''}`}>
@@ -807,8 +393,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
               <button className="icon-button" onClick={() => setShowCreate(false)}>×</button>
             </header>
             <form onSubmit={handleCreate}>
-
-              {/* ── Hình thức toggle ── */}
               <div className="ck-type-toggle">
                 <button type="button"
                   className={`ck-type-btn${form.match_type === 'singles' ? ' ck-type-active' : ''}`}
@@ -826,7 +410,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
                 </button>
               </div>
 
-              {/* ── Số set ── */}
               <div className="ck-sets-row">
                 <span className="ck-sets-label">🏸 Số set</span>
                 <div className="ck-sets-options">
@@ -840,7 +423,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
                 </div>
               </div>
 
-              {/* ── Chọn đội ── */}
               <div className="ck-vs-row">
                 <div className="ck-team">
                   <div className="ck-team-label ck-label-blue">🧑 Bên tôi</div>
@@ -878,7 +460,6 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
                 </div>
               </div>
 
-              {/* ── Chi tiết ── */}
               <div className="ck-details">
                 <label className="ck-field">
                   <span className="ck-field-label">🎁 Vật phẩm cược</span>

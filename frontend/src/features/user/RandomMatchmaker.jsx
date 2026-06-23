@@ -53,7 +53,6 @@ function pairDoubles(selected, rankMap, lockedPerson) {
 
   if (lockedPerson) {
     // lockedPerson always challenger — pair them with weakest (r4)
-    const selfIdx = sorted.findIndex((p) => p.id === lockedPerson.id)
     const rest = sorted.filter((p) => p.id !== lockedPerson.id) // r of others sorted
     // self + weakest of others vs 2 middle
     return {
@@ -76,18 +75,23 @@ function PlayerSlot({ person, spinning, spinPool }) {
   const intervalRef = useRef(null)
 
   useEffect(() => {
-    if (spinning && spinPool.length > 0) {
-      const pool = shuffle(spinPool)
-      let i = 0
-      intervalRef.current = setInterval(() => {
-        setDisplay(pool[i % pool.length])
-        i++
-      }, 80)
-    } else {
+    if (!spinning) {
       clearInterval(intervalRef.current)
-      if (person) setDisplay(person)
+      return
     }
+    if (spinPool.length === 0) return
+    const pool = shuffle(spinPool)
+    let i = 0
+    intervalRef.current = setInterval(() => {
+      setDisplay(pool[i % pool.length])
+      i++
+    }, 80)
     return () => clearInterval(intervalRef.current)
+  }, [spinning, spinPool])
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    if (!spinning && person) setDisplay(person)
   }, [spinning, person])
 
   return (

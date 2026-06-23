@@ -11,7 +11,6 @@ import { ShuttlePanel } from './panels/ShuttlePanel'
 export function AdminContent(props) {
   const {
     activeTab,
-    activePeriod,
     summary,
     people,
     periods,

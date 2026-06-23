@@ -14,24 +14,11 @@ function fmtDate(dateStr) {
   return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`
 }
 
-const DEBT_TYPE_LABEL = {
-  monthly_fee: 'Phí tháng',
-  guest_fee:   'Phí khách',
-  shuttle_extra: 'Phí cầu',
-  other: 'Khác',
-}
-
 const FUND_TYPE_LABEL = {
   income:     'Thu',
   expense:    'Chi',
   refund:     'Hoàn tiền',
   adjustment: 'Điều chỉnh',
-}
-
-const STATUS_LABEL = {
-  paid:      'Đã thanh toán',
-  unpaid:    'Chưa thu',
-  cancelled: 'Đã hủy',
 }
 
 export function printPeriodReport({ period, debts = [], fund = [], shuttleExpenses = [], members = [] }) {

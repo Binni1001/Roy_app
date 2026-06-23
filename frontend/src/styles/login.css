@@ -1,0 +1,70 @@
+﻿/* â”€â”€ Login brand image â”€â”€ */
+.login-brand-img {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-height: 360px;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.login-brand-img > img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center top;
+}
+
+.login-brand-overlay {
+  position: relative;
+  z-index: 1;
+  display: grid;
+  justify-items: center;
+  gap: 10px;
+  padding: 28px 20px;
+  height: 100%;
+  text-align: center;
+  background: linear-gradient(
+    to bottom,
+    rgba(16, 20, 27, 0.55) 0%,
+    rgba(16, 20, 27, 0.82) 100%
+  );
+}
+
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   LOGIN â€” feature list overlay
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.login-feature-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 16px;
+  text-align: left;
+}
+
+.login-feature-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: rgba(239,231,210,0.85);
+  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+  background: rgba(0,0,0,0.2);
+  padding: 7px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.07);
+  backdrop-filter: blur(4px);
+}
+
+.login-feature-item span {
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+@media (max-width: 860px) {
+  .login-feature-list { display: none; }
+}
+

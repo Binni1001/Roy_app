@@ -1,0 +1,155 @@
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   IMPROVED BUTTON HIERARCHY â€” primary action buttons
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* NÃºt hÃ nh Ä‘á»™ng chÃ­nh trong match actions */
+.pk-match-actions button {
+  min-height: 34px;
+  padding: 0 14px;
+  font-size: 13px;
+  border-radius: 8px;
+  border: 1px solid rgba(239,231,210,0.15);
+  background: rgba(255,255,255,0.06);
+  color: #efe7d2;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+
+.pk-match-actions button:hover:not(:disabled) {
+  background: rgba(255,255,255,0.12);
+  border-color: rgba(239,231,210,0.3);
+}
+
+/* Btn Start â€” ná»•i báº­t hÆ¡n */
+.btn-start {
+  background: linear-gradient(135deg, rgba(76,175,125,0.25), rgba(76,175,125,0.15)) !important;
+  border-color: rgba(76,175,125,0.4) !important;
+  color: #81d8aa !important;
+  font-weight: 600 !important;
+}
+
+.btn-start:hover:not(:disabled) {
+  background: linear-gradient(135deg, rgba(76,175,125,0.4), rgba(76,175,125,0.25)) !important;
+  box-shadow: 0 0 10px rgba(76,175,125,0.2) !important;
+}
+
+/* Btn Danger Ä‘á» */
+.btn-danger,
+button.danger {
+  background: rgba(229,115,115,0.1) !important;
+  border-color: rgba(229,115,115,0.3) !important;
+  color: #ff8a80 !important;
+}
+
+.btn-danger:hover:not(:disabled),
+button.danger:hover:not(:disabled) {
+  background: rgba(229,115,115,0.22) !important;
+  box-shadow: 0 0 8px rgba(229,115,115,0.2) !important;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   IMPROVED TOPBAR â€” cleaner look
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.topbar {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgba(239,231,210,0.07);
+  margin-bottom: 18px;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   SIDEBAR IMPROVEMENTS
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+
+/* Profile card in sidebar â€” add avatar circle effect */
+.profile-card .avatar {
+  width: 52px;
+  height: 52px;
+  font-size: 16px;
+  border-radius: 50%;
+  border: 2px solid rgba(216,174,82,0.4);
+  box-shadow: 0 0 0 4px rgba(216,174,82,0.08);
+}
+
+.profile-card .avatar-img {
+  border-radius: 50%;
+}
+
+.profile-card strong {
+  font-size: 14px;
+  color: #efe7d2;
+}
+
+.profile-card small {
+  font-size: 11px;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   BOTTOM NAV IMPROVEMENTS
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+@media (max-width: 860px) {
+  .bottom-nav {
+    border-top: 1px solid rgba(239,231,210,0.1);
+    background: rgba(10,14,20,0.97);
+    backdrop-filter: blur(12px);
+  }
+
+  .bottom-nav-item {
+    position: relative;
+  }
+
+  /* Active indicator line at top */
+  .bottom-nav-item.active::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 25%;
+    right: 25%;
+    height: 2px;
+    border-radius: 0 0 2px 2px;
+    background: #d8ae52;
+    box-shadow: 0 0 6px rgba(216,174,82,0.6);
+  }
+
+  .bottom-nav-label {
+    font-size: 0.62rem;
+    letter-spacing: 0.01em;
+  }
+
+  .bottom-nav-item.active .bottom-nav-label {
+    color: #d8ae52;
+    font-weight: 600;
+  }
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   PANEL IMPROVEMENTS â€” cleaner headers
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.panel-header {
+  padding-bottom: 12px;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(239,231,210,0.07);
+}
+
+.panel-header h2 {
+  margin-bottom: 0;
+}
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   EMPTY STATE â€” bigger and friendlier
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.empty-state {
+  padding: 28px 16px;
+  gap: 12px;
+}
+
+.empty-state-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  opacity: 0.7;
+}
+
+.empty-state p.empty {
+  color: #5a6472;
+  font-size: 14px;
+}

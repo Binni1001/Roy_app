@@ -1,4 +1,3 @@
-import { useMemo } from 'react'
 import { Panel } from '../../../components/common'
 import { formatMoney, formatDate } from '../../../utils/appUtils'
 import { printPeriodReport } from '../../../utils/printReport'
@@ -153,16 +152,19 @@ function FundSection({ fund }) {
   const adjust   = fund.filter((f) => f.transaction_type === 'adjustment').reduce((s, f) => s + Number(f.amount), 0)
   const balance  = income + adjust - expense - refund
 
-  // Group fund by date for trend chart
-  const byDate = {}
   const sorted = [...fund].sort((a, b) => new Date(a.created_at) - new Date(b.created_at))
-  let running = 0
-  const trend = sorted.map((f) => {
-    const delta = f.transaction_type === 'income' || f.transaction_type === 'adjustment'
-      ? Number(f.amount) : -Number(f.amount)
-    running += delta
-    return { label: formatDate(f.created_at).slice(0, 5), value: Math.max(0, running), formatted: formatMoney(running), cls: delta >= 0 ? 'an-bar-income' : 'an-bar-expense' }
-  })
+  const { trend } = sorted.reduce(
+    ({ trend: t, running }, f) => {
+      const delta = f.transaction_type === 'income' || f.transaction_type === 'adjustment'
+        ? Number(f.amount) : -Number(f.amount)
+      const next = running + delta
+      return {
+        running: next,
+        trend: [...t, { label: formatDate(f.created_at).slice(0, 5), value: Math.max(0, next), formatted: formatMoney(next), cls: delta >= 0 ? 'an-bar-income' : 'an-bar-expense' }],
+      }
+    },
+    { trend: [], running: 0 }
+  )
 
   return (
     <Panel title="💰 Biến động quỹ">

@@ -14,10 +14,11 @@ export function useNotificationCenter(activePerson) {
     try {
       const data = await api.notifications.list()
       setNotifications(data || [])
-    } catch (_) {}
+    } catch { /* ignore */ }
     setLoaded(true)
   }, [personId])
 
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => { loadAll() }, [loadAll])
 
   /* ── Save a new notification to DB + local state ── */
@@ -26,7 +27,7 @@ export function useNotificationCenter(activePerson) {
     try {
       const saved = await api.notifications.create(notif)
       setNotifications((prev) => [saved, ...prev])
-    } catch (_) {
+    } catch {
       // fallback: show in state even if DB fails
       setNotifications((prev) => [{
         id: `tmp_${Date.now()}`,
@@ -84,22 +85,22 @@ export function useNotificationCenter(activePerson) {
   /* ── Actions ── */
   async function markRead(id) {
     setNotifications((prev) => prev.map((n) => n.id === id ? { ...n, read: true } : n))
-    try { await api.notifications.markRead(id) } catch (_) {}
+    try { await api.notifications.markRead(id) } catch { /* ignore */ }
   }
 
   async function markAllRead() {
     setNotifications((prev) => prev.map((n) => ({ ...n, read: true })))
-    try { await api.notifications.markAllRead() } catch (_) {}
+    try { await api.notifications.markAllRead() } catch { /* ignore */ }
   }
 
   async function dismiss(id) {
     setNotifications((prev) => prev.filter((n) => n.id !== id))
-    try { await api.notifications.remove(id) } catch (_) {}
+    try { await api.notifications.remove(id) } catch { /* ignore */ }
   }
 
   async function dismissAll() {
     setNotifications([])
-    try { await api.notifications.removeAll() } catch (_) {}
+    try { await api.notifications.removeAll() } catch { /* ignore */ }
   }
 
   const unreadCount = notifications.filter((n) => !n.read).length

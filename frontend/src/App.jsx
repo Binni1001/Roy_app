@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import { AdminPortal } from './features/admin/AdminPortal'
 import { UserPortal } from './features/user/UserPortal'
+import { ErrorBoundary } from './components/ErrorBoundary'
 import { supabase } from './lib/supabase'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
@@ -64,10 +65,18 @@ function App() {
 
   // Không dùng path-based routing để tránh blank screen từ replaceState
   if (canOpenAdmin(role)) {
-    return <AdminPortal session={session} role={role} onSignOut={signOut} />
+    return (
+      <ErrorBoundary>
+        <AdminPortal session={session} role={role} onSignOut={signOut} />
+      </ErrorBoundary>
+    )
   }
 
-  return <UserPortal session={session} role={role} onSignOut={signOut} />
+  return (
+    <ErrorBoundary>
+      <UserPortal session={session} role={role} onSignOut={signOut} />
+    </ErrorBoundary>
+  )
 }
 
 export default App

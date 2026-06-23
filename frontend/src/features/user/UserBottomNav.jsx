@@ -10,7 +10,7 @@ const TAB_ICONS = {
   payment:  '💳',
 }
 
-export function UserBottomNav({ activeTab, setActiveTab, pkBadge = 0, totalDebt = 0, debtCount = 0 }) {
+export function UserBottomNav({ activeTab, setActiveTab, pkBadge = 0, debtCount = 0 }) {
   // Show only the most important tabs in the bottom bar (max 5)
   const primary = ['home', 'schedule', 'pk', 'debts', 'profile']
   const visibleTabs = userTabs.filter(([key]) => primary.includes(key))

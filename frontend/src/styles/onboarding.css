@@ -1,0 +1,202 @@
+﻿/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   ONBOARDING (ProfileSetup cho ngÆ°á»i má»›i)
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+.onboarding-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+/* Hero banner */
+.onboarding-hero {
+  position: relative;
+  height: 210px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+.onboarding-hero-img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center 35%;
+  filter: brightness(0.38) saturate(0.7);
+  transform: scale(1.04);
+}
+
+.onboarding-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to bottom,
+    rgba(12,16,22,0.3) 0%,
+    rgba(12,16,22,0.75) 100%
+  );
+}
+
+.onboarding-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  text-align: center;
+  padding: 24px;
+  gap: 8px;
+}
+
+.onboarding-logo-ring {
+  font-size: 2.4rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 8px rgba(216,174,82,0.5));
+}
+
+.onboarding-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #fff8e6;
+  margin: 0;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.7);
+  line-height: 1.2;
+}
+
+.onboarding-subtitle {
+  font-size: 13px;
+  color: #c8bfa8;
+  margin: 0;
+  max-width: 400px;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+}
+
+/* Features grid */
+.onboarding-features {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.onboarding-feature-item {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.04);
+  border: 1px solid rgba(239,231,210,0.1);
+  transition: background 0.2s;
+}
+
+.onboarding-feature-item:hover {
+  background: rgba(255,255,255,0.07);
+  border-color: rgba(216,174,82,0.2);
+}
+
+.onboarding-feature-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+  line-height: 1;
+  margin-top: 1px;
+}
+
+.onboarding-feature-title {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  color: #efe7d2;
+  margin-bottom: 3px;
+}
+
+.onboarding-feature-desc {
+  font-size: 12px;
+  color: #7a8490;
+  margin: 0;
+  line-height: 1.4;
+}
+
+/* Form card */
+.onboarding-form-card {
+  padding: 24px;
+  border-radius: 16px;
+  background: rgba(20,25,33,0.92);
+  border: 1px solid rgba(239,231,210,0.14);
+  box-shadow: 0 12px 40px rgba(0,0,0,0.28);
+}
+
+.onboarding-step-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 3px 12px;
+  border-radius: 20px;
+  background: rgba(216,174,82,0.15);
+  border: 1px solid rgba(216,174,82,0.3);
+  color: #d8ae52;
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 12px;
+}
+
+.onboarding-form-title {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff8e6;
+  margin: 0 0 8px;
+}
+
+.onboarding-form-hint {
+  font-size: 13px;
+  color: #7a8490;
+  margin: 0 0 18px;
+}
+
+.onboarding-email {
+  color: #c9b174;
+  font-style: italic;
+}
+
+.onboarding-form {
+  gap: 14px;
+}
+
+.onboarding-submit-btn {
+  width: 100%;
+  min-height: 46px;
+  border-radius: 10px;
+  border: none;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+  background: linear-gradient(135deg, #d8ae52, #f0c860);
+  color: #141414;
+  transition: all 0.2s;
+  box-shadow: 0 4px 16px rgba(216,174,82,0.3);
+  margin-top: 4px;
+}
+
+.onboarding-submit-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #e8be62, #ffd870);
+  box-shadow: 0 6px 24px rgba(216,174,82,0.5);
+  transform: translateY(-1px);
+}
+
+.onboarding-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+@media (max-width: 860px) {
+  .onboarding-hero { height: 160px; }
+  .onboarding-title { font-size: 17px; }
+  .onboarding-features { grid-template-columns: 1fr; gap: 8px; }
+  .onboarding-form-card { padding: 16px; }
+}
+

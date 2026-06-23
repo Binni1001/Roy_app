@@ -95,7 +95,81 @@ export function SearchBox({ value, onChange, placeholder = 'Tìm kiếm...' }) {
   )
 }
 
-/** Filter rows by query across given field paths */
+/* ── Skeleton primitives ── */
+function Sk({ w = '100%', h = 14, r = 4, style }) {
+  return <div className="sk" style={{ width: w, height: h, borderRadius: r, ...style }} />
+}
+
+export function SkeletonTable({ rows = 5, cols = 7 }) {
+  return (
+    <div className="table-wrap">
+      <table className="sk-table">
+        <tbody>
+          {Array.from({ length: rows }, (_, r) => (
+            <tr key={r}>
+              <td><Sk w={28} h={28} r={14} /></td>
+              <td>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <Sk w={32} h={32} r={16} />
+                  <Sk w={90} h={13} />
+                </div>
+              </td>
+              {Array.from({ length: cols - 2 }, (_, c) => (
+                <td key={c}><Sk w={32} h={13} /></td>
+              ))}
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  )
+}
+
+export function SkeletonMatchCards({ count = 3 }) {
+  return (
+    <>
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="sk-match-card">
+          <div className="sk-match-header">
+            <Sk w={72} h={22} r={10} />
+            <Sk w={52} h={22} r={10} />
+            <Sk w={80} h={16} style={{ marginLeft: 'auto' }} />
+          </div>
+          <div className="sk-match-vs">
+            <div className="sk-team">
+              <Sk w={48} h={48} r={24} />
+              <Sk w={70} h={13} />
+              <Sk w={44} h={11} />
+            </div>
+            <Sk w={30} h={22} r={6} />
+            <div className="sk-team">
+              <Sk w={48} h={48} r={24} />
+              <Sk w={70} h={13} />
+              <Sk w={44} h={11} />
+            </div>
+          </div>
+        </div>
+      ))}
+    </>
+  )
+}
+
+export function SkeletonPlayerGrid({ count = 6 }) {
+  return (
+    <div className="sk-player-grid">
+      {Array.from({ length: count }, (_, i) => (
+        <div key={i} className="sk-player-card">
+          <Sk w={64} h={64} r={32} />
+          <Sk w={80} h={14} />
+          <Sk w={56} h={11} />
+          <Sk w={48} h={11} />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+// eslint-disable-next-line react-refresh/only-export-components
 export function filterRows(rows, query, fields) {
   if (!query.trim()) return rows
   const q = query.toLowerCase().trim()

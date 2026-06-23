@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, ConfirmModal, Modal, Panel } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Modal, Panel, SkeletonMatchCards, SkeletonTable } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
 import { computeLeaderboard } from '../../../utils/leaderboardUtils'
 import { RandomMatchmaker } from '../../user/RandomMatchmaker'
@@ -61,7 +61,6 @@ function AdminLeaderboardLegend({ total }) {
 }
 
 const STATUS_OPTIONS = ['pending', 'active', 'completed', 'cancelled']
-const WINNER_OPTIONS = [{ value: '', label: '—' }, { value: 'challenger', label: 'Bên thách đấu' }, { value: 'opponent', label: 'Bên đối thủ' }]
 
 function sortByDate(arr) {
   return [...arr].sort((a, b) => new Date(b.played_at || b.created_at) - new Date(a.played_at || a.created_at))
@@ -282,7 +281,7 @@ export function PkPanel() {
               🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
             </button>
           </div>
-          {loading ? <p className="muted">Đang tải...</p> : activeLb.length === 0 ? (
+          {loading ? <SkeletonTable rows={5} cols={7} /> : activeLb.length === 0 ? (
             <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}.</p>
           ) : (
             <>
@@ -354,7 +353,7 @@ export function PkPanel() {
             </div>
           </div>
 
-          {loading ? <p className="muted">Đang tải...</p> : filtered.length === 0 ? (
+          {loading ? <SkeletonMatchCards count={3} /> : filtered.length === 0 ? (
             <p className="muted">Không có kèo nào.</p>
           ) : (
             <div className="pk-match-list">

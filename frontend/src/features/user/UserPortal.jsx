@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { StatusLine } from '../../components/common'
+import { StatusLine, SkeletonTable } from '../../components/common'
 import { NotificationBell } from '../../components/NotificationBell'
 import { Topbar } from '../../components/shell'
 import { useNotificationCenter } from '../../hooks/useNotificationCenter'
@@ -98,7 +98,11 @@ export function UserPortal({ session, role, onSignOut }) {
         />
         <StatusLine text={toast} />
 
-        {loading && !activePerson ? null : !activePerson ? (
+        {loading && !activePerson ? (
+          <div style={{ padding: '24px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+            <SkeletonTable rows={4} cols={3} />
+          </div>
+        ) : !activePerson ? (
           <ProfileSetup
             form={profileForm}
             setForm={setProfileForm}

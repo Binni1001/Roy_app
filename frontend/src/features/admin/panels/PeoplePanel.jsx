@@ -5,7 +5,7 @@ import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable,
 import { emptyPerson } from '../../../constants/appConstants'
 import { displayValue, initials } from '../../../utils/appUtils'
 
-export function PeoplePanel({ people, form, setForm, submit }) {
+export function PeoplePanel({ people, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
