@@ -168,6 +168,10 @@ export const periodMembersService = {
       updateData.note = payload.note;
     }
 
+    if (payload.exempt_shuttle !== undefined) {
+      updateData.exempt_shuttle = Boolean(payload.exempt_shuttle);
+    }
+
     const { data, error } = await periodMembersRepository.update(id, updateData);
 
     if (error) {

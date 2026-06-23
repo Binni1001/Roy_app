@@ -45,6 +45,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
             columns={[
               ['person.full_name', 'Người'],
               ['status', 'Trạng thái', displayValue],
+              ['exempt_shuttle', 'Miễn cầu', (v) => v ? <span style={{ color: '#d8ae52', fontSize: 12 }}>✓ Miễn</span> : '—'],
               ['period.fixed_member_fee', 'Phí cố định kỳ', formatMoney],
             ]}
             actions={(member) => (
@@ -183,10 +184,11 @@ function PeriodEditModal({ period, onClose, onSubmit }) {
 
 function MemberEditModal({ member, onClose, onSubmit }) {
   const [status, setStatus] = useState(member.status || 'fixed')
+  const [exemptShuttle, setExemptShuttle] = useState(member.exempt_shuttle || false)
 
   return (
     <Modal title="Sửa thành viên trong kỳ" onClose={onClose}>
-      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit({ status }) }}>
+      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit({ status, exempt_shuttle: exemptShuttle }) }}>
         <label>Trạng thái
           <select value={status} onChange={(e) => setStatus(e.target.value)}>
             <option value="fixed">Đánh cố định</option>
@@ -194,6 +196,17 @@ function MemberEditModal({ member, onClose, onSubmit }) {
             <option value="inactive">Tạm nghỉ</option>
           </select>
         </label>
+        {status === 'fixed' && (
+          <label style={{ flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
+            <input
+              type="checkbox"
+              checked={exemptShuttle}
+              onChange={(e) => setExemptShuttle(e.target.checked)}
+              style={{ width: 16, height: 16, accentColor: '#d8ae52' }}
+            />
+            Miễn tiền cầu cuối kỳ
+          </label>
+        )}
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>
