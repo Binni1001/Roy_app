@@ -1,4 +1,11 @@
-import { Input, Panel } from '../../components/common'
+import { Input } from '../../components/common'
+
+const FEATURES = [
+  { icon: '💰', title: 'Theo dõi công nợ', desc: 'Biết chính xác bạn nợ bao nhiêu mỗi kỳ' },
+  { icon: '📅', title: 'Lịch chơi', desc: 'Xem lịch buổi đánh và ngày cầu đã dùng' },
+  { icon: '⚔️', title: 'Đấu trường PK', desc: 'Thách đấu và theo dõi bảng xếp hạng' },
+  { icon: '💳', title: 'Thanh toán online', desc: 'Nộp tiền qua PayOS nhanh chóng' },
+]
 
 export function ProfileSetup({ form, setForm, loading, email, onSubmit }) {
   function updateField(key, value) {
@@ -6,21 +13,44 @@ export function ProfileSetup({ form, setForm, loading, email, onSubmit }) {
   }
 
   return (
-    <section className="grid one">
-      <div className="profile-setup-banner">
-        <img src="/images/racket-sky.jpg" alt="" />
-        <div className="profile-setup-banner-overlay">
-          <p className="eyebrow">Chào mừng bạn đến với Roy Badminton</p>
-          <p>Hãy tạo hồ sơ để bắt đầu theo dõi công nợ và lịch chơi của bạn.</p>
+    <div className="onboarding-wrap">
+      {/* Hero banner */}
+      <div className="onboarding-hero">
+        <img src="/images/racket-sky.jpg" alt="" className="onboarding-hero-img" />
+        <div className="onboarding-hero-overlay" />
+        <div className="onboarding-hero-content">
+          <div className="onboarding-logo-ring">🏸</div>
+          <h1 className="onboarding-title">Chào mừng đến Roy Badminton!</h1>
+          <p className="onboarding-subtitle">
+            Tạo hồ sơ để bắt đầu theo dõi công nợ, lịch chơi và đấu trường của bạn
+          </p>
         </div>
       </div>
-      <Panel title="Hoàn thiện hồ sơ người chơi">
-        <form className="form profile-setup" onSubmit={onSubmit}>
-          <p className="muted">
-            Tài khoản {email} chưa có hồ sơ trong câu lạc bộ. Vui lòng nhập thông tin để bắt đầu sử dụng khu người dùng.
-          </p>
+
+      {/* Features grid */}
+      <div className="onboarding-features">
+        {FEATURES.map((f) => (
+          <div key={f.title} className="onboarding-feature-item">
+            <span className="onboarding-feature-icon">{f.icon}</span>
+            <div>
+              <strong className="onboarding-feature-title">{f.title}</strong>
+              <p className="onboarding-feature-desc">{f.desc}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Form card */}
+      <div className="onboarding-form-card">
+        <div className="onboarding-step-badge">Bước 1 / 1</div>
+        <h2 className="onboarding-form-title">Hoàn thiện hồ sơ</h2>
+        <p className="onboarding-form-hint">
+          Tài khoản <span className="onboarding-email">{email}</span> chưa có hồ sơ trong câu lạc bộ.
+        </p>
+
+        <form className="form onboarding-form" onSubmit={onSubmit}>
           <Input
-            label="Họ tên"
+            label="Họ và tên *"
             value={form.full_name}
             onChange={(value) => updateField('full_name', value)}
             required
@@ -36,13 +66,15 @@ export function ProfileSetup({ form, setForm, loading, email, onSubmit }) {
               value={form.attendance_type}
               onChange={(event) => updateField('attendance_type', event.target.value)}
             >
-              <option value="fixed">Đánh cố định</option>
-              <option value="guest">Đánh vãng lai</option>
+              <option value="fixed">Đánh cố định (thành viên tháng)</option>
+              <option value="guest">Đánh vãng lai (tính theo buổi)</option>
             </select>
           </label>
-          <button disabled={loading}>Tạo hồ sơ</button>
+          <button className="onboarding-submit-btn" disabled={loading}>
+            {loading ? 'Đang tạo hồ sơ…' : '🚀 Tạo hồ sơ và bắt đầu'}
+          </button>
         </form>
-      </Panel>
-    </section>
+      </div>
+    </div>
   )
 }

@@ -164,7 +164,7 @@ export default function Login() {
       <section className="login-panel">
         <div className="login-brand">
           <div className="login-brand-img">
-            <img src="/images/court.jpg" alt="Sân cầu lông" />
+            <img src="/images/player-jump2.jpg" alt="Sân cầu lông" />
             <div className="login-brand-overlay">
               <div className="login-logo">
                 <img src={logoUrl} alt="Biểu trưng Roy Badminton" />
@@ -172,8 +172,22 @@ export default function Login() {
               <p className="eyebrow">Roy Badminton</p>
               <h1>Chào mừng trở lại</h1>
               <p className="muted">
-                Đăng nhập để theo dõi công nợ, thanh toán và quản lý quỹ câu lạc bộ.
+                Quản lý câu lạc bộ cầu lông thông minh — công nợ, lịch đánh, đấu trường PK.
               </p>
+              <div className="login-feature-list">
+                <div className="login-feature-item">
+                  <span>💰</span> Theo dõi công nợ mỗi kỳ
+                </div>
+                <div className="login-feature-item">
+                  <span>📅</span> Lịch chơi &amp; buổi cầu
+                </div>
+                <div className="login-feature-item">
+                  <span>⚔️</span> Đấu trường PK &amp; bảng xếp hạng
+                </div>
+                <div className="login-feature-item">
+                  <span>💳</span> Thanh toán nhanh qua PayOS
+                </div>
+              </div>
             </div>
           </div>
         </div>
