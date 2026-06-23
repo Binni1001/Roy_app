@@ -597,18 +597,40 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
   return (
-    <div className="tab-scene" style={{ '--tab-img': 'url(/images/player-fist.jpg)' }}>
+    <div className="tab-scene" style={{ '--tab-img': 'url(/images/rackets-court.jpg)' }}>
       {toast && <div className="toast" role="alert">{toast}</div>}
 
+      {/* Arena hero banner */}
+      <div className="pk-arena-hero">
+        <div className="pk-arena-hero-bg" />
+        <div className="pk-arena-hero-content">
+          <span className="pk-arena-hero-eyebrow">⚔️ Roy Badminton</span>
+          <h2 className="pk-arena-hero-title">Đấu Trường PK</h2>
+          <p className="pk-arena-hero-sub">Thách đấu · Bảng xếp hạng · Vinh quang</p>
+        </div>
+        <span className="pk-arena-hero-deco">🏸</span>
+      </div>
+
       <div className="pk-tabs">
-        <button className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>Bảng xếp hạng</button>
-        <button className={tab === 'matches'     ? 'active' : ''} onClick={() => setTab('matches')}>Kèo đấu</button>
-        <button className={tab === 'players'     ? 'active' : ''} onClick={() => setTab('players')}>Thành viên</button>
+        <button className={tab === 'leaderboard' ? 'active' : ''} onClick={() => setTab('leaderboard')}>🏆 Xếp hạng</button>
+        <button className={tab === 'matches'     ? 'active' : ''} onClick={() => setTab('matches')}>⚔️ Kèo đấu</button>
+        <button className={tab === 'players'     ? 'active' : ''} onClick={() => setTab('players')}>👥 Thành viên</button>
       </div>
 
       {/* ── LEADERBOARD ── */}
       {tab === 'leaderboard' && (
         <Panel title="Bảng xếp hạng PK">
+          {/* Leaderboard image strip */}
+          <div className="lb-image-strip">
+            <div className="lb-strip-bg" />
+            <div className="lb-strip-content">
+              <span className="lb-strip-icon">🏆</span>
+              <div>
+                <div className="lb-strip-title">Bảng vinh danh</div>
+                <div className="lb-strip-sub">Thống kê theo Wilson Score — càng nhiều kèo, điểm càng chính xác</div>
+              </div>
+            </div>
+          </div>
           {/* Type toggle */}
           <div className="lb-type-toggle">
             <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
@@ -703,11 +725,14 @@ if (!form.opponent_id) { setToast('Vui lòng chọn đối thủ'); return }
           </div>
 
           {loading ? <p className="muted">Đang tải...</p> : filteredMatches.length === 0 ? (
-            <p className="muted">
-              {matchFilter === 'upcoming'  && 'Chưa có kèo nào sắp tới.'}
-              {matchFilter === 'completed' && 'Chưa có trận đấu nào kết thúc.'}
-              {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
-            </p>
+            <div className="pk-empty-state">
+              <img src="/images/cat-shuttle.jpg" alt="" className="pk-empty-img" />
+              <p className="pk-empty-msg">
+                {matchFilter === 'upcoming'  && 'Chưa có kèo nào sắp tới. Hãy thách đấu đi!'}
+                {matchFilter === 'completed' && 'Chưa có trận đấu nào kết thúc.'}
+                {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
+              </p>
+            </div>
           ) : (
             <div className="pk-match-list">
               {filteredMatches.map((m) => (

@@ -32,7 +32,11 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
           ))}
         </nav>
         <div className="sidebar-deco">
-          <img src="/images/rackets-court.jpg" alt="" />
+          <img src="/images/heart-shuttle.jpg" alt="" />
+          <div className="sidebar-deco-text">
+            <span className="sidebar-deco-club">🏸 Roy Badminton</span>
+            <span className="sidebar-deco-motto">Chơi đẹp · Sống khoẻ</span>
+          </div>
         </div>
       </aside>
     </>

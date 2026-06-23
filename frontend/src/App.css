@@ -102,6 +102,32 @@
   border: 2px solid rgba(216, 174, 82, 0.22);
 }
 
+/* ── PK empty state ── */
+.pk-empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  padding: 24px 16px 12px;
+}
+
+.pk-empty-img {
+  width: 100px;
+  height: 100px;
+  object-fit: cover;
+  object-position: center 30%;
+  border-radius: 50%;
+  opacity: 0.72;
+  border: 2px solid rgba(216, 174, 82, 0.2);
+  filter: saturate(0.8);
+}
+
+.pk-empty-msg {
+  color: #6a748a;
+  font-size: 14px;
+  text-align: center;
+}
+
 /* ════════════════════════════════
    BADMINTON IMAGES — DECORATIONS
    ════════════════════════════════ */
@@ -186,7 +212,7 @@
   background-image: var(--tab-img);
   background-size: cover;
   background-position: center;
-  filter: blur(22px) brightness(0.22) saturate(0.65);
+  filter: blur(16px) brightness(0.32) saturate(0.75);
   transform: scale(1.08);
   z-index: 0;
 }
@@ -259,20 +285,45 @@
   height: 100%;
   object-fit: cover;
   object-position: center;
-  filter: brightness(0.45) saturate(0.8);
+  filter: brightness(0.55) saturate(0.85);
   transition: filter 0.3s;
 }
 
 .sidebar-deco:hover img {
-  filter: brightness(0.62) saturate(1);
+  filter: brightness(0.72) saturate(1.05);
 }
 
 .sidebar-deco::after {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(to top, rgba(12, 16, 22, 0.85) 0%, transparent 60%);
+  background: linear-gradient(to top, rgba(8, 12, 20, 0.92) 0%, rgba(12, 16, 22, 0.4) 55%, transparent 100%);
   border-radius: 8px;
+  z-index: 1;
+}
+
+.sidebar-deco-text {
+  position: absolute;
+  bottom: 10px;
+  left: 12px;
+  right: 12px;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-deco-club {
+  font-size: 11px;
+  font-weight: 700;
+  color: #d8ae52;
+  letter-spacing: 0.05em;
+}
+
+.sidebar-deco-motto {
+  font-size: 10px;
+  color: rgba(239, 231, 210, 0.5);
+  letter-spacing: 0.06em;
 }
 
 @media (max-width: 860px) {
@@ -568,12 +619,38 @@ nav button,
   min-height: 40px;
   border: 1px solid rgba(239, 231, 210, 0.14);
   border-radius: 8px;
-  color: #fff;
-  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
-              url('/images/panel-banner.jpg') center 65% / cover;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  color: #d0d8e4;
+  background: rgba(22, 28, 38, 0.88);
+  text-shadow: none;
+  transition: filter 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   cursor: pointer;
+}
+
+/* ── Toolbar buttons: court.jpg tint — sporty feel ── */
+.toolbar button {
+  background:
+    linear-gradient(rgba(12, 28, 38, 0.78), rgba(12, 28, 38, 0.78)),
+    url('/images/court.jpg') center / cover;
+  color: #9fd4e8;
+  border-color: rgba(30, 80, 110, 0.35);
+}
+
+/* ── Form submit / primary CTA: gold gradient ── */
+.form button[type='submit'],
+.form button:not([type='button']):last-child:not(:only-child) {
+  background: linear-gradient(135deg, #b07820, #d8ae52, #ead068);
+  border-color: #d8ae52;
+  color: #1a0f00;
+  font-weight: 700;
+}
+
+/* ── Checkout: shuttle-green.jpg — success/pay feel ── */
+.checkout button {
+  background:
+    linear-gradient(rgba(14, 70, 50, 0.72), rgba(14, 70, 50, 0.72)),
+    url('/images/shuttle-green.jpg') center / cover;
+  color: #90e8c0;
+  border-color: rgba(30, 140, 90, 0.35);
 }
 
 nav button {
@@ -846,23 +923,24 @@ button:disabled {
 
 .modal-actions button {
   min-height: 40px;
-  border: 1px solid rgba(239, 231, 210, 0.14);
+  border: 1px solid rgba(239, 231, 210, 0.12);
   border-radius: 8px;
-  padding: 0 14px;
-  color: #fff;
-  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
-              url('/images/panel-banner.jpg') center 65% / cover;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  padding: 0 16px;
+  color: #8a94a0;
+  background: rgba(20, 26, 36, 0.92);
+  text-shadow: none;
+  transition: filter 0.18s ease, background 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   cursor: pointer;
 }
 
+/* Modal confirm/submit: gold gradient */
 .modal-actions button[type='submit'],
-.modal-actions button:not(.danger):last-child {
-  color: #fff;
-  background: linear-gradient(rgba(180,130,20,0.72), rgba(180,130,20,0.72)),
-              url('/images/panel-banner.jpg') center 65% / cover;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.7);
+.modal-actions button:not(.danger):not([type='button']):last-child {
+  background: linear-gradient(135deg, #b07820, #d8ae52);
+  border-color: #c89a30;
+  color: #1a0f00;
+  font-weight: 700;
+  text-shadow: none;
 }
 
 .metrics {
@@ -992,16 +1070,30 @@ button:disabled {
   font-size: 0.85rem;
   padding: 5px 12px;
 }
-.panel-header-action button,
-.pk-create-btn {
-  color: #fff;
-  background: linear-gradient(rgba(10,14,22,0.68), rgba(10,14,22,0.68)),
-              url('/images/panel-banner.jpg') center 65% / cover;
-  text-shadow: 0 1px 4px rgba(0,0,0,0.9);
-  border: 1px solid rgba(239, 231, 210, 0.14);
+.panel-header-action button {
+  color: #c8d4e0;
+  background:
+    linear-gradient(rgba(10, 16, 26, 0.7), rgba(10, 16, 26, 0.7)),
+    url('/images/hero-action.jpg') center 25% / cover;
+  text-shadow: 0 1px 4px rgba(0,0,0,0.8);
+  border: 1px solid rgba(239, 231, 210, 0.16);
   border-radius: 8px;
   transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
   cursor: pointer;
+}
+
+/* pk-create-btn: player jump — dynamic CTA */
+.pk-create-btn {
+  color: #fff;
+  background:
+    linear-gradient(rgba(8, 22, 38, 0.6), rgba(8, 22, 38, 0.6)),
+    url('/images/player-jump2.jpg') center 15% / cover;
+  text-shadow: 0 1px 5px rgba(0,0,0,0.9);
+  border: 1px solid rgba(216, 174, 82, 0.28);
+  border-radius: 8px;
+  transition: filter 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  cursor: pointer;
+  font-weight: 600;
 }
 
 .form,
@@ -1640,6 +1732,66 @@ button.danger:hover {
   font-size: 0.75rem;
   color: #e57373;
   white-space: nowrap;
+}
+
+/* ── Leaderboard image strip ── */
+.lb-image-strip {
+  position: relative;
+  height: 72px;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 14px;
+  border: 1px solid rgba(216, 174, 82, 0.15);
+}
+
+.lb-strip-bg {
+  position: absolute;
+  inset: -4px;
+  background: url('/images/racket-sky.jpg') center 40% / cover;
+  filter: blur(2px) brightness(0.28) saturate(0.7);
+  transform: scale(1.05);
+}
+
+.lb-image-strip::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(6,10,18,0.9) 0%, rgba(30,50,20,0.15) 50%, rgba(6,10,18,0.7) 100%);
+  z-index: 1;
+}
+
+.lb-strip-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  height: 100%;
+  padding: 0 18px;
+}
+
+.lb-strip-icon {
+  font-size: 1.8rem;
+  line-height: 1;
+  filter: drop-shadow(0 2px 6px rgba(216,174,82,0.4));
+}
+
+.lb-strip-title {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f0e4b8;
+  text-shadow: 0 1px 8px rgba(0,0,0,0.8);
+}
+
+.lb-strip-sub {
+  font-size: 11px;
+  color: rgba(239,231,210,0.45);
+  margin-top: 2px;
+}
+
+@media (max-width: 480px) {
+  .lb-strip-sub { display: none; }
+  .lb-image-strip { height: 56px; }
 }
 
 /* ── Leaderboard type toggle ── */
@@ -4373,6 +4525,100 @@ textarea:focus {
 @media (max-width: 480px) {
   /* 2 chips per row so 3rd chip doesn't stretch full width alone */
   .home-summary-chip { flex: 1 1 calc(50% - 4px); min-width: 0; }
+}
+
+/* ════════════════════════════════════════════════════════
+   PK ARENA HERO BANNER
+   ════════════════════════════════════════════════════════ */
+.pk-arena-hero {
+  position: relative;
+  height: 148px;
+  border-radius: 14px;
+  overflow: hidden;
+  margin-bottom: 18px;
+  border: 1px solid rgba(216, 174, 82, 0.2);
+  box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+}
+
+.pk-arena-hero-bg {
+  position: absolute;
+  inset: -8px;
+  background: url('/images/player-spotlight.jpg') center 20% / cover;
+  filter: blur(2px) brightness(0.28) saturate(0.7);
+  transform: scale(1.05);
+}
+
+.pk-arena-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    100deg,
+    rgba(8, 14, 22, 0.88) 0%,
+    rgba(30, 50, 20, 0.2) 50%,
+    rgba(216, 174, 82, 0.12) 80%,
+    rgba(8, 14, 22, 0.7) 100%
+  );
+  z-index: 1;
+}
+
+.pk-arena-hero-content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  height: 100%;
+  padding: 0 28px;
+  gap: 5px;
+}
+
+.pk-arena-hero-eyebrow {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: #d8ae52;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pk-arena-hero-title {
+  font-size: 26px;
+  font-weight: 800;
+  color: #fff8e6;
+  margin: 0;
+  line-height: 1.1;
+  text-shadow: 0 2px 16px rgba(0,0,0,0.9);
+  letter-spacing: -0.01em;
+}
+
+.pk-arena-hero-sub {
+  font-size: 12px;
+  color: #7a8898;
+  margin: 0;
+  letter-spacing: 0.02em;
+}
+
+/* Decoration line */
+.pk-arena-hero-deco {
+  position: absolute;
+  right: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 2;
+  font-size: 3.5rem;
+  opacity: 0.12;
+  filter: drop-shadow(0 0 20px rgba(216,174,82,0.3));
+  pointer-events: none;
+}
+
+@media (max-width: 860px) {
+  .pk-arena-hero { height: 110px; border-radius: 10px; }
+  .pk-arena-hero-title { font-size: 20px; }
+  .pk-arena-hero-content { padding: 0 18px; }
+  .pk-arena-hero-deco { font-size: 2.5rem; right: 18px; }
 }
 
 /* ════════════════════════════════════════════════════════
