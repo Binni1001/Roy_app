@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { api } from '../api/client'
-import { ActionGroup, ConfirmModal, Input, Modal, SimpleTable } from './common'
-import { displayValue, formatDate, formatMoney } from '../utils/appUtils'
+import { ActionGroup, ConfirmModal, Input, Modal, SimpleTable, StatusBadge } from './common'
+import { formatDate, formatMoney } from '../utils/appUtils'
 
 export function DebtTable({ debts, admin = false, submit }) {
   return (
@@ -9,9 +9,9 @@ export function DebtTable({ debts, admin = false, submit }) {
       rows={debts}
       columns={[
         ['person.full_name', 'Người'],
-        ['debt_type', 'Loại', displayValue],
+        ['debt_type', 'Loại', (v) => <StatusBadge value={v} />],
         ['amount', 'Số tiền', formatMoney],
-        ['status', 'Trạng thái', displayValue],
+        ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
       ]}
       actions={admin ? (debt) => (
         <ActionGroup>
@@ -33,7 +33,7 @@ export function FundTable({ rows, submit }) {
         rows={rows}
         columns={[
           ['created_at', 'Ngày', formatDate],
-          ['transaction_type', 'Loại', displayValue],
+          ['transaction_type', 'Loại', (v) => <StatusBadge value={v} />],
           ['amount', 'Số tiền', formatMoney],
           ['person.full_name', 'Người'],
           ['description', 'Nội dung'],

@@ -198,6 +198,45 @@ export function filterRows(rows, query, fields) {
   )
 }
 
+const BADGE_MAP = {
+  // Period status
+  open:      { label: 'Đang mở',   cls: 'badge-green'  },
+  draft:     { label: 'Nháp',      cls: 'badge-gray'   },
+  closed:    { label: 'Đã đóng',   cls: 'badge-red'    },
+  // Debt status
+  paid:      { label: 'Đã đóng',   cls: 'badge-green'  },
+  unpaid:    { label: 'Chưa đóng', cls: 'badge-red'    },
+  cancelled: { label: 'Đã hủy',    cls: 'badge-gray'   },
+  // Member status
+  fixed:     { label: 'Cố định',   cls: 'badge-gold'   },
+  'drop-in': { label: 'Vãng lai',  cls: 'badge-blue'   },
+  guest:     { label: 'Khách',     cls: 'badge-blue'   },
+  // Person status
+  active:    { label: 'Hoạt động', cls: 'badge-green'  },
+  inactive:  { label: 'Đã nghỉ',   cls: 'badge-gray'   },
+  // Attendance type
+  'fixed-attendance': { label: 'Đánh cố định', cls: 'badge-gold' },
+  // Debt type
+  monthly_fee:   { label: 'Quỹ tháng',  cls: 'badge-gold' },
+  shuttle_extra: { label: 'Tiền cầu',   cls: 'badge-blue' },
+  other:         { label: 'Khác',       cls: 'badge-gray' },
+  // Fund type
+  income:     { label: 'Thu',       cls: 'badge-green'  },
+  expense:    { label: 'Chi',       cls: 'badge-red'    },
+  refund:     { label: 'Hoàn',      cls: 'badge-yellow' },
+  adjustment: { label: 'Điều chỉnh', cls: 'badge-gray'  },
+  // Match status
+  pending:   { label: 'Chờ',       cls: 'badge-yellow' },
+  active:    { label: 'Đang đấu',  cls: 'badge-green'  },
+  completed: { label: 'Hoàn thành', cls: 'badge-blue'  },
+}
+
+export function StatusBadge({ value }) {
+  if (!value) return <span className="badge badge-gray">—</span>
+  const def = BADGE_MAP[value] || { label: value, cls: 'badge-gray' }
+  return <span className={`badge ${def.cls}`}>{def.label}</span>
+}
+
 export function SimpleTable({ rows, columns, actions }) {
   if (!rows.length) return (
     <div className="empty-state">

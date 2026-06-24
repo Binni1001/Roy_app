@@ -1464,3 +1464,31 @@ button.danger:hover {
 .dash-member-unpaid { border-color: rgba(220,70,60,0.35); }
 .dash-member-unpaid .dash-member-status { color: #ff8c8c; }
 .dash-member-none .dash-member-status   { color: #6a748a; }
+
+/* ── Status badges ── */
+.badge {
+  display: inline-block;
+  padding: 2px 9px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .3px;
+  white-space: nowrap;
+}
+.badge-green  { background: rgba(76,175,125,.18); color: #7ee89a; border: 1px solid rgba(76,175,125,.35); }
+.badge-red    { background: rgba(220,70,60,.15);  color: #ff8c8c; border: 1px solid rgba(220,70,60,.35); }
+.badge-gold   { background: rgba(216,174,82,.15); color: #d8ae52; border: 1px solid rgba(216,174,82,.35); }
+.badge-blue   { background: rgba(90,150,230,.15); color: #90bdf7; border: 1px solid rgba(90,150,230,.35); }
+.badge-yellow { background: rgba(230,185,60,.15); color: #f0c96a; border: 1px solid rgba(230,185,60,.35); }
+.badge-gray   { background: rgba(120,130,150,.15); color: #8a94a8; border: 1px solid rgba(120,130,150,.3); }
+
+/* ── Dashboard section label ── */
+.metrics-section-label {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .8px;
+  text-transform: uppercase;
+  color: #6a748a;
+  padding: 2px 2px 4px;
+  margin-top: 8px;
+}

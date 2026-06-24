@@ -1,8 +1,8 @@
 import { useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable, StatusBadge } from '../../../components/common'
 import { emptyPeriod } from '../../../constants/appConstants'
-import { displayValue, formatDate, formatMoney } from '../../../utils/appUtils'
+import { formatDate, formatMoney } from '../../../utils/appUtils'
 
 export function PeriodsPanel({ people, periods, members, periodForm, memberForm, selectedPeriodId, setForm, submit }) {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
@@ -26,7 +26,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
               ['end_date', 'Kết thúc', formatDate],
               ['fixed_member_fee', 'Phí cố định', formatMoney],
               ['guest_fee_per_session', 'Phí khách', formatMoney],
-              ['status', 'Trạng thái', displayValue],
+              ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
             ]}
             actions={(period) => (
               <ActionGroup>
@@ -44,7 +44,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
             rows={members}
             columns={[
               ['person.full_name', 'Người'],
-              ['status', 'Trạng thái', displayValue],
+              ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
               ['exempt_shuttle', 'Miễn cầu', (v) => v ? <span style={{ color: '#d8ae52', fontSize: 12 }}>✓ Miễn</span> : '—'],
               ['period.fixed_member_fee', 'Phí cố định kỳ', formatMoney],
             ]}

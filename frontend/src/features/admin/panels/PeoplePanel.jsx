@@ -1,9 +1,9 @@
 import { useRef, useState, useMemo } from 'react'
 import { api } from '../../../api/client'
 import { supabase } from '../../../lib/supabase'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, filterRows } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, StatusBadge, filterRows } from '../../../components/common'
 import { emptyPerson } from '../../../constants/appConstants'
-import { displayValue, initials } from '../../../utils/appUtils'
+import { initials } from '../../../utils/appUtils'
 
 export function PeoplePanel({ people, submit }) {
   const [showAdd, setShowAdd] = useState(false)
@@ -30,8 +30,8 @@ export function PeoplePanel({ people, submit }) {
               ['full_name', 'Họ tên'],
               ['phone', 'Điện thoại'],
               ['email', 'Thư điện tử'],
-              ['attendance_type', 'Hình thức chơi', displayValue],
-              ['status', 'Trạng thái', (v) => v === 'inactive' ? 'Đã nghỉ' : 'Đang hoạt động'],
+              ['attendance_type', 'Hình thức chơi', (v) => <StatusBadge value={v} />],
+              ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
               ['note', 'Ghi chú'],
             ]}
             actions={(person) => (

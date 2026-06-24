@@ -20,6 +20,7 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
 
   return (
     <>
+      <p className="metrics-section-label">Tổng quan dự án</p>
       <section className="metrics">
         {summary.map((item) => (
           <article className="metric" key={item.label}>
@@ -29,7 +30,7 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
         ))}
       </section>
 
-      {/* Stats kỳ nhanh */}
+      <p className="metrics-section-label">Kỳ hiện tại</p>
       <section className="metrics" style={{ marginTop: 0 }}>
         <article className="metric">
           <span>Buổi trong kỳ</span>
