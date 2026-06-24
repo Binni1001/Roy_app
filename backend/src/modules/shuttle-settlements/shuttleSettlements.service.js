@@ -95,6 +95,26 @@ export const shuttleSettlementsService = {
     const rpcResult = await shuttleSettlementsRepository.settlePeriod(periodId);
 
     if (!rpcResult.error) {
+      // Gửi notification cho từng thành viên sau khi chốt
+      const rpcData = rpcResult.data || {};
+      const details = rpcData.preview_details || [];
+      if (details.length > 0) {
+        const periodInfo = await shuttleSettlementsRepository.getPeriodById(periodId);
+        const periodName = periodInfo.data?.name || "kỳ này";
+        const notifications = details.map((d) => ({
+          person_id: d.person_id,
+          kind: "shuttle_settled",
+          icon: d.net_amount > 0 ? "💰" : d.net_amount < 0 ? "⚠️" : "✅",
+          title: `Chốt tiền cầu — ${periodName}`,
+          body: d.net_amount > 0
+            ? `Bạn được hoàn lại ${Math.abs(d.net_amount).toLocaleString("vi-VN")}đ do đã mua cầu nhiều hơn phần chịu.`
+            : d.net_amount < 0
+              ? `Bạn cần nộp thêm ${Math.abs(d.net_amount).toLocaleString("vi-VN")}đ tiền cầu kỳ này.`
+              : "Tiền cầu của bạn đã huề, không cần thêm.",
+          action: "home",
+        }));
+        await shuttleSettlementsRepository.createNotifications(notifications).catch(() => {});
+      }
       return rpcResult.data;
     }
 

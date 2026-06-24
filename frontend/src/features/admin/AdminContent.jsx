@@ -36,6 +36,9 @@ export function AdminContent(props) {
         summary={summary}
         debts={data.debts}
         fund={data.fund}
+        members={data.members}
+        sessions={data.sessions}
+        shuttleExpenses={data.shuttleExpenses}
         role={role}
         adminUsers={adminUsers}
         adminUserForm={forms.adminUser}

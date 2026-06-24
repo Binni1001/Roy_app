@@ -94,5 +94,12 @@ export const shuttleSettlementsRepository = {
       .select("id, name, status")
       .eq("id", periodId)
       .maybeSingle();
+  },
+
+  async createNotifications(notifications) {
+    return await supabase
+      .from("notifications")
+      .insert(notifications)
+      .select();
   }
 };

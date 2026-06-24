@@ -2,10 +2,21 @@ import { useState } from 'react'
 import { api } from '../../../api/client'
 import { ActionGroup, Input, Modal, Panel, SimpleTable } from '../../../components/common'
 import { DebtTable, FundTable } from '../../../components/finance'
-import { displayRole } from '../../../utils/appUtils'
+import { displayRole, formatMoney, initials } from '../../../utils/appUtils'
 
-export function DashboardPanel({ summary, debts, fund, role, adminUsers, adminUserForm, setForm, submit }) {
+export function DashboardPanel({ summary, debts, fund, members, sessions, shuttleExpenses, role, adminUsers, adminUserForm, setForm, submit }) {
   const [showInvite, setShowInvite] = useState(false)
+
+  const fixedMembers = members.filter((m) => m.status === 'fixed')
+  const memberPaymentStatus = fixedMembers.map((m) => {
+    const debt = debts.find((d) => d.person_id === m.person_id && d.debt_type === 'monthly_fee')
+    return { ...m, monthlyDebt: debt || null }
+  })
+  const paidCount   = memberPaymentStatus.filter((m) => m.monthlyDebt?.status === 'paid').length
+  const unpaidCount = memberPaymentStatus.filter((m) => m.monthlyDebt?.status === 'unpaid').length
+
+  const totalShuttleCost = shuttleExpenses.reduce((s, e) => s + Number(e.total_amount || 0), 0)
+  const totalShuttleUsed = sessions.reduce((s, e) => s + Number(e.shuttle_used_count || 0), 0)
 
   return (
     <>
@@ -17,10 +28,69 @@ export function DashboardPanel({ summary, debts, fund, role, adminUsers, adminUs
           </article>
         ))}
       </section>
+
+      {/* Stats kỳ nhanh */}
+      <section className="metrics" style={{ marginTop: 0 }}>
+        <article className="metric">
+          <span>Buổi trong kỳ</span>
+          <strong>{sessions.length}</strong>
+        </article>
+        <article className="metric">
+          <span>Cầu đã dùng</span>
+          <strong>{totalShuttleUsed} quả</strong>
+        </article>
+        <article className="metric">
+          <span>Chi phí cầu</span>
+          <strong>{formatMoney(totalShuttleCost)}</strong>
+        </article>
+        <article className="metric">
+          <span>Thành viên cố định</span>
+          <strong>{fixedMembers.length} người</strong>
+        </article>
+      </section>
+
+      {/* Tình trạng đóng tiền tháng */}
+      {fixedMembers.length > 0 && (
+        <section className="grid one" style={{ marginBottom: 0 }}>
+          <Panel title={`Tình trạng đóng tiền tháng — ${paidCount}/${fixedMembers.length} đã đóng`}>
+            <div className="dash-member-grid">
+              {memberPaymentStatus.map((m) => {
+                const status = m.monthlyDebt?.status
+                const cls = status === 'paid' ? 'dash-member-paid'
+                  : status === 'unpaid' ? 'dash-member-unpaid'
+                  : 'dash-member-none'
+                const label = status === 'paid' ? '✓ Đã đóng'
+                  : status === 'unpaid' ? '✗ Chưa đóng'
+                  : '— Chưa có nợ'
+                return (
+                  <div key={m.id} className={`dash-member-card ${cls}`}>
+                    {m.person?.avatar_url
+                      ? <img src={m.person.avatar_url} alt="" className="dash-member-avatar" />
+                      : <span className="avatar dash-member-avatar">{initials(m.person?.full_name)}</span>
+                    }
+                    <span className="dash-member-name">{m.person?.full_name}</span>
+                    <span className="dash-member-status">{label}</span>
+                    {status === 'unpaid' && m.monthlyDebt?.amount && (
+                      <span className="dash-member-amount">{formatMoney(m.monthlyDebt.amount)}</span>
+                    )}
+                  </div>
+                )
+              })}
+            </div>
+            {unpaidCount > 0 && (
+              <p style={{ marginTop: 10, fontSize: 13, color: '#ff8c8c' }}>
+                ⚠️ Còn {unpaidCount} thành viên chưa đóng tiền tháng
+              </p>
+            )}
+          </Panel>
+        </section>
+      )}
+
       <section className="grid two">
         <Panel title="Công nợ gần đây"><DebtTable debts={debts.slice(0, 8)} /></Panel>
         <Panel title="Giao dịch quỹ"><FundTable rows={fund.slice(0, 8)} /></Panel>
       </section>
+
       {role === 'owner' && (
         <section className="grid one owner-tools">
           <Panel

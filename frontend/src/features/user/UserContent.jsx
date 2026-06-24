@@ -90,8 +90,18 @@ export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessi
         </div>
       )}
 
+      {unpaidDebts.length > 0 && (
+        <div className="debt-reminder-banner">
+          <span className="debt-reminder-icon">⚠️</span>
+          <div>
+            <strong>Bạn còn {unpaidDebts.length} khoản chưa thanh toán</strong>
+            <p>Tổng cộng {formatMoney(totalUnpaid)} — vui lòng thanh toán sớm để tránh phát sinh thêm.</p>
+          </div>
+        </div>
+      )}
+
       <section className="grid one">
-        <Panel title="⚠️ Công nợ chưa thanh toán"><DebtTable debts={unpaidDebts} /></Panel>
+        <Panel title="Công nợ chưa thanh toán"><DebtTable debts={unpaidDebts} /></Panel>
       </section>
     </div>
   )
