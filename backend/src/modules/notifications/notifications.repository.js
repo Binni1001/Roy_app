@@ -50,4 +50,20 @@ export const notificationsRepository = {
       .delete()
       .eq('person_id', personId)
   },
+
+  async getUnpaidDebtsByPerson(personId) {
+    return supabase
+      .from('debts')
+      .select('id, amount, debt_type, description, period:periods(name)')
+      .eq('person_id', personId)
+      .eq('status', 'unpaid')
+  },
+
+  async getPersonById(personId) {
+    return supabase
+      .from('people')
+      .select('id, full_name')
+      .eq('id', personId)
+      .maybeSingle()
+  },
 }

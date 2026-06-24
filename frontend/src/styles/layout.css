@@ -1505,3 +1505,18 @@ button.danger:hover {
   flex-wrap: wrap;
   gap: 4px;
 }
+
+/* ── Remind debt button ── */
+.btn-remind {
+  background: rgba(216,174,82,.12);
+  border: 1px solid rgba(216,174,82,.35);
+  color: #d8ae52;
+  padding: 7px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background .15s;
+  white-space: nowrap;
+}
+.btn-remind:hover:not(:disabled) { background: rgba(216,174,82,.22); }
+.btn-remind:disabled { opacity: .4; cursor: not-allowed; }

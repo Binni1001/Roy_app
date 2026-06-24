@@ -186,6 +186,7 @@ export const api = {
     create:     (payload)  => request({ url: '/api/notifications', method: 'POST', data: payload }),
     markRead:   (id)       => request({ url: `/api/notifications/${id}/read`, method: 'PUT' }),
     markAllRead: ()        => request({ url: '/api/notifications/read-all', method: 'PUT' }),
+    remindDebt: (personId) => request({ url: `/api/notifications/remind-debt/${personId}`, method: 'POST' }),
     remove:     (id)       => request({ url: `/api/notifications/${id}`, method: 'DELETE' }),
     removeAll:  ()         => request({ url: '/api/notifications/all', method: 'DELETE' }),
   },

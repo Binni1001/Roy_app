@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import { api } from '../../../api/client'
 import { CheckoutBox, DebtTable } from '../../../components/finance'
-import { Input, Modal, Panel, SearchBox, SelectPeople, filterRows } from '../../../components/common'
+import { Input, Modal, Panel, SearchBox, SelectPeople, StatusLine, filterRows } from '../../../components/common'
 import { formatMoney } from '../../../utils/appUtils'
 
 const STATUS_FILTERS = [
@@ -24,6 +24,21 @@ export function DebtsPanel({
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
   const [showCustomDebt, setShowCustomDebt] = useState(false)
+  const [remindToast, setRemindToast] = useState('')
+  const [remindToastType, setRemindToastType] = useState('success')
+
+  async function handleRemindDebt() {
+    if (!selectedPersonId) return
+    try {
+      await api.notifications.remindDebt(selectedPersonId)
+      setRemindToastType('success')
+      setRemindToast('Đã gửi nhắc nhở đến người này.')
+    } catch (err) {
+      setRemindToastType('error')
+      setRemindToast(err.response?.data?.message || err.message)
+    }
+    setTimeout(() => setRemindToast(''), 3000)
+  }
 
   const filtered = useMemo(() => {
     let rows = filterRows(debts, query, ['person.full_name', 'person.nickname', 'description', 'debt_type'])
@@ -36,12 +51,21 @@ export function DebtsPanel({
       <Panel
         title="Tạo thanh toán"
         action={
-          <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <SelectPeople people={people} value={selectedPersonId} onChange={setSelectedPersonId} />
             <button onClick={() => createPayment(selectedPersonId)}>Tạo thanh toán PayOS</button>
+            <button
+              className="btn-remind"
+              onClick={handleRemindDebt}
+              disabled={!selectedPersonId}
+              title="Gửi thông báo nhắc nợ đến chuông 🔔 của người này"
+            >
+              🔔 Nhắc nợ
+            </button>
           </div>
         }
       >
+        <StatusLine text={remindToast} type={remindToastType} />
         <CheckoutBox checkout={checkout} submit={submit} />
       </Panel>
       <Panel

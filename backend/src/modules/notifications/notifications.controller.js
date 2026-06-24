@@ -42,4 +42,11 @@ export const notificationsController = {
       res.json(data)
     } catch (err) { res.status(400).json({ message: err.message }) }
   },
+
+  async remindDebt(req, res) {
+    try {
+      const data = await notificationsService.remindDebt(req.params.personId)
+      res.status(201).json(data)
+    } catch (err) { res.status(400).json({ message: err.message }) }
+  },
 }
