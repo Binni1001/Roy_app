@@ -16,6 +16,7 @@ export function DebtsPanel({
   debts,
   selectedPersonId,
   setSelectedPersonId,
+  selectedPeriodId,
   createPayment,
   checkout,
   submit,
