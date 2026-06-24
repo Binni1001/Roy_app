@@ -144,6 +144,7 @@ export function AdminContent(props) {
           debts={data.debts}
           selectedPersonId={selectedPersonId}
           setSelectedPersonId={setSelectedPersonId}
+          selectedPeriodId={selectedPeriodId}
           createPayment={createPayment}
           checkout={checkout}
           submit={submit}
