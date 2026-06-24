@@ -1,6 +1,8 @@
 import { useMemo, useState } from 'react'
+import { api } from '../../../api/client'
 import { CheckoutBox, DebtTable } from '../../../components/finance'
-import { Panel, SearchBox, SelectPeople, filterRows } from '../../../components/common'
+import { Input, Modal, Panel, SearchBox, SelectPeople, filterRows } from '../../../components/common'
+import { formatMoney } from '../../../utils/appUtils'
 
 const STATUS_FILTERS = [
   ['all', 'Tất cả'],
@@ -20,6 +22,7 @@ export function DebtsPanel({
 }) {
   const [query, setQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
+  const [showCustomDebt, setShowCustomDebt] = useState(false)
 
   const filtered = useMemo(() => {
     let rows = filterRows(debts, query, ['person.full_name', 'person.nickname', 'description', 'debt_type'])
@@ -40,7 +43,10 @@ export function DebtsPanel({
       >
         <CheckoutBox checkout={checkout} submit={submit} />
       </Panel>
-      <Panel title="Công nợ">
+      <Panel
+        title="Công nợ"
+        action={<button onClick={() => setShowCustomDebt(true)}>+ Tạo khoản thu thủ công</button>}
+      >
         <div className="search-filter-row">
           <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, mô tả..." />
           <div className="filter-tabs">
@@ -60,7 +66,80 @@ export function DebtsPanel({
         </div>
         <DebtTable debts={filtered} admin submit={submit} />
       </Panel>
+
+      {showCustomDebt && (
+        <CustomDebtModal
+          people={people}
+          periodId={selectedPeriodId}
+          onClose={() => setShowCustomDebt(false)}
+          onSubmit={(payload) => {
+            submit(() => api.debts.create(payload), 'Đã tạo khoản thu thủ công.')
+            setShowCustomDebt(false)
+          }}
+        />
+      )}
     </section>
+  )
+}
+
+function CustomDebtModal({ people, periodId, onClose, onSubmit }) {
+  const [personId, setPersonId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
+
+  const person = people.find((p) => p.id === personId)
+
+  return (
+    <Modal title="Tạo khoản thu thủ công" onClose={onClose}>
+      <form className="form" onSubmit={(e) => {
+        e.preventDefault()
+        if (!personId || !amount) return
+        onSubmit({
+          person_id: personId,
+          period_id: periodId,
+          debt_type: 'other',
+          amount: Number(amount),
+          status: 'unpaid',
+          description: description || 'Khoản thu thủ công',
+        })
+      }}>
+        <label>Người nợ
+          <select value={personId} onChange={(e) => setPersonId(e.target.value)} required>
+            <option value="">-- Chọn người --</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>{p.full_name || p.nickname}</option>
+            ))}
+          </select>
+        </label>
+
+        <Input
+          label="Số tiền (đ)"
+          type="number"
+          value={amount}
+          onChange={setAmount}
+          required
+        />
+
+        <Input
+          label="Mô tả khoản thu"
+          value={description}
+          onChange={setDescription}
+        />
+        <small className="muted">Ví dụ: Tiền vãng lai người nhà anh Thuần, Tiền sân buổi thêm...</small>
+
+        {personId && amount && (
+          <div className="custom-debt-preview">
+            <span>📋 Sẽ tạo: <strong>{person?.full_name}</strong> nợ <strong>{formatMoney(Number(amount))}</strong></span>
+            {description && <span className="muted"> — {description}</span>}
+          </div>
+        )}
+
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Tạo khoản thu</button>
+        </footer>
+      </form>
+    </Modal>
   )
 }
 

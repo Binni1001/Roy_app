@@ -1492,3 +1492,16 @@ button.danger:hover {
   padding: 2px 2px 4px;
   margin-top: 8px;
 }
+
+/* ── Custom debt preview ── */
+.custom-debt-preview {
+  padding: 10px 14px;
+  border-radius: 8px;
+  background: rgba(216,174,82,.08);
+  border: 1px solid rgba(216,174,82,.25);
+  font-size: 13px;
+  color: #efe7d2;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
