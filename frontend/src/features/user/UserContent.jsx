@@ -30,12 +30,9 @@ export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessi
   if (activeTab === 'history') {
     return (
       <div className="tab-scene" style={{ '--tab-img': 'url(/images/rackets-grass.jpg)' }}>
-        <section className="grid two">
+        <section className="grid one">
           <Panel title="💰 Lịch sử số dư">
             <SimpleTable rows={transactions} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
-          </Panel>
-          <Panel title="🏸 Buổi cầu trong kỳ">
-            <SimpleTable rows={sessions} columns={[['play_date', 'Ngày', formatDate], ['shuttle_used_count', 'Số cầu'], ['note', 'Ghi chú']]} />
           </Panel>
         </section>
       </div>
@@ -94,13 +91,7 @@ export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessi
       )}
 
       <section className="grid one">
-        <Panel title="⚠️ Công nợ gần nhất"><DebtTable debts={debts.slice(0, 5)} /></Panel>
-        <Panel title="💰 Giao dịch gần đây">
-          <SimpleTable rows={transactions.slice(0, 5)} columns={[['created_at', 'Ngày', formatDate], ['amount', 'Số tiền', formatMoney], ['description', 'Nội dung']]} />
-        </Panel>
-        <Panel title="📅 Lịch chơi">
-          <SessionCalendar sessions={sessions} />
-        </Panel>
+        <Panel title="⚠️ Công nợ chưa thanh toán"><DebtTable debts={unpaidDebts} /></Panel>
       </section>
     </div>
   )
