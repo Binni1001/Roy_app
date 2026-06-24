@@ -1,12 +1,23 @@
-import { DashboardPanel } from './panels/DashboardPanel'
-import { AnalyticsPanel } from './panels/AnalyticsPanel'
-import { PkPanel } from './panels/PkPanel'
-import { DebtsPanel } from './panels/DebtsPanel'
-import { FundPanel } from './panels/FundPanel'
-import { PeoplePanel } from './panels/PeoplePanel'
-import { PeriodsPanel } from './panels/PeriodsPanel'
-import { SessionsPanel } from './panels/SessionsPanel'
-import { ShuttlePanel } from './panels/ShuttlePanel'
+import { Suspense, lazy } from 'react'
+import { SkeletonTable } from '../../components/common'
+
+const DashboardPanel  = lazy(() => import('./panels/DashboardPanel'))
+const AnalyticsPanel  = lazy(() => import('./panels/AnalyticsPanel'))
+const PkPanel         = lazy(() => import('./panels/PkPanel'))
+const DebtsPanel      = lazy(() => import('./panels/DebtsPanel'))
+const FundPanel       = lazy(() => import('./panels/FundPanel'))
+const PeoplePanel     = lazy(() => import('./panels/PeoplePanel'))
+const PeriodsPanel    = lazy(() => import('./panels/PeriodsPanel'))
+const SessionsPanel   = lazy(() => import('./panels/SessionsPanel'))
+const ShuttlePanel    = lazy(() => import('./panels/ShuttlePanel'))
+
+function PanelSuspense({ children }) {
+  return (
+    <Suspense fallback={<div style={{ padding: 24 }}><SkeletonTable rows={5} cols={4} /></div>}>
+      {children}
+    </Suspense>
+  )
+}
 
 export function AdminContent(props) {
   const {
@@ -27,122 +38,136 @@ export function AdminContent(props) {
     adminUsers,
   } = props
 
-  // Dùng cho các action thay đổi danh sách người / kỳ / admin users
   const submitGlobal = (action, msg) => submit(action, msg, 'global')
 
   if (activeTab === 'dashboard') {
     return (
-      <DashboardPanel
-        summary={summary}
-        debts={data.debts}
-        fund={data.fund}
-        members={data.members}
-        sessions={data.sessions}
-        shuttleExpenses={data.shuttleExpenses}
-        role={role}
-        adminUsers={adminUsers}
-        adminUserForm={forms.adminUser}
-        setForm={setForm}
-        submit={submitGlobal}
-      />
+      <PanelSuspense>
+        <DashboardPanel
+          summary={summary}
+          debts={data.debts}
+          fund={data.fund}
+          members={data.members}
+          sessions={data.sessions}
+          shuttleExpenses={data.shuttleExpenses}
+          role={role}
+          adminUsers={adminUsers}
+          adminUserForm={forms.adminUser}
+          setForm={setForm}
+          submit={submitGlobal}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'analytics') {
     return (
-      <AnalyticsPanel
-        debts={data.debts}
-        fund={data.fund}
-        shuttleExpenses={data.shuttleExpenses}
-        members={data.members}
-        activePeriod={props.activePeriod}
-      />
+      <PanelSuspense>
+        <AnalyticsPanel
+          debts={data.debts}
+          fund={data.fund}
+          shuttleExpenses={data.shuttleExpenses}
+          members={data.members}
+          activePeriod={props.activePeriod}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'people') {
     return (
-      <PeoplePanel
-        people={people}
-        form={forms.person}
-        setForm={setForm}
-        submit={submitGlobal}
-      />
+      <PanelSuspense>
+        <PeoplePanel
+          people={people}
+          form={forms.person}
+          setForm={setForm}
+          submit={submitGlobal}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'periods') {
     return (
-      <PeriodsPanel
-        people={people}
-        periods={periods}
-        members={data.members}
-        periodForm={forms.period}
-        memberForm={forms.member}
-        selectedPeriodId={selectedPeriodId}
-        setForm={setForm}
-        submit={submitGlobal}
-      />
+      <PanelSuspense>
+        <PeriodsPanel
+          people={people}
+          periods={periods}
+          members={data.members}
+          periodForm={forms.period}
+          memberForm={forms.member}
+          selectedPeriodId={selectedPeriodId}
+          setForm={setForm}
+          submit={submitGlobal}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'sessions') {
     return (
-      <SessionsPanel
-        people={people}
-        sessions={data.sessions}
-        sessionForm={forms.session}
-        guestForm={forms.guest}
-        selectedPeriodId={selectedPeriodId}
-        setForm={setForm}
-        submit={submit}
-      />
+      <PanelSuspense>
+        <SessionsPanel
+          people={people}
+          sessions={data.sessions}
+          sessionForm={forms.session}
+          guestForm={forms.guest}
+          selectedPeriodId={selectedPeriodId}
+          setForm={setForm}
+          submit={submit}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'shuttle') {
     return (
-      <ShuttlePanel
-        people={people}
-        expenses={data.shuttleExpenses}
-        settlementPreview={data.settlementPreview}
-        shuttleForm={forms.shuttle}
-        selectedPeriodId={selectedPeriodId}
-        setForm={setForm}
-        submit={submit}
-      />
+      <PanelSuspense>
+        <ShuttlePanel
+          people={people}
+          expenses={data.shuttleExpenses}
+          settlementPreview={data.settlementPreview}
+          shuttleForm={forms.shuttle}
+          selectedPeriodId={selectedPeriodId}
+          setForm={setForm}
+          submit={submit}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'debts') {
     return (
-      <DebtsPanel
-        people={people}
-        debts={data.debts}
-        selectedPersonId={selectedPersonId}
-        setSelectedPersonId={setSelectedPersonId}
-        createPayment={createPayment}
-        checkout={checkout}
-        submit={submit}
-      />
+      <PanelSuspense>
+        <DebtsPanel
+          people={people}
+          debts={data.debts}
+          selectedPersonId={selectedPersonId}
+          setSelectedPersonId={setSelectedPersonId}
+          createPayment={createPayment}
+          checkout={checkout}
+          submit={submit}
+        />
+      </PanelSuspense>
     )
   }
 
   if (activeTab === 'pk') {
-    return <PkPanel />
+    return <PanelSuspense><PkPanel /></PanelSuspense>
   }
 
   return (
-    <FundPanel
-      balances={data.balances}
-      fund={data.fund}
-      debts={data.debts}
-      people={people}
-      fundForm={forms.fund}
-      selectedPeriodId={selectedPeriodId}
-      setForm={setForm}
-      submit={submit}
-    />
+    <PanelSuspense>
+      <FundPanel
+        balances={data.balances}
+        fund={data.fund}
+        debts={data.debts}
+        people={people}
+        fundForm={forms.fund}
+        selectedPeriodId={selectedPeriodId}
+        setForm={setForm}
+        submit={submit}
+      />
+    </PanelSuspense>
   )
 }
-

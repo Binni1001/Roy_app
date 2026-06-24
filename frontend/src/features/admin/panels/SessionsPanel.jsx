@@ -162,3 +162,5 @@ function SessionEditModal({ session, onClose, onSubmit }) {
     </Modal>
   )
 }
+
+export default SessionsPanel

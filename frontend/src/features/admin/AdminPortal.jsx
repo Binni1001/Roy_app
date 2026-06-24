@@ -78,3 +78,5 @@ export function AdminPortal({ session, role, onSignOut }) {
   )
 }
 
+
+export default AdminPortal

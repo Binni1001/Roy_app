@@ -1,6 +1,4 @@
-import { useEffect, useState } from 'react'
-import { AdminPortal } from './features/admin/AdminPortal'
-import { UserPortal } from './features/user/UserPortal'
+import { Suspense, lazy, useEffect, useState } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { supabase } from './lib/supabase'
 import Login from './pages/Login'
@@ -8,8 +6,23 @@ import ResetPassword from './pages/ResetPassword'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
 import './App.css'
 
+const AdminPortal = lazy(() => import('./features/admin/AdminPortal'))
+const UserPortal  = lazy(() => import('./features/user/UserPortal'))
+
+function AppLoading() {
+  return (
+    <div className="app-loading">
+      <img src="/images/cat-loading.png" alt="Đang tải" className="app-loading-img" />
+      <div className="app-loading-dots">
+        <span className="app-loading-dot" />
+        <span className="app-loading-dot" />
+        <span className="app-loading-dot" />
+      </div>
+    </div>
+  )
+}
+
 function App() {
-  // undefined = đang khởi tạo, null = chưa đăng nhập, object = đã đăng nhập
   const [session, setSession] = useState(undefined)
   const [recoveringPassword, setRecoveringPassword] = useState(false)
 
@@ -26,9 +39,7 @@ function App() {
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
       setSession(nextSession ?? null)
-      if (event === 'PASSWORD_RECOVERY') {
-        setRecoveringPassword(true)
-      }
+      if (event === 'PASSWORD_RECOVERY') setRecoveringPassword(true)
     })
 
     return () => {
@@ -37,19 +48,7 @@ function App() {
     }
   }, [])
 
-  // Đang tải session → màn hình chờ, không flash Login hay portal
-  if (session === undefined) {
-    return (
-      <div className="app-loading">
-        <img src="/images/cat-loading.png" alt="Đang tải" className="app-loading-img" />
-        <div className="app-loading-dots">
-          <span className="app-loading-dot" />
-          <span className="app-loading-dot" />
-          <span className="app-loading-dot" />
-        </div>
-      </div>
-    )
-  }
+  if (session === undefined) return <AppLoading />
 
   if (recoveringPassword || window.location.pathname.startsWith('/reset-password')) {
     return <ResetPassword />
@@ -63,18 +62,21 @@ function App() {
     await supabase.auth.signOut()
   }
 
-  // Không dùng path-based routing để tránh blank screen từ replaceState
   if (canOpenAdmin(role)) {
     return (
       <ErrorBoundary>
-        <AdminPortal session={session} role={role} onSignOut={signOut} />
+        <Suspense fallback={<AppLoading />}>
+          <AdminPortal session={session} role={role} onSignOut={signOut} />
+        </Suspense>
       </ErrorBoundary>
     )
   }
 
   return (
     <ErrorBoundary>
-      <UserPortal session={session} role={role} onSignOut={signOut} />
+      <Suspense fallback={<AppLoading />}>
+        <UserPortal session={session} role={role} onSignOut={signOut} />
+      </Suspense>
     </ErrorBoundary>
   )
 }

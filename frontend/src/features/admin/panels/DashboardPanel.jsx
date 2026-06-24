@@ -137,3 +137,5 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
     </>
   )
 }
+
+export default DashboardPanel

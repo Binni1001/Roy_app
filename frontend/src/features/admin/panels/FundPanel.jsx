@@ -184,3 +184,5 @@ function submitOffsetBalance(balance, selectedPeriodId, submit) {
   if (!personId || !selectedPeriodId) return
   submit(() => api.balances.offset(personId, selectedPeriodId), 'Đã bù trừ số dư.')
 }
+
+export default FundPanel

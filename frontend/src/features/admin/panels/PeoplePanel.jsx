@@ -194,3 +194,5 @@ function PersonEditModal({ person, onClose, onSubmit }) {
     </Modal>
   )
 }
+
+export default PeoplePanel

@@ -530,3 +530,5 @@ export function PkArena({ activePerson }) {
     </div>
   )
 }
+
+export default PkArena

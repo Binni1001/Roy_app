@@ -63,3 +63,5 @@ export function DebtsPanel({
     </section>
   )
 }
+
+export default DebtsPanel

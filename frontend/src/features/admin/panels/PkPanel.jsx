@@ -771,3 +771,5 @@ function PkEditModal({ match, people = [], onClose, onSubmit }) {
     </Modal>
   )
 }
+
+export default PkPanel

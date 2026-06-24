@@ -1,16 +1,17 @@
-import { useState } from 'react'
-import { StatusLine, SkeletonTable } from '../../components/common'
+import { Suspense, lazy, useState } from 'react'
+import { SkeletonMatchCards, SkeletonTable, StatusLine } from '../../components/common'
 import { NotificationBell } from '../../components/NotificationBell'
 import { Topbar } from '../../components/shell'
 import { useNotificationCenter } from '../../hooks/useNotificationCenter'
 import { MemberHero } from './MemberHero'
-import { PkArena } from './PkArena'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
-import { UserContent } from './UserContent'
 import { UserBottomNav } from './UserBottomNav'
+import { UserContent } from './UserContent'
 import { UserSidebar } from './UserSidebar'
 import { useUserPortalData } from './useUserPortalData'
+
+const PkArena = lazy(() => import('./PkArena'))
 
 export function UserPortal({ session, role, onSignOut }) {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('user_tab') || 'home')
@@ -118,7 +119,9 @@ export function UserPortal({ session, role, onSignOut }) {
             onSave={updateProfile}
           />
         ) : activeTab === 'pk' ? (
-          <PkArena activePerson={activePerson} />
+          <Suspense fallback={<div style={{ padding: 24 }}><SkeletonMatchCards count={3} /></div>}>
+            <PkArena activePerson={activePerson} />
+          </Suspense>
         ) : (
           <>
             <MemberHero
@@ -144,3 +147,5 @@ export function UserPortal({ session, role, onSignOut }) {
     </div>
   )
 }
+
+export default UserPortal

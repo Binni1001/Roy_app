@@ -305,3 +305,5 @@ export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePe
     </div>
   )
 }
+
+export default AnalyticsPanel

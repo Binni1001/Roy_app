@@ -264,3 +264,5 @@ function FundSplitModal({ people, periodId, onClose, onSubmit }) {
     </Modal>
   )
 }
+
+export default ShuttlePanel

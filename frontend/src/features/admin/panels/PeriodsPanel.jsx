@@ -223,3 +223,5 @@ function MemberEditModal({ member, onClose, onSubmit }) {
     </Modal>
   )
 }
+
+export default PeriodsPanel
