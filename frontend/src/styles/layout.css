@@ -1579,34 +1579,23 @@ button.danger:hover {
 /* ── Brand block ── */
 .sb-brand {
   display: flex;
-  align-items: center;
-  gap: 14px;
+  justify-content: center;
   margin-bottom: 22px;
   padding-bottom: 18px;
   border-bottom: 1px solid rgba(216,174,82,0.14);
 }
 
 .sb-brand .brand-mark {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
+  width: 120px;
+  height: 120px;
+  flex: 0 0 120px;
   overflow: visible;
 }
 
-.sb-brand-name {
-  font-size: 16px;
-  font-weight: 800;
-  color: #d8ae52;
-  letter-spacing: .6px;
-  line-height: 1.2;
-}
-
-.sb-brand-sub {
-  font-size: 10px;
-  color: #8e98a8;
-  letter-spacing: 1px;
-  text-transform: uppercase;
-  margin-top: 2px;
+.sb-brand .brand-mark img,
+.sb-brand .brand-logo-wrap img {
+  width: 120px;
+  height: 120px;
 }
 
 /* ── Account compact (admin) ── */
