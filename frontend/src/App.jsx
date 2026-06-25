@@ -31,6 +31,8 @@ function App() {
   const [recoveringPassword, setRecoveringPassword] = useState(false)
   // undefined = loading, null = no record, object = person data
   const [person, setPerson] = useState(undefined)
+  // tick tăng lên mỗi lần cần re-fetch person (dùng để trigger useEffect)
+  const [personTick, setPersonTick] = useState(0)
 
   useEffect(() => {
     let mounted = true
@@ -54,7 +56,7 @@ function App() {
     }
   }, [])
 
-  // Fetch person record whenever we have a valid session
+  // Fetch person record khi session thay đổi hoặc khi cần refresh (personTick)
   useEffect(() => {
     if (!session) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
@@ -64,7 +66,7 @@ function App() {
     }).catch(() => {
       setPerson(null)
     })
-  }, [session])
+  }, [session, personTick])
 
   if (session === undefined) return <AppLoading />
 
@@ -77,7 +79,7 @@ function App() {
   // Still loading person record
   if (person === undefined) return <AppLoading />
 
-  const refresh = () => setPerson(undefined)
+  const refresh = () => setPersonTick(t => t + 1)
   const role = getSessionRole(session)
 
   async function signOut() {
