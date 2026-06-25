@@ -262,20 +262,17 @@
 }
 
 .login-logo {
-  width: 108px;
-  height: 108px;
+  width: 140px;
+  height: 140px;
   display: grid;
   place-items: center;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(216,174,82,0.16), rgba(255,255,255,0.02));
-  border: 1.5px solid rgba(216,174,82,0.4);
-  box-shadow: 0 0 40px rgba(216,174,82,0.22), 0 0 80px rgba(216,174,82,0.08);
 }
 
 .login-logo img {
-  width: 88px;
-  height: 88px;
+  width: 140px;
+  height: 140px;
   object-fit: contain;
+  filter: drop-shadow(0 0 28px rgba(216,174,82,0.35));
 }
 
 .login-card {
@@ -433,27 +430,12 @@
 }
 
 .brand-mark {
-  width: 56px;
-  height: 56px;
-  flex: 0 0 56px;
+  display: grid;
+  place-items: center;
   overflow: visible;
 }
 
-.brand-logo-wrap {
-  display: grid;
-  place-items: center;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(216,174,82,0.13), rgba(255,255,255,0.02));
-  border: 1px solid rgba(216,174,82,0.32);
-  box-shadow: 0 0 22px rgba(216,174,82,0.18), inset 0 0 10px rgba(216,174,82,0.06);
-}
-
-.brand-logo-wrap img,
 .brand-mark img {
-  width: 44px;
-  height: 44px;
   object-fit: contain;
   pointer-events: none;
 }
