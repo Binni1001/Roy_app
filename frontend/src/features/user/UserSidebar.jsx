@@ -1,5 +1,6 @@
 import { CalendarDays, History, Home, LogOut, Swords, UserPen, Wallet } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
+import { GroupSwitcher } from '../../components/GroupSwitcher'
 import { formatMoney, initials } from '../../utils/appUtils'
 
 const USER_NAV = [
@@ -12,7 +13,7 @@ const USER_NAV = [
   ['payment',  'Thanh toán',   Wallet],
 ]
 
-export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, isOpen, onClose, pkBadge = 0, totalDebt = 0 }) {
+export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, isOpen, onClose, pkBadge = 0, totalDebt = 0, onSwitchGroup }) {
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
@@ -40,6 +41,13 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, 
             </div>
           </div>
         )}
+
+        {/* ── Group switcher ── */}
+        <GroupSwitcher
+          activeGroupId={activePerson?.active_group_id}
+          onSwitched={onSwitchGroup}
+          onAddGroup={onSwitchGroup}
+        />
 
         {/* ── Nav ── */}
         <nav className="sb-nav">

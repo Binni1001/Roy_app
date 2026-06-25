@@ -182,13 +182,17 @@ export const api = {
   },
 
   groups: {
-    verifyCode:     (code)     => request({ url: '/api/groups/verify-code', method: 'POST', data: { invite_code: code } }),
-    join:           (code, fullName) => request({ url: '/api/groups/join', method: 'POST', data: { invite_code: code, full_name: fullName } }),
-    info:           ()         => request({ url: '/api/groups/info' }),
-    pending:        ()         => request({ url: '/api/groups/pending' }),
-    approve:        (personId) => request({ url: `/api/groups/members/${personId}/approve`, method: 'PUT' }),
-    reject:         (personId) => request({ url: `/api/groups/members/${personId}/reject`, method: 'PUT' }),
-    regenerateCode: ()         => request({ url: '/api/groups/regenerate-code', method: 'PUT' }),
+    verifyCode:     (code)              => request({ url: '/api/groups/verify-code', method: 'POST', data: { invite_code: code } }),
+    mine:           ()                  => request({ url: '/api/groups/mine' }),
+    create:         (name, fullName)    => request({ url: '/api/groups/create', method: 'POST', data: { name, full_name: fullName } }),
+    join:           (code, fullName)    => request({ url: '/api/groups/join', method: 'POST', data: { invite_code: code, full_name: fullName } }),
+    switchGroup:    (groupId)           => request({ url: `/api/groups/switch/${groupId}`, method: 'PUT' }),
+    leave:          (groupId)           => request({ url: `/api/groups/${groupId}/leave`, method: 'DELETE' }),
+    info:           ()                  => request({ url: '/api/groups/info' }),
+    pending:        ()                  => request({ url: '/api/groups/pending' }),
+    approve:        (personId)          => request({ url: `/api/groups/members/${personId}/approve`, method: 'PUT' }),
+    reject:         (personId)          => request({ url: `/api/groups/members/${personId}/reject`, method: 'PUT' }),
+    regenerateCode: ()                  => request({ url: '/api/groups/regenerate-code', method: 'PUT' }),
   },
 
   notifications: {

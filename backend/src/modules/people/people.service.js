@@ -131,7 +131,8 @@ export const peopleService = {
       joined_at: payload.joined_at || null,
       last_play_date: payload.last_play_date || null,
       note: payload.note || null,
-      group_id: payload.group_id || null
+      group_id: payload.group_id || null,
+      active_group_id: payload.active_group_id || payload.group_id || null
     });
 
     if (error) {

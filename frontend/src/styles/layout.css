@@ -2083,3 +2083,154 @@ button.danger:hover {
   margin-bottom: 16px;
   text-align: center;
 }
+
+/* ============================================================
+   ONBOARDING — chọn tạo nhóm / tham gia nhóm
+   ============================================================ */
+.onboarding-choices {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+  margin-top: 8px;
+}
+
+.onboarding-choice {
+  background: rgba(13,18,25,0.7);
+  border: 1px solid rgba(216,174,82,0.18);
+  border-radius: 14px;
+  color: #f5ebd0;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 3px;
+  padding: 16px 18px;
+  text-align: left;
+  transition: border-color .15s, background .15s, transform .12s;
+  width: 100%;
+}
+
+.onboarding-choice:hover {
+  background: rgba(216,174,82,0.06);
+  border-color: rgba(216,174,82,0.45);
+  transform: translateY(-1px);
+}
+
+.onboarding-choice-icon {
+  font-size: 20px;
+  margin-bottom: 2px;
+  color: #d8ae52;
+}
+
+.onboarding-choice-label {
+  font-size: 15px;
+  font-weight: 700;
+  color: #f5ebd0;
+}
+
+.onboarding-choice-sub {
+  font-size: 12px;
+  color: rgba(239,231,210,0.45);
+}
+
+/* ============================================================
+   GROUP SWITCHER — trong sidebar
+   ============================================================ */
+.group-switcher {
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(216,174,82,0.1);
+  margin-bottom: 4px;
+}
+
+.group-switcher-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  color: rgba(216,174,82,0.5);
+  margin-bottom: 6px;
+}
+
+.group-switcher-list {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.group-switcher-item {
+  align-items: center;
+  background: none;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  color: rgba(239,231,210,0.6);
+  cursor: pointer;
+  display: flex;
+  font-size: 13px;
+  gap: 8px;
+  padding: 7px 10px;
+  text-align: left;
+  transition: all .15s;
+  width: 100%;
+}
+
+.group-switcher-item:hover {
+  background: rgba(216,174,82,0.06);
+  color: #f5ebd0;
+}
+
+.group-switcher-item.active {
+  background: rgba(216,174,82,0.1);
+  border-color: rgba(216,174,82,0.25);
+  color: #d8ae52;
+  font-weight: 600;
+}
+
+.group-switcher-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: rgba(239,231,210,0.3);
+  flex-shrink: 0;
+}
+
+.group-switcher-item.active .group-switcher-dot {
+  background: #d8ae52;
+}
+
+.group-switcher-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.group-switcher-role {
+  font-size: 10px;
+  color: rgba(216,174,82,0.6);
+  background: rgba(216,174,82,0.08);
+  border-radius: 4px;
+  padding: 1px 5px;
+  flex-shrink: 0;
+}
+
+.group-switcher-add {
+  align-items: center;
+  background: none;
+  border: 1px dashed rgba(216,174,82,0.2);
+  border-radius: 8px;
+  color: rgba(216,174,82,0.5);
+  cursor: pointer;
+  display: flex;
+  font-size: 12px;
+  gap: 6px;
+  margin-top: 4px;
+  padding: 7px 10px;
+  transition: all .15s;
+  width: 100%;
+}
+
+.group-switcher-add:hover {
+  border-color: rgba(216,174,82,0.5);
+  color: #d8ae52;
+}

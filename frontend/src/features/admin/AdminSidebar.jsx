@@ -1,5 +1,6 @@
 import { BarChart2, CalendarDays, DollarSign, LayoutDashboard, LogOut, Shield, Swords, Users, Wallet, Wind, Zap } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
+import { GroupSwitcher } from '../../components/GroupSwitcher'
 import { displayRole } from '../../utils/appUtils'
 
 const ADMIN_NAV = [
@@ -15,7 +16,7 @@ const ADMIN_NAV = [
   ['members',   'Thành viên','Duyệt và mã nhóm',        Shield],
 ]
 
-export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut, isOpen, onClose }) {
+export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut, isOpen, onClose, person, onSwitchGroup }) {
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
@@ -32,6 +33,13 @@ export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut
           <span className="sb-account-email">{session?.user?.email}</span>
           <span className="sb-account-role">{displayRole(role)}</span>
         </div>
+
+        {/* ── Group switcher ── */}
+        <GroupSwitcher
+          activeGroupId={person?.active_group_id}
+          onSwitched={onSwitchGroup}
+          onAddGroup={onSwitchGroup}
+        />
 
         {/* ── Nav ── */}
         <nav className="sb-nav">

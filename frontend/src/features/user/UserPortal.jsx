@@ -13,7 +13,7 @@ import { useUserPortalData } from './useUserPortalData'
 
 const PkArena = lazy(() => import('./PkArena'))
 
-export function UserPortal({ session, role, onSignOut }) {
+export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('user_tab') || 'home')
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
 
@@ -68,6 +68,7 @@ export function UserPortal({ session, role, onSignOut }) {
         onClose={() => setSidebarOpen(false)}
         pkBadge={pkBadge}
         totalDebt={totalDebt}
+        onSwitchGroup={onSwitchGroup}
       />
       <UserBottomNav
         activeTab={activeTab}

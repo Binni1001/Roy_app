@@ -4,7 +4,7 @@ import { supabase } from './lib/supabase'
 import { api } from './api/client'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
-import InviteCode from './pages/InviteCode'
+import Onboarding from './pages/Onboarding'
 import PendingApproval from './pages/PendingApproval'
 import RejectedScreen from './pages/RejectedScreen'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
@@ -77,22 +77,24 @@ function App() {
   // Still loading person record
   if (person === undefined) return <AppLoading />
 
-  // No people record yet → ask for invite code + create profile
+  const refresh = () => setPerson(undefined)
+
+  // Chưa có hồ sơ → onboarding với tạo profile
   if (person === null) {
-    return <InviteCode needsProfile onJoined={() => setPerson(undefined)} />
+    return <Onboarding needsProfile onDone={refresh} />
   }
 
-  // Has profile but not in any group → ask for invite code (no name needed)
-  if (!person.group_id) {
-    return <InviteCode needsProfile={false} onJoined={() => setPerson(undefined)} />
+  // Có hồ sơ nhưng chưa vào nhóm nào (active_group_id null)
+  if (!person.active_group_id) {
+    return <Onboarding needsProfile={false} onDone={refresh} />
   }
 
-  // Waiting for owner approval
+  // Check status trong nhóm hiện tại dựa vào people.status
+  // (people.status được cập nhật khi approve/reject trong active_group)
   if (person.status === 'pending') {
-    return <PendingApproval />
+    return <PendingApproval onRefresh={refresh} />
   }
 
-  // Rejected or deactivated
   if (person.status === 'inactive') {
     return <RejectedScreen />
   }
@@ -107,7 +109,7 @@ function App() {
     return (
       <ErrorBoundary>
         <Suspense fallback={<AppLoading />}>
-          <AdminPortal session={session} role={role} onSignOut={signOut} />
+          <AdminPortal session={session} role={role} onSignOut={signOut} person={person} onSwitchGroup={refresh} />
         </Suspense>
       </ErrorBoundary>
     )
@@ -116,7 +118,7 @@ function App() {
   return (
     <ErrorBoundary>
       <Suspense fallback={<AppLoading />}>
-        <UserPortal session={session} role={role} onSignOut={signOut} />
+        <UserPortal session={session} role={role} onSignOut={signOut} person={person} onSwitchGroup={refresh} />
       </Suspense>
     </ErrorBoundary>
   )

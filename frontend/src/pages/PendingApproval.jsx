@@ -1,7 +1,16 @@
+import { useState } from 'react'
 import logoUrl from '../assets/logo.png'
 import { supabase } from '../lib/supabase'
 
-export default function PendingApproval() {
+export default function PendingApproval({ onRefresh }) {
+  const [checking, setChecking] = useState(false)
+
+  async function handleRefresh() {
+    setChecking(true)
+    await onRefresh?.()
+    setTimeout(() => setChecking(false), 1000)
+  }
+
   async function handleSignOut() {
     await supabase.auth.signOut()
   }
@@ -19,14 +28,13 @@ export default function PendingApproval() {
           Yêu cầu tham gia nhóm của bạn đã được gửi đi.<br />
           Vui lòng chờ trưởng nhóm xác nhận.
         </p>
+        <p className="pending-hint">Bạn sẽ được vào ngay sau khi trưởng nhóm duyệt.</p>
 
-        <p className="pending-hint">
-          Bạn sẽ được vào ngay sau khi trưởng nhóm duyệt.
-        </p>
-
-        <button className="invite-signout" onClick={handleSignOut}>
-          Đăng xuất
+        <button className="invite-btn" onClick={handleRefresh} disabled={checking} style={{ marginTop: 8 }}>
+          {checking ? 'Đang kiểm tra...' : 'Kiểm tra lại'}
         </button>
+
+        <button className="invite-signout" onClick={handleSignOut}>Đăng xuất</button>
       </section>
     </main>
   )

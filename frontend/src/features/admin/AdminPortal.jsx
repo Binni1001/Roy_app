@@ -5,7 +5,7 @@ import { AdminContent } from './AdminContent'
 import { AdminSidebar } from './AdminSidebar'
 import { useAdminPortalData } from './useAdminPortalData'
 
-export function AdminPortal({ session, role, onSignOut }) {
+export function AdminPortal({ session, role, onSignOut, person, onSwitchGroup }) {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('admin_tab') || 'dashboard')
   const [sidebarOpen, setSidebarOpen] = useState(() => window.innerWidth > 860)
   const {
@@ -41,6 +41,8 @@ export function AdminPortal({ session, role, onSignOut }) {
         onSignOut={onSignOut}
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
+        person={person}
+        onSwitchGroup={onSwitchGroup}
       />
       <main className="workspace admin-workspace" style={{ backgroundImage: 'url(/images/player-jump2.jpg)' }}>
         <Topbar
