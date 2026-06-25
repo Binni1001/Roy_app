@@ -230,9 +230,10 @@
 .login-panel {
   width: min(560px, 100%);
   padding: 28px;
-  border: 1px solid rgba(239, 231, 210, 0.14);
-  border-radius: 8px;
-  background: rgba(20, 25, 33, 0.94);
+  border: 1px solid rgba(216, 174, 82, 0.18);
+  border-radius: 24px;
+  background: rgba(13, 18, 26, 0.96);
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.5);
 }
 
 .login-panel {
@@ -261,17 +262,20 @@
 }
 
 .login-logo {
-  width: 180px;
-  height: 180px;
-  overflow: visible;
+  width: 108px;
+  height: 108px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216,174,82,0.16), rgba(255,255,255,0.02));
+  border: 1.5px solid rgba(216,174,82,0.4);
+  box-shadow: 0 0 40px rgba(216,174,82,0.22), 0 0 80px rgba(216,174,82,0.08);
 }
 
 .login-logo img {
-  width: 100%;
-  height: 100%;
+  width: 88px;
+  height: 88px;
   object-fit: contain;
-  transform: scale(2.25);
-  transform-origin: center;
 }
 
 .login-card {
@@ -400,25 +404,27 @@
 .admin-shell,
 .user-shell {
   display: grid;
-  grid-template-columns: 272px minmax(0, 1fr);
+  grid-template-columns: 280px minmax(0, 1fr);
 }
 
 .sidebar,
 .user-sidebar {
   position: sticky;
   top: 0;
-  width: 272px;
+  width: 280px;
   flex-shrink: 0;
   height: 100vh;
   padding: 22px 16px;
-  border-right: 1px solid rgba(239, 231, 210, 0.12);
-  background: rgba(12, 16, 22, 0.94);
+  border-right: 1px solid rgba(216, 174, 82, 0.14);
+  background:
+    radial-gradient(ellipse at top left, rgba(216,174,82,0.09) 0%, transparent 55%),
+    linear-gradient(180deg, #0B0F16 0%, #070A0F 100%);
 }
 
 .user-sidebar {
   background:
-    linear-gradient(180deg, rgba(216, 174, 82, 0.11), transparent 42%),
-    rgba(12, 16, 22, 0.96);
+    radial-gradient(ellipse at top left, rgba(216,174,82,0.09) 0%, transparent 55%),
+    linear-gradient(180deg, #0B0F16 0%, #070A0F 100%);
 }
 
 
@@ -441,15 +447,27 @@
 }
 
 .brand-mark {
-  width: 96px;
-  height: 96px;
-  flex: 0 0 96px;
-  overflow: hidden;
+  width: 56px;
+  height: 56px;
+  flex: 0 0 56px;
+  overflow: visible;
 }
 
+.brand-logo-wrap {
+  display: grid;
+  place-items: center;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(216,174,82,0.13), rgba(255,255,255,0.02));
+  border: 1px solid rgba(216,174,82,0.32);
+  box-shadow: 0 0 22px rgba(216,174,82,0.18), inset 0 0 10px rgba(216,174,82,0.06);
+}
+
+.brand-logo-wrap img,
 .brand-mark img {
-  width: 90%;
-  height: 90%;
+  width: 44px;
+  height: 44px;
   object-fit: contain;
   pointer-events: none;
 }
@@ -609,10 +627,10 @@ nav button.active small {
   display: grid;
   gap: 8px;
   margin-bottom: 20px;
-  padding: 16px;
-  border: 1px solid rgba(216, 174, 82, 0.22);
-  border-radius: 8px;
-  background: rgba(216, 174, 82, 0.08);
+  padding: 14px;
+  border: 1px solid rgba(216, 174, 82, 0.14);
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .account-box {
@@ -620,9 +638,9 @@ nav button.active small {
   gap: 10px;
   margin-bottom: 18px;
   padding: 12px;
-  border: 1px solid rgba(239, 231, 210, 0.12);
-  border-radius: 8px;
-  background: rgba(20, 25, 33, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.03);
 }
 
 .account-box span {
@@ -667,9 +685,7 @@ nav button.active small {
 }
 
 .user-workspace {
-  background:
-    linear-gradient(180deg, rgba(30, 65, 76, 0.24), transparent 360px),
-    transparent;
+  background: transparent;
 }
 
 .topbar {
@@ -719,11 +735,11 @@ select,
 input {
   width: 100%;
   min-height: 40px;
-  border: 1px solid rgba(239, 231, 210, 0.15);
-  border-radius: 8px;
+  border: 1px solid rgba(216, 174, 82, 0.14);
+  border-radius: 10px;
   padding: 0 11px;
-  color: #fff8e6;
-  background: #151a22;
+  color: #f5ebd0;
+  background: #0D1219;
   outline: none;
 }
 
@@ -775,11 +791,11 @@ button:disabled {
   width: min(560px, 100%);
   max-height: calc(100vh - 40px);
   overflow: auto;
-  padding: 18px;
-  border: 1px solid rgba(239, 231, 210, 0.16);
-  border-radius: 8px;
-  background: #141922;
-  box-shadow: 0 26px 70px rgba(0, 0, 0, 0.48);
+  padding: 20px;
+  border: 1px solid rgba(216, 174, 82, 0.18);
+  border-radius: 20px;
+  background: #0F141C;
+  box-shadow: 0 32px 80px rgba(0, 0, 0, 0.6);
 }
 
 .modal-header {
@@ -853,10 +869,10 @@ button:disabled {
 .metric,
 .panel,
 .member-hero {
-  border: 1px solid rgba(239, 231, 210, 0.12);
-  border-radius: 8px;
-  background: rgba(20, 25, 33, 0.9);
-  box-shadow: 0 18px 36px rgba(0, 0, 0, 0.18);
+  border: 1px solid rgba(216, 174, 82, 0.1);
+  border-radius: 18px;
+  background: rgba(16, 21, 30, 0.92);
+  box-shadow: 0 20px 48px rgba(0, 0, 0, 0.28);
 }
 
 .metric {
@@ -1574,6 +1590,7 @@ button.danger:hover {
   width: 56px;
   height: 56px;
   flex: 0 0 56px;
+  overflow: visible;
 }
 
 .sb-brand-name {

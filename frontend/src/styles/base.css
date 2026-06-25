@@ -3,9 +3,7 @@
 .admin-shell,
 .user-shell {
   min-height: 100vh;
-  background:
-    linear-gradient(135deg, rgba(216, 174, 82, 0.1), transparent 34%),
-    #10141b;
+  background: #0A0E14;
 }
 
 /* â”€â”€ MÃ n hÃ¬nh chá» khá»Ÿi táº¡o â”€â”€ */

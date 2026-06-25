@@ -16,7 +16,9 @@ export function BrandBlock({ caption }) {
 export function BrandLogo() {
   return (
     <span className="brand-mark">
-      <img src={logoUrl} alt="Biểu trưng Roy Badminton" />
+      <span className="brand-logo-wrap">
+        <img src={logoUrl} alt="Biểu trưng Roy Badminton" />
+      </span>
     </span>
   )
 }
