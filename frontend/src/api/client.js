@@ -181,6 +181,16 @@ export const api = {
     people: () => request({ url: '/api/pk-matches/people' }),
   },
 
+  groups: {
+    verifyCode:     (code)     => request({ url: '/api/groups/verify-code', method: 'POST', data: { invite_code: code } }),
+    join:           (code, fullName) => request({ url: '/api/groups/join', method: 'POST', data: { invite_code: code, full_name: fullName } }),
+    info:           ()         => request({ url: '/api/groups/info' }),
+    pending:        ()         => request({ url: '/api/groups/pending' }),
+    approve:        (personId) => request({ url: `/api/groups/members/${personId}/approve`, method: 'PUT' }),
+    reject:         (personId) => request({ url: `/api/groups/members/${personId}/reject`, method: 'PUT' }),
+    regenerateCode: ()         => request({ url: '/api/groups/regenerate-code', method: 'PUT' }),
+  },
+
   notifications: {
     list:       ()         => request({ url: '/api/notifications' }),
     create:     (payload)  => request({ url: '/api/notifications', method: 'POST', data: payload }),

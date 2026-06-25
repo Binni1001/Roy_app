@@ -1,4 +1,4 @@
-import { CalendarDays, History, Home, LogOut, Swords, User, UserPen, Wallet } from 'lucide-react'
+import { CalendarDays, History, Home, LogOut, Swords, UserPen, Wallet } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
 import { formatMoney, initials } from '../../utils/appUtils'
 
@@ -12,7 +12,7 @@ const USER_NAV = [
   ['payment',  'Thanh toán',   Wallet],
 ]
 
-export function UserSidebar({ activeTab, setActiveTab, activePerson, session, role, onSignOut, isOpen, onClose, pkBadge = 0, totalDebt = 0 }) {
+export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, isOpen, onClose, pkBadge = 0, totalDebt = 0 }) {
   return (
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}

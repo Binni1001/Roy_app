@@ -1758,3 +1758,328 @@ button.danger:hover {
   background: rgba(216,174,82,0.16);
   border-color: rgba(216,174,82,0.5);
 }
+
+/* ============================================================
+   INVITE / PENDING / REJECTED SCREENS
+   ============================================================ */
+.invite-panel {
+  background: rgba(15,20,28,0.97);
+  border: 1px solid rgba(216,174,82,0.2);
+  border-radius: 24px;
+  box-shadow: 0 8px 48px rgba(0,0,0,0.6), 0 0 0 1px rgba(216,174,82,0.06);
+  padding: 48px 40px 36px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.invite-logo {
+  margin-bottom: 8px;
+}
+
+.invite-logo img {
+  width: 100px;
+  height: 100px;
+  object-fit: contain;
+  filter: drop-shadow(0 0 12px rgba(216,174,82,0.35));
+}
+
+.invite-title {
+  font-size: 22px;
+  font-weight: 700;
+  color: #f5ebd0;
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+.invite-sub {
+  font-size: 13px;
+  color: rgba(239,231,210,0.55);
+  text-align: center;
+  line-height: 1.5;
+  margin: 0 0 8px;
+}
+
+.invite-group-name {
+  font-size: 13px;
+  color: #d8ae52;
+  margin-bottom: 4px;
+}
+
+.invite-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.invite-input {
+  background: #0d1219;
+  border: 1px solid rgba(216,174,82,0.25);
+  border-radius: 10px;
+  color: #f5ebd0;
+  font-size: 16px;
+  font-weight: 700;
+  letter-spacing: 2px;
+  padding: 12px 16px;
+  text-align: center;
+  text-transform: uppercase;
+  width: 100%;
+  outline: none;
+}
+
+.invite-input::placeholder {
+  letter-spacing: 1px;
+  opacity: 0.4;
+  text-transform: uppercase;
+  font-weight: 400;
+}
+
+.invite-input:focus {
+  border-color: rgba(216,174,82,0.6);
+}
+
+.invite-btn {
+  background: linear-gradient(135deg, #d8ae52 0%, #b88932 100%);
+  border: none;
+  border-radius: 10px;
+  color: #0a0e14;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 700;
+  padding: 12px;
+  width: 100%;
+  transition: opacity .15s;
+}
+
+.invite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.invite-back {
+  background: none;
+  border: none;
+  color: rgba(216,174,82,0.7);
+  cursor: pointer;
+  font-size: 13px;
+  text-align: center;
+  padding: 4px;
+}
+
+.invite-back:hover { color: #d8ae52; }
+
+.invite-error {
+  color: #e05555;
+  font-size: 12px;
+  text-align: center;
+  margin: 0;
+}
+
+.invite-signout {
+  background: none;
+  border: none;
+  color: rgba(239,231,210,0.35);
+  cursor: pointer;
+  font-size: 12px;
+  margin-top: 12px;
+  padding: 4px;
+}
+
+.invite-signout:hover { color: rgba(239,231,210,0.6); }
+
+.pending-icon,
+.rejected-icon {
+  font-size: 40px;
+  margin: 4px 0;
+}
+
+.pending-hint {
+  font-size: 12px;
+  color: rgba(239,231,210,0.4);
+  text-align: center;
+  margin: 4px 0 0;
+}
+
+/* ============================================================
+   MEMBERS PANEL (admin tab)
+   ============================================================ */
+.members-panel {
+  padding: 24px;
+}
+
+.members-panel-section {
+  background: rgba(13,18,25,0.8);
+  border: 1px solid rgba(216,174,82,0.1);
+  border-radius: 16px;
+  margin-bottom: 24px;
+  padding: 20px;
+}
+
+.members-panel-section-title {
+  color: #d8ae52;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.members-panel-badge {
+  background: #d8ae52;
+  border-radius: 99px;
+  color: #0a0e14;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 2px 7px;
+}
+
+.members-panel-group-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.members-panel-group-name {
+  font-size: 18px;
+  font-weight: 700;
+  color: #f5ebd0;
+}
+
+.members-panel-code-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.members-panel-code {
+  background: rgba(216,174,82,0.1);
+  border: 1px solid rgba(216,174,82,0.3);
+  border-radius: 8px;
+  color: #d8ae52;
+  font-family: monospace;
+  font-size: 20px;
+  font-weight: 700;
+  letter-spacing: 3px;
+  padding: 8px 16px;
+}
+
+.members-panel-regen {
+  font-size: 12px;
+  padding: 8px 14px;
+}
+
+.members-panel-code-hint {
+  font-size: 12px;
+  color: rgba(239,231,210,0.4);
+  margin: 0;
+}
+
+.members-panel-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.members-panel-card {
+  background: rgba(10,14,20,0.6);
+  border: 1px solid rgba(216,174,82,0.08);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 16px;
+}
+
+.members-panel-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.members-panel-avatar--initials {
+  background: rgba(216,174,82,0.15);
+  color: #d8ae52;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.members-panel-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.members-panel-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #f5ebd0;
+  margin: 0 0 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.members-panel-nick {
+  font-size: 12px;
+  color: #d8ae52;
+  margin: 0 0 2px;
+}
+
+.members-panel-email {
+  font-size: 12px;
+  color: rgba(239,231,210,0.5);
+  margin: 0 0 2px;
+}
+
+.members-panel-date {
+  font-size: 11px;
+  color: rgba(239,231,210,0.35);
+  margin: 0;
+}
+
+.members-panel-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+}
+
+.members-panel-approve {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+.members-panel-reject {
+  font-size: 12px;
+  padding: 6px 14px;
+}
+
+.members-panel-empty {
+  color: rgba(239,231,210,0.4);
+  font-size: 13px;
+  margin: 0;
+  text-align: center;
+  padding: 16px 0;
+}
+
+.members-panel-toast {
+  background: rgba(216,174,82,0.12);
+  border: 1px solid rgba(216,174,82,0.3);
+  border-radius: 8px;
+  color: #d8ae52;
+  font-size: 13px;
+  padding: 10px 16px;
+  margin-bottom: 16px;
+  text-align: center;
+}

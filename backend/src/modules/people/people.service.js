@@ -9,7 +9,7 @@ import {
   assertValid
 } from "../../utils/validators.js";
 
-const allowedStatuses = ["active", "inactive"];
+const allowedStatuses = ["active", "inactive", "pending"];
 const allowedAttendanceTypes = ["fixed", "guest"];
 const allowedGenders = ["male", "female", "other"];
 
@@ -104,7 +104,7 @@ export const peopleService = {
     const attendanceType = payload.attendance_type || "guest";
 
     if (!allowedStatuses.includes(status)) {
-      throw new Error("Status khong hop le. Chi duoc dung: active, inactive");
+      throw new Error("Status khong hop le. Chi duoc dung: active, inactive, pending");
     }
 
     if (!allowedAttendanceTypes.includes(attendanceType)) {
@@ -130,7 +130,8 @@ export const peopleService = {
       attendance_type: attendanceType,
       joined_at: payload.joined_at || null,
       last_play_date: payload.last_play_date || null,
-      note: payload.note || null
+      note: payload.note || null,
+      group_id: payload.group_id || null
     });
 
     if (error) {
@@ -208,9 +209,13 @@ export const peopleService = {
 
     if (payload.status !== undefined) {
       if (!allowedStatuses.includes(payload.status)) {
-        throw new Error("Status khong hop le. Chi duoc dung: active, inactive");
+        throw new Error("Status khong hop le. Chi duoc dung: active, inactive, pending");
       }
       updateData.status = payload.status;
+    }
+
+    if (payload.group_id !== undefined) {
+      updateData.group_id = payload.group_id;
     }
 
     if (payload.attendance_type !== undefined) {

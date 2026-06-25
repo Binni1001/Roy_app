@@ -1,8 +1,12 @@
 import { Suspense, lazy, useEffect, useState } from 'react'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { supabase } from './lib/supabase'
+import { api } from './api/client'
 import Login from './pages/Login'
 import ResetPassword from './pages/ResetPassword'
+import InviteCode from './pages/InviteCode'
+import PendingApproval from './pages/PendingApproval'
+import RejectedScreen from './pages/RejectedScreen'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
 import './App.css'
 
@@ -25,6 +29,8 @@ function AppLoading() {
 function App() {
   const [session, setSession] = useState(undefined)
   const [recoveringPassword, setRecoveringPassword] = useState(false)
+  // undefined = loading, null = no record, object = person data
+  const [person, setPerson] = useState(undefined)
 
   useEffect(() => {
     let mounted = true
@@ -48,6 +54,18 @@ function App() {
     }
   }, [])
 
+  // Fetch person record whenever we have a valid session
+  useEffect(() => {
+    if (!session) return
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setPerson(undefined)
+    api.people.me().then((data) => {
+      setPerson(data ?? null)
+    }).catch(() => {
+      setPerson(null)
+    })
+  }, [session])
+
   if (session === undefined) return <AppLoading />
 
   if (recoveringPassword || window.location.pathname.startsWith('/reset-password')) {
@@ -55,6 +73,29 @@ function App() {
   }
 
   if (!session) return <Login />
+
+  // Still loading person record
+  if (person === undefined) return <AppLoading />
+
+  // No people record yet → ask for invite code + create profile
+  if (person === null) {
+    return <InviteCode needsProfile onJoined={() => setPerson(undefined)} />
+  }
+
+  // Has profile but not in any group → ask for invite code (no name needed)
+  if (!person.group_id) {
+    return <InviteCode needsProfile={false} onJoined={() => setPerson(undefined)} />
+  }
+
+  // Waiting for owner approval
+  if (person.status === 'pending') {
+    return <PendingApproval />
+  }
+
+  // Rejected or deactivated
+  if (person.status === 'inactive') {
+    return <RejectedScreen />
+  }
 
   const role = getSessionRole(session)
 
