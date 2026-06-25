@@ -7,7 +7,7 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
     <>
       {isOpen && <div className="sidebar-overlay" onClick={onClose} />}
       <aside className={`user-sidebar${isOpen ? ' sidebar--open' : ''}`}>
-        <BrandBlock caption="Roy Badminton" />
+        <BrandBlock caption="Câu lạc bộ cầu lông" />
         <AccountBox session={session} role={role} onSignOut={onSignOut} showRole={false} />
         <div className="profile-card">
           {activePerson?.avatar_url

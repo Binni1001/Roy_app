@@ -444,10 +444,6 @@
   width: 96px;
   height: 96px;
   flex: 0 0 96px;
-  border-radius: 50%;
-  background: #fff;
-  border: 2.5px solid #d8ae52;
-  box-shadow: 0 0 20px rgba(216,174,82,0.4), 0 0 6px rgba(216,174,82,0.15) inset;
   overflow: hidden;
 }
 
