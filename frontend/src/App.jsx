@@ -78,33 +78,13 @@ function App() {
   if (person === undefined) return <AppLoading />
 
   const refresh = () => setPerson(undefined)
-
-  // Chưa có hồ sơ → onboarding với tạo profile
-  if (person === null) {
-    return <Onboarding needsProfile onDone={refresh} />
-  }
-
-  // Có hồ sơ nhưng chưa vào nhóm nào (active_group_id null)
-  if (!person.active_group_id) {
-    return <Onboarding needsProfile={false} onDone={refresh} />
-  }
-
-  // Check status trong nhóm hiện tại dựa vào people.status
-  // (people.status được cập nhật khi approve/reject trong active_group)
-  if (person.status === 'pending') {
-    return <PendingApproval onRefresh={refresh} />
-  }
-
-  if (person.status === 'inactive') {
-    return <RejectedScreen />
-  }
-
   const role = getSessionRole(session)
 
   async function signOut() {
     await supabase.auth.signOut()
   }
 
+  // Admin/owner bypass toàn bộ group check — vào thẳng portal
   if (canOpenAdmin(role)) {
     return (
       <ErrorBoundary>
@@ -115,10 +95,27 @@ function App() {
     )
   }
 
+  // User thường: kiểm tra group membership
+  if (person === null) {
+    return <Onboarding needsProfile onDone={refresh} />
+  }
+
+  if (!person.active_group_id) {
+    return <Onboarding needsProfile={false} onDone={refresh} />
+  }
+
+  if (person.status === 'pending') {
+    return <PendingApproval onRefresh={refresh} />
+  }
+
+  if (person.status === 'inactive') {
+    return <RejectedScreen />
+  }
+
   return (
     <ErrorBoundary>
       <Suspense fallback={<AppLoading />}>
-        <UserPortal session={session} role={role} onSignOut={signOut} person={person} onSwitchGroup={refresh} />
+        <UserPortal session={session} role={role} onSignOut={signOut} onSwitchGroup={refresh} />
       </Suspense>
     </ErrorBoundary>
   )
