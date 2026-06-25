@@ -67,6 +67,7 @@ export function UserPortal({ session, role, onSignOut }) {
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
         pkBadge={pkBadge}
+        totalDebt={totalDebt}
       />
       <UserBottomNav
         activeTab={activeTab}
