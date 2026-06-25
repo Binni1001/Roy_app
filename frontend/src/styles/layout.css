@@ -424,9 +424,12 @@
 
 .brand {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  gap: 10px;
   margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid rgba(216,174,82,0.15);
 }
 
 .brand-mark,
@@ -438,21 +441,25 @@
 }
 
 .brand-mark {
-  width: 72px;
-  height: 72px;
-  flex: 0 0 72px;
+  width: 96px;
+  height: 96px;
+  flex: 0 0 96px;
   border-radius: 50%;
   background: #fff;
-  border: 2px solid #d8ae52;
-  box-shadow: 0 0 14px rgba(216,174,82,0.35), 0 0 4px rgba(216,174,82,0.2) inset;
+  border: 2.5px solid #d8ae52;
+  box-shadow: 0 0 20px rgba(216,174,82,0.4), 0 0 6px rgba(216,174,82,0.15) inset;
   overflow: hidden;
 }
 
 .brand-mark img {
-  width: 88%;
-  height: 88%;
+  width: 90%;
+  height: 90%;
   object-fit: contain;
   pointer-events: none;
+}
+
+.brand-text {
+  text-align: center;
 }
 
 .avatar {
@@ -468,15 +475,18 @@
 }
 
 .brand strong {
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 700;
   color: #d8ae52;
-  letter-spacing: .4px;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
 }
 
 .brand small {
-  font-size: 11px;
-  margin-top: 2px;
+  font-size: 10px;
+  margin-top: 3px;
+  letter-spacing: .6px;
+  text-transform: uppercase;
 }
 
 .brand small,
@@ -1210,9 +1220,9 @@ button.danger:hover {
   }
 
   .brand-mark {
-    width: 56px;
-    height: 56px;
-    flex: 0 0 56px;
+    width: 80px;
+    height: 80px;
+    flex: 0 0 80px;
   }
 }
 

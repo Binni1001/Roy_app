@@ -5,9 +5,9 @@ export function BrandBlock({ caption }) {
   return (
     <div className="brand">
       <BrandLogo />
-      <div>
+      <div className="brand-text">
         <strong>Roy Badminton</strong>
-        <small>{caption}</small>
+        {caption && <small>{caption}</small>}
       </div>
     </div>
   )
