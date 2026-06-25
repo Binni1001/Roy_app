@@ -33,6 +33,8 @@ function App() {
   const [person, setPerson] = useState(undefined)
   // tick tăng lên mỗi lần cần re-fetch person (dùng để trigger useEffect)
   const [personTick, setPersonTick] = useState(0)
+  // admin/owner: true khi đang mở màn hình thêm nhóm
+  const [addingGroup, setAddingGroup] = useState(false)
 
   useEffect(() => {
     let mounted = true
@@ -78,8 +80,6 @@ function App() {
 
   // Still loading person record
   if (person === undefined) return <AppLoading />
-
-  const [addingGroup, setAddingGroup] = useState(false)
 
   const refresh = () => { setAddingGroup(false); setPersonTick(t => t + 1) }
   const role = getSessionRole(session)

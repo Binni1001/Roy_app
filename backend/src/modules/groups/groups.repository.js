@@ -58,6 +58,7 @@ export const groupsRepository = {
       .from('person_groups')
       .select('id', { count: 'exact', head: true })
       .eq('person_id', personId)
+      .neq('status', 'inactive')
   },
 
   async addMembership(personId, groupId, status = 'pending', memberRole = 'member') {
@@ -108,9 +109,18 @@ export const groupsRepository = {
   async setActiveGroup(personId, groupId) {
     return supabase
       .from('people')
-      .update({ active_group_id: groupId, group_id: groupId })
+      .update({ active_group_id: groupId })
       .eq('id', personId)
       .select()
       .single()
+  },
+
+  async hasActiveGroupMembership(personId) {
+    const { count } = await supabase
+      .from('person_groups')
+      .select('id', { count: 'exact', head: true })
+      .eq('person_id', personId)
+      .eq('status', 'active')
+    return (count ?? 0) > 0
   },
 }

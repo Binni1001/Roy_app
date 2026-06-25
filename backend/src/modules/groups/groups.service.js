@@ -66,13 +66,13 @@ export const groupsService = {
     // Dùng khi chưa có person record: tạo person + join trong 1 luồng
     const { group_id, group_name } = await this.verifyCode(code)
 
-    // Tạo person record — status pending cho đến khi owner duyệt
+    // Tạo person record — status pending, active_group_id null cho đến khi được duyệt
     const person = await peopleService.createPerson({
       full_name: fullName,
       email,
       status: 'pending',
       group_id,
-      active_group_id: group_id,
+      active_group_id: null,
     })
 
     // Thêm membership pending
@@ -147,12 +147,18 @@ export const groupsService = {
   },
 
   async approveMember(personId, groupId) {
+    // Check TRƯỚC khi update để biết người này có active group chưa
+    const hadActiveGroup = await groupsRepository.hasActiveGroupMembership(personId)
+
     const { data, error } = await groupsRepository.updateMembershipStatus(personId, groupId, 'active')
     if (error) throw new Error(error.message)
     if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
 
-    // Set active_group_id và update people.status nếu còn pending
-    await groupsRepository.setActiveGroup(personId, groupId)
+    // Chỉ set active_group_id nếu trước đó chưa có active group
+    if (!hadActiveGroup) {
+      await groupsRepository.setActiveGroup(personId, groupId)
+    }
+    // Luôn update people.status về active
     await groupsRepository.updatePersonStatus(personId, 'active')
     return data
   },
@@ -162,8 +168,11 @@ export const groupsService = {
     if (error) throw new Error(error.message)
     if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
 
-    // Nếu người này vẫn đang pending (chưa active ở nhóm nào) → set inactive
-    await groupsRepository.updatePersonStatus(personId, 'inactive')
+    // Chỉ set people.status=inactive nếu không còn active membership nào khác
+    const stillActive = await groupsRepository.hasActiveGroupMembership(personId)
+    if (!stillActive) {
+      await groupsRepository.updatePersonStatus(personId, 'inactive')
+    }
     return data
   },
 

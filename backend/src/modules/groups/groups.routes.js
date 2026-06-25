@@ -4,10 +4,8 @@ import { groupsController } from './groups.controller.js'
 
 const router = express.Router()
 
-// Public — kiểm tra mã
-router.post('/verify-code', groupsController.verifyCode)
-
 // Auth — mọi user đã đăng nhập
+router.post('/verify-code',                      requireAuth, groupsController.verifyCode)
 router.get('/mine',                              requireAuth, groupsController.mine)
 router.post('/create',                           requireAuth, groupsController.create)
 router.post('/join',                             requireAuth, groupsController.join)
