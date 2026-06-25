@@ -4,7 +4,7 @@ import { api } from '../api/client'
 import { supabase } from '../lib/supabase'
 
 // step: 'choose' | 'join-code' | 'join-name' | 'create-name'
-export default function Onboarding({ needsProfile, onDone, canCreate = false }) {
+export default function Onboarding({ needsProfile, onDone, canCreate = false, onCancel }) {
   const [step, setStep] = useState('choose')
   const [code, setCode] = useState('')
   const [groupName, setGroupName] = useState('')   // tên nhóm khi verify code thành công
@@ -189,7 +189,10 @@ export default function Onboarding({ needsProfile, onDone, canCreate = false }) 
           </>
         )}
 
-        <button className="invite-signout" onClick={handleSignOut}>Đăng xuất</button>
+        {onCancel
+          ? <button className="invite-back" style={{ marginTop: 16 }} onClick={onCancel}>← Quay lại portal</button>
+          : <button className="invite-signout" onClick={handleSignOut}>Đăng xuất</button>
+        }
       </section>
     </main>
   )

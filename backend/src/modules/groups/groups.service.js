@@ -66,11 +66,11 @@ export const groupsService = {
     // Dùng khi chưa có person record: tạo person + join trong 1 luồng
     const { group_id, group_name } = await this.verifyCode(code)
 
-    // Tạo person record
+    // Tạo person record — status pending cho đến khi owner duyệt
     const person = await peopleService.createPerson({
       full_name: fullName,
       email,
-      status: 'active',
+      status: 'pending',
       group_id,
       active_group_id: group_id,
     })
@@ -151,8 +151,9 @@ export const groupsService = {
     if (error) throw new Error(error.message)
     if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
 
-    // Set active_group_id nếu chưa có
+    // Set active_group_id và update people.status nếu còn pending
     await groupsRepository.setActiveGroup(personId, groupId)
+    await groupsRepository.updatePersonStatus(personId, 'active')
     return data
   },
 
@@ -160,6 +161,9 @@ export const groupsService = {
     const { data, error } = await groupsRepository.updateMembershipStatus(personId, groupId, 'inactive')
     if (error) throw new Error(error.message)
     if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
+
+    // Nếu người này vẫn đang pending (chưa active ở nhóm nào) → set inactive
+    await groupsRepository.updatePersonStatus(personId, 'inactive')
     return data
   },
 

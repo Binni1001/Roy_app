@@ -95,6 +95,15 @@ export const groupsRepository = {
       .order('joined_at', { ascending: true })
   },
 
+  async updatePersonStatus(personId, status) {
+    return supabase
+      .from('people')
+      .update({ status })
+      .eq('id', personId)
+      .select('id, status')
+      .single()
+  },
+
   // ── Set active group ─────────────────────────────────────
   async setActiveGroup(personId, groupId) {
     return supabase

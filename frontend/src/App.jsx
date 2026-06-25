@@ -79,7 +79,9 @@ function App() {
   // Still loading person record
   if (person === undefined) return <AppLoading />
 
-  const refresh = () => setPersonTick(t => t + 1)
+  const [addingGroup, setAddingGroup] = useState(false)
+
+  const refresh = () => { setAddingGroup(false); setPersonTick(t => t + 1) }
   const role = getSessionRole(session)
 
   async function signOut() {
@@ -87,25 +89,27 @@ function App() {
   }
 
   // Admin/owner bypass toàn bộ group check — vào thẳng portal
+  // Ngoại trừ khi đang mở màn hình thêm nhóm
   if (canOpenAdmin(role)) {
+    if (addingGroup) {
+      return <Onboarding needsProfile={!person} canCreate onDone={refresh} onCancel={() => setAddingGroup(false)} />
+    }
     return (
       <ErrorBoundary>
         <Suspense fallback={<AppLoading />}>
-          <AdminPortal session={session} role={role} onSignOut={signOut} person={person} onSwitchGroup={refresh} />
+          <AdminPortal session={session} role={role} onSignOut={signOut} person={person} onSwitchGroup={() => setAddingGroup(true)} />
         </Suspense>
       </ErrorBoundary>
     )
   }
 
   // User thường: kiểm tra group membership
-  const canCreate = canOpenAdmin(role)
-
   if (person === null) {
-    return <Onboarding needsProfile canCreate={canCreate} onDone={refresh} />
+    return <Onboarding needsProfile canCreate={false} onDone={refresh} />
   }
 
   if (!person.active_group_id) {
-    return <Onboarding needsProfile={false} canCreate={canCreate} onDone={refresh} />
+    return <Onboarding needsProfile={false} canCreate={false} onDone={refresh} />
   }
 
   if (person.status === 'pending') {
