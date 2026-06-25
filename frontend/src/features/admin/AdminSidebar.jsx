@@ -23,6 +23,7 @@ export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut
         {/* ── Brand ── */}
         <div className="sb-brand">
           <BrandLogo />
+          <div className="sb-brand-name">Roy Badminton</div>
         </div>
 
         {/* ── Account info compact ── */}

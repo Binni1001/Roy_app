@@ -21,6 +21,7 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, session, ro
         {/* ── Brand ── */}
         <div className="sb-brand">
           <BrandLogo />
+          <div className="sb-brand-name">Roy Badminton</div>
         </div>
 
         {/* ── Profile card ── */}
