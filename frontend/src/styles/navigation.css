@@ -14,10 +14,10 @@
     left: 0;
     right: 0;
     z-index: 50;
-    background: rgba(16, 20, 27, 0.97);
-    border-top: 1px solid rgba(239, 231, 210, 0.1);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
+    background: rgba(7, 10, 15, 0.97);
+    border-top: 1px solid rgba(216, 174, 82, 0.14);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
     padding: 6px 4px calc(6px + env(safe-area-inset-bottom));
     gap: 0;
   }
