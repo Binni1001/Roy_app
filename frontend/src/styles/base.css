@@ -14,7 +14,7 @@
   justify-content: center;
   gap: 16px;
   min-height: 100vh;
-  background: #10141b;
+  background: #0A0E14;
 }
 
 .app-loading-img {
@@ -55,7 +55,7 @@
   justify-content: center;
   gap: 14px;
   min-height: 100vh;
-  background: #10141b;
+  background: #0A0E14;
   padding: 24px;
   text-align: center;
 }
