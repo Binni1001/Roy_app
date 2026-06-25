@@ -98,12 +98,14 @@ function App() {
   }
 
   // User thường: kiểm tra group membership
+  const canCreate = canOpenAdmin(role)
+
   if (person === null) {
-    return <Onboarding needsProfile onDone={refresh} />
+    return <Onboarding needsProfile canCreate={canCreate} onDone={refresh} />
   }
 
   if (!person.active_group_id) {
-    return <Onboarding needsProfile={false} onDone={refresh} />
+    return <Onboarding needsProfile={false} canCreate={canCreate} onDone={refresh} />
   }
 
   if (person.status === 'pending') {

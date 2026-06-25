@@ -47,6 +47,7 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, 
           activeGroupId={activePerson?.active_group_id}
           onSwitched={onSwitchGroup}
           onAddGroup={onSwitchGroup}
+          canCreate={false}
         />
 
         {/* ── Nav ── */}

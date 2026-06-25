@@ -3,7 +3,7 @@ import { api } from '../api/client'
 
 const ROLE_LABEL = { owner: 'Trưởng', admin: 'Quản lý', member: '' }
 
-export function GroupSwitcher({ activeGroupId, onSwitched, onAddGroup }) {
+export function GroupSwitcher({ activeGroupId, onSwitched, onAddGroup, canCreate = false }) {
   const [groups, setGroups] = useState([])
   const [switching, setSwitching] = useState(null)
 
@@ -26,7 +26,7 @@ export function GroupSwitcher({ activeGroupId, onSwitched, onAddGroup }) {
 
   const activeGroups = groups.filter(g => g.membership_status === 'active')
   const pendingGroups = groups.filter(g => g.membership_status === 'pending')
-  const canAddMore = groups.length < 3
+  const canAddMore = canCreate && groups.length < 3
 
   return (
     <div className="group-switcher">

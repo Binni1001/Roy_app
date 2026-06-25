@@ -39,6 +39,7 @@ export function AdminSidebar({ activeTab, setActiveTab, session, role, onSignOut
           activeGroupId={person?.active_group_id}
           onSwitched={onSwitchGroup}
           onAddGroup={onSwitchGroup}
+          canCreate
         />
 
         {/* ── Nav ── */}

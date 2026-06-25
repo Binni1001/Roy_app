@@ -4,7 +4,7 @@ import { api } from '../api/client'
 import { supabase } from '../lib/supabase'
 
 // step: 'choose' | 'join-code' | 'join-name' | 'create-name'
-export default function Onboarding({ needsProfile, onDone }) {
+export default function Onboarding({ needsProfile, onDone, canCreate = false }) {
   const [step, setStep] = useState('choose')
   const [code, setCode] = useState('')
   const [groupName, setGroupName] = useState('')   // tên nhóm khi verify code thành công
@@ -81,17 +81,22 @@ export default function Onboarding({ needsProfile, onDone }) {
         {step === 'choose' && (
           <>
             <h1 className="invite-title">Bắt đầu</h1>
-            <p className="invite-sub">Bạn muốn tạo nhóm mới hay tham gia nhóm đã có?</p>
+            {canCreate
+              ? <p className="invite-sub">Bạn muốn tạo nhóm mới hay tham gia nhóm đã có?</p>
+              : <p className="invite-sub">Nhập mã nhóm do quản trị viên cung cấp để tham gia</p>
+            }
             <div className="onboarding-choices">
-              <button className="onboarding-choice" onClick={() => goTo('create-name')}>
-                <span className="onboarding-choice-icon">✦</span>
-                <span className="onboarding-choice-label">Tạo nhóm mới</span>
-                <span className="onboarding-choice-sub">Bạn sẽ là trưởng nhóm</span>
-              </button>
+              {canCreate && (
+                <button className="onboarding-choice" onClick={() => goTo('create-name')}>
+                  <span className="onboarding-choice-icon">✦</span>
+                  <span className="onboarding-choice-label">Tạo nhóm mới</span>
+                  <span className="onboarding-choice-sub">Bạn sẽ là trưởng nhóm</span>
+                </button>
+              )}
               <button className="onboarding-choice" onClick={() => goTo('join-code')}>
                 <span className="onboarding-choice-icon">⊕</span>
                 <span className="onboarding-choice-label">Tham gia nhóm</span>
-                <span className="onboarding-choice-sub">Nhập mã do trưởng nhóm cung cấp</span>
+                <span className="onboarding-choice-sub">Nhập mã do quản trị viên cung cấp</span>
               </button>
             </div>
           </>
