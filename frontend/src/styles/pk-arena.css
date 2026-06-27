@@ -1708,3 +1708,36 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   .pk-arena-hero-deco { font-size: 2.5rem; right: 18px; }
 }
 
+/* Matchmaker trên điện thoại nhỏ */
+@media (max-width: 480px) {
+  .rm-body { padding: 14px 14px 14px; gap: 14px; }
+  .rm-hero { height: 92px; }
+  .rm-title { font-size: 1.15rem; }
+  .rm-subtitle { font-size: 0.74rem; }
+
+  /* Slot quay gọn lại */
+  .rm-slots-row { gap: 8px; }
+  .rm-slot { min-width: 80px; padding: 8px 6px; }
+  .rm-slot-avatar { width: 42px; height: 42px; }
+  .rm-slot-name { max-width: 78px; font-size: 0.72rem; }
+  .rm-vs-divider { width: 30px; }
+
+  /* Card từng trận */
+  .rm-mcard { padding: 10px; gap: 6px; }
+  .rm-mcard-body { gap: 4px; }
+  .rm-mcard-ava { width: 28px; height: 28px; }
+  .rm-mcard-name { font-size: 0.76rem; }
+  .rm-mcard-vs { padding: 0; }
+  .rm-mcard-vs-text { font-size: 0.8rem; }
+  .rm-mcard-type { font-size: 0.56rem; }
+  .rm-mcard-player { gap: 6px; }
+
+  /* Số trận + ngày: xếp dọc cho dễ bấm */
+  .rm-count-row { flex-direction: column; gap: 10px; }
+  .rm-count-block { min-width: 0; }
+
+  /* Nút hành động */
+  .rm-result-actions { gap: 8px; }
+  .rm-create-btn, .rm-reroll-btn { padding: 12px 10px; font-size: 0.9rem; }
+}
+
