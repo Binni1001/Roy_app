@@ -1,0 +1,229 @@
+/* sidebar.css — Premium sidebar (admin + user) — tách từ layout.css */
+/* ════════════════════════════════════════
+   PREMIUM SIDEBAR REDESIGN
+════════════════════════════════════════ */
+
+/* ── Base sidebar ── */
+.sidebar,
+.user-sidebar {
+  display: flex;
+  flex-direction: column;
+  width: 280px;
+  flex-shrink: 0;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 24px 16px 20px;
+  background:
+    radial-gradient(circle at top left, rgba(216,174,82,0.1), transparent 38%),
+    linear-gradient(180deg, #10141b 0%, #080b10 100%);
+  border-right: 1px solid rgba(216,174,82,0.16);
+  scrollbar-width: none;
+}
+
+.sidebar::-webkit-scrollbar,
+.user-sidebar::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Brand block ── */
+.sb-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  margin-bottom: 22px;
+  padding-bottom: 18px;
+  border-bottom: 1px solid rgba(216,174,82,0.14);
+}
+
+.sb-brand-name {
+  font-size: 13px;
+  font-weight: 700;
+  color: #d8ae52;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+}
+
+.sb-brand .brand-mark {
+  width: 120px;
+  height: 120px;
+  flex: 0 0 120px;
+  overflow: visible;
+}
+
+.sb-brand .brand-mark img,
+.sb-brand .brand-logo-wrap img {
+  width: 120px;
+  height: 120px;
+}
+
+/* ── Account compact (admin) ── */
+.sb-account {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  margin-bottom: 16px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(255,255,255,0.07);
+}
+
+.sb-account-email {
+  font-size: 11px;
+  color: #8e98a8;
+  overflow-wrap: anywhere;
+}
+
+.sb-account-role {
+  font-size: 11px;
+  color: #d8ae52;
+  font-weight: 600;
+}
+
+/* ── Profile card (user) ── */
+.sb-profile-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding: 14px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, rgba(216,174,82,0.09), rgba(255,255,255,0.025));
+  border: 1px solid rgba(216,174,82,0.22);
+}
+
+.sb-avatar {
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(216,174,82,0.5);
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 15px;
+  color: #10141b;
+  background: #d8ae52;
+}
+
+.sb-avatar-img {
+  object-fit: cover;
+}
+
+.sb-profile-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.sb-profile-info strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #f5ebd0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.sb-profile-info small {
+  font-size: 11px;
+  color: #8e98a8;
+}
+
+.sb-profile-debt {
+  font-size: 11px;
+  color: #ff8c8c;
+  font-weight: 600;
+  margin-top: 2px;
+}
+
+/* ── Nav ── */
+.sb-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.sb-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  min-height: 46px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: rgba(255,255,255,0.035);
+  border: 1px solid rgba(255,255,255,0.07);
+  color: #c4ccd8;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+  transition: background .18s, border-color .18s, color .18s, transform .15s;
+}
+
+.sb-nav-item:hover {
+  background: rgba(216,174,82,0.1);
+  border-color: rgba(216,174,82,0.35);
+  color: #f5ebd0;
+  transform: translateX(3px);
+}
+
+.sb-nav-item.active {
+  background: linear-gradient(135deg, #d8ae52, #b88932);
+  border-color: rgba(216,174,82,0.8);
+  color: #10141b;
+  font-weight: 700;
+  box-shadow: 0 8px 24px rgba(216,174,82,0.25);
+  transform: none;
+}
+
+.sb-nav-item.active svg {
+  color: #10141b;
+}
+
+.sb-nav-text {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.sb-nav-text small {
+  font-size: 10px;
+  font-weight: 400;
+  color: #8e98a8;
+  line-height: 1;
+}
+
+.sb-nav-item.active .sb-nav-text small {
+  color: rgba(16,20,27,0.7);
+}
+
+/* ── Logout ── */
+.sb-logout {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  min-height: 44px;
+  margin-top: 16px;
+  padding: 0 14px;
+  border-radius: 12px;
+  background: rgba(216,174,82,0.08);
+  border: 1px solid rgba(216,174,82,0.28);
+  color: #d8ae52;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background .18s, border-color .18s;
+}
+
+.sb-logout:hover {
+  background: rgba(216,174,82,0.16);
+  border-color: rgba(216,174,82,0.5);
+}
+

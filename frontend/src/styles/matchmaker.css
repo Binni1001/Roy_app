@@ -1,0 +1,704 @@
+/* matchmaker.css — Ghép ngẫu nhiên (rm-*) — tách từ pk-arena.css */
+
+
+/* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+   RANDOM MATCHMAKER
+   â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• */
+@keyframes rm-dice-bounce {
+  0%,100% { transform: rotate(-15deg) scale(1); }
+  50%      { transform: rotate(15deg) scale(1.25); }
+}
+@keyframes rm-slot-blur {
+  0%   { filter: blur(2px); opacity: 0.5; transform: translateY(-4px); }
+  100% { filter: blur(0);   opacity: 1;   transform: translateY(0); }
+}
+@keyframes rm-vs-pulse {
+  0%,100% { transform: scale(1);    text-shadow: 0 0 8px rgba(216,174,82,0.4); }
+  50%      { transform: scale(1.15); text-shadow: 0 0 24px rgba(216,174,82,0.9); }
+}
+@keyframes rm-result-pop {
+  0%   { opacity: 0; transform: scale(0.85) translateY(12px); }
+  70%  { transform: scale(1.03); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+@keyframes rm-banner-glow {
+  0%,100% { box-shadow: 0 0 10px rgba(216,174,82,0.3); }
+  50%      { box-shadow: 0 0 28px rgba(216,174,82,0.7); }
+}
+
+.rm-modal {
+  max-width: 560px;
+  max-height: 92vh;
+  padding: 0;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.rm-hero {
+  position: relative;
+  height: 110px;
+  flex-shrink: 0;
+  background-size: cover;
+  background-position: center 30%;
+}
+.rm-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, rgba(10,14,20,0.35) 0%, rgba(10,14,20,0.85) 100%);
+}
+.rm-hero-content {
+  position: relative;
+  z-index: 1;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  text-align: center;
+}
+.rm-dice {
+  font-size: 2rem;
+  animation: rm-dice-bounce 1.8s ease-in-out infinite;
+}
+.rm-title {
+  margin: 0;
+  font-size: 1.4rem;
+  color: #efe7d2;
+  letter-spacing: 0.03em;
+}
+.rm-subtitle {
+  margin: 0;
+  font-size: 0.78rem;
+  color: #8a94a0;
+}
+
+.rm-body {
+  padding: 16px 20px 16px;
+  display: flex;
+  flex-direction: column;
+  overflow-y: auto;
+  flex: 1;
+  gap: 18px;
+}
+
+/* Ẩn thanh cuộn (vẫn cuộn được) cho các vùng trong matchmaker */
+.rm-body,
+.rm-picker-list,
+.rm-batch-list {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge cũ */
+}
+.rm-body::-webkit-scrollbar,
+.rm-picker-list::-webkit-scrollbar,
+.rm-batch-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                /* Chrome/Safari */
+}
+
+/* Mode picker */
+.rm-mode-picker {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.rm-mode-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1.5px solid rgba(239,231,210,0.1);
+  background: rgba(255,255,255,0.03);
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s;
+}
+.rm-mode-btn:hover, .rm-mode-btn.active {
+  border-color: rgba(216,174,82,0.5);
+  background: rgba(216,174,82,0.08);
+}
+.rm-mode-icon { font-size: 1.5rem; }
+.rm-mode-btn strong { font-size: 0.95rem; color: #efe7d2; }
+.rm-mode-btn small  { font-size: 0.72rem; color: #8a94a0; }
+
+/* Balance info */
+.rm-balance-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  background: rgba(255,255,255,0.03);
+  border-radius: 10px;
+  padding: 14px;
+  border: 1px solid rgba(239,231,210,0.07);
+}
+.rm-info-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+}
+.rm-info-icon { font-size: 1.1rem; margin-top: 2px; }
+.rm-info-row strong { font-size: 0.87rem; color: #efe7d2; }
+.rm-info-row p { margin: 2px 0 0; font-size: 0.76rem; }
+.rm-info-self {
+  background: rgba(216,174,82,0.08);
+  border: 1px solid rgba(216,174,82,0.25);
+  border-radius: 8px;
+  padding: 8px 10px;
+}
+.rm-info-self strong { color: #d8ae52; }
+
+/* Person picker */
+.rm-picker { margin: 12px 0; }
+.rm-picker-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.rm-picker-count { font-size: 0.82rem; color: #8a94a0; }
+.rm-picker-actions { display: flex; gap: 6px; }
+.rm-picker-btn {
+  font-size: 0.76rem; padding: 3px 10px; border-radius: 6px;
+  background: rgba(255,255,255,0.07); border: 1px solid rgba(255,255,255,0.12);
+  color: #efe7d2; cursor: pointer;
+}
+.rm-picker-btn:hover { background: rgba(255,255,255,0.12); }
+.rm-picker-list {
+  display: flex; flex-direction: column; gap: 4px;
+  max-height: 200px; overflow-y: auto;
+  border: 1px solid rgba(255,255,255,0.08); border-radius: 10px; padding: 6px;
+}
+.rm-picker-item {
+  display: flex; align-items: center; gap: 10px;
+  padding: 7px 10px; border-radius: 8px; cursor: pointer;
+  border: 1px solid transparent; transition: background 0.15s;
+}
+.rm-picker-item:hover { background: rgba(255,255,255,0.05); }
+.rm-picker-item input[type="checkbox"] { accent-color: #d8ae52; width: 15px; height: 15px; flex-shrink: 0; }
+.rm-picker-checked { background: rgba(216,174,82,0.08) !important; border-color: rgba(216,174,82,0.3) !important; }
+.rm-picker-avatar {
+  width: 30px; height: 30px; border-radius: 50%; overflow: hidden; flex-shrink: 0;
+  background: #2a2f3a; display: flex; align-items: center; justify-content: center;
+  font-size: 0.72rem; font-weight: 700; color: #d8ae52;
+}
+.rm-picker-avatar img { width: 100%; height: 100%; object-fit: cover; }
+.rm-picker-name { flex: 1; font-size: 0.84rem; color: #efe7d2; }
+.rm-picker-rank { font-size: 0.75rem; color: #8a94a0; flex-shrink: 0; }
+.rm-picker-unranked { color: #4a5260; }
+.rm-picker-locked { background: rgba(216,174,82,0.06); border: 1px solid rgba(216,174,82,0.2); cursor: default; }
+.rm-picker-lock-tag {
+  font-size: 0.7rem; padding: 2px 7px; border-radius: 4px;
+  background: rgba(216,174,82,0.2); color: #d8ae52; flex-shrink: 0;
+}
+
+/* Spin button */
+.rm-spin-btn {
+  width: 100%;
+  padding: 14px;
+  border-radius: 12px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: linear-gradient(135deg, #d8ae52 0%, #b8882a 100%);
+  color: #10141b;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.15s;
+  letter-spacing: 0.04em;
+}
+.rm-spin-btn:hover { opacity: 0.9; transform: translateY(-1px); }
+.rm-spin-btn:active { transform: translateY(0); }
+
+.rm-error { color: #e57373; font-size: 14px; text-align: center; }
+
+/* Spinning arena */
+.rm-arena {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+  padding: 8px 0;
+}
+.rm-spin-label {
+  font-size: 0.85rem;
+  color: #8a94a0;
+  animation: rm-vs-pulse 1s ease-in-out infinite;
+}
+.rm-slots-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+.rm-team-slots {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.rm-team-tag {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  color: #5a6472;
+  letter-spacing: 0.08em;
+}
+.rm-vs-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 48px;
+}
+.rm-vs-anim {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #d8ae52;
+  animation: rm-vs-pulse 0.6s ease-in-out infinite;
+}
+
+/* Slot card */
+.rm-slot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239,231,210,0.1);
+  background: rgba(255,255,255,0.04);
+  min-width: 110px;
+  transition: border-color 0.3s;
+}
+.rm-slot.rm-spinning {
+  animation: rm-slot-blur 0.08s linear infinite;
+  border-color: rgba(216,174,82,0.3);
+}
+.rm-slot.rm-landed {
+  animation: rm-result-pop 0.4s ease-out forwards;
+  border-color: rgba(216,174,82,0.4);
+}
+.rm-slot-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+.rm-avatar-initials {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(216,174,82,0.18);
+  color: #d8ae52;
+  font-weight: 700;
+  font-size: 1rem;
+}
+.rm-slot-name {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #efe7d2;
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100px;
+}
+
+/* Result */
+.rm-result {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: rm-result-pop 0.5s ease-out;
+}
+.rm-result-banner {
+  background: rgba(76,175,125,0.12);
+  border: 1px solid rgba(76,175,125,0.3);
+  color: #4caf7d;
+  border-radius: 20px;
+  padding: 5px 18px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  animation: rm-banner-glow 1.5s ease-in-out infinite;
+}
+.rm-result-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  justify-content: center;
+}
+.rm-result-team {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+}
+.rm-result-team-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: #5a6472;
+  letter-spacing: 0.08em;
+}
+.rm-result-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  flex-shrink: 0;
+}
+.rm-vs-big {
+  font-size: 1.4rem;
+  font-weight: 900;
+  color: #d8ae52;
+}
+.rm-match-type-tag {
+  font-size: 0.7rem;
+  background: rgba(216,174,82,0.12);
+  color: #d8ae52;
+  border-radius: 10px;
+  padding: 2px 8px;
+}
+.rm-result-actions {
+  display: flex;
+  gap: 10px;
+  width: 100%;
+}
+.rm-reroll-btn {
+  flex: 1;
+  padding: 11px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239,231,210,0.15);
+  background: transparent;
+  color: #efe7d2;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+.rm-reroll-btn:hover { background: rgba(255,255,255,0.05); }
+.rm-create-btn {
+  flex: 2;
+  padding: 11px;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #d8ae52 0%, #b8882a 100%);
+  color: #10141b;
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: none;
+  cursor: pointer;
+  transition: opacity 0.2s;
+}
+.rm-create-btn:hover { opacity: 0.9; }
+
+.rm-close-btn {
+  align-self: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(239,231,210,0.15);
+  color: #c8d0dc;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: center;
+  padding: 9px 28px;
+  border-radius: 10px;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.rm-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(239,231,210,0.3);
+  color: #efe7d2;
+}
+
+/* ── Batch / số trận ── */
+.rm-count-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 4px 0 2px;
+}
+.rm-count-block {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+  min-width: 140px;
+}
+.rm-count-label { font-size: 0.82rem; color: #8a94a0; font-weight: 600; }
+.rm-count-stepper {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.rm-count-btn {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239,231,210,0.15);
+  background: rgba(255,255,255,0.04);
+  color: #efe7d2;
+  font-size: 1.2rem;
+  cursor: pointer;
+  flex-shrink: 0;
+}
+.rm-count-btn:hover { background: rgba(216,174,82,0.18); }
+.rm-count-input {
+  flex: 1;
+  min-width: 0;
+  height: 38px;
+  text-align: center;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239,231,210,0.15);
+  background: rgba(0,0,0,0.25);
+  color: #efe7d2;
+  font-size: 1rem;
+  font-weight: 700;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+/* Ẩn mũi tên spinner mặc định (đã có nút − và +) */
+.rm-count-input::-webkit-outer-spin-button,
+.rm-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+.rm-date-input-mm {
+  height: 38px;
+  border-radius: 10px;
+  border: 1.5px solid rgba(239,231,210,0.15);
+  background: rgba(0,0,0,0.25);
+  color: #efe7d2;
+  font-size: 0.9rem;
+  padding: 0 10px;
+  color-scheme: dark;
+}
+.rm-count-hint { font-size: 0.78rem; margin: 2px 0 0; }
+
+.rm-batch { display: flex; flex-direction: column; gap: 14px; }
+.rm-batch-stats {
+  background: rgba(255,255,255,0.03);
+  border: 1px solid rgba(239,231,210,0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+}
+.rm-batch-stats-title { font-size: 0.8rem; color: #8a94a0; font-weight: 600; }
+.rm-batch-stats-list { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+.rm-batch-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.76rem;
+  padding: 3px 6px 3px 10px;
+  border-radius: 999px;
+  background: rgba(216,174,82,0.1);
+  color: #cdb784;
+  font-weight: 600;
+  border: 1px solid rgba(216,174,82,0.18);
+}
+.rm-batch-stat-chip b {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 18px;
+  height: 18px;
+  padding: 0 4px;
+  border-radius: 999px;
+  background: rgba(216,174,82,0.85);
+  color: #10141b;
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+.rm-batch-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 340px;
+  overflow-y: auto;
+  padding: 2px;
+}
+
+/* Tiến trình quay batch */
+.rm-batch-progress {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.rm-skip-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(239,231,210,0.12);
+  color: #8a94a0;
+  font-size: 0.78rem;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.18s;
+}
+.rm-skip-btn:hover { color: #efe7d2; border-color: rgba(216,174,82,0.35); }
+.rm-arena-compact { padding: 6px 0 2px; gap: 10px; }
+.rm-reveal-in { animation: rm-card-in 0.45s cubic-bezier(0.2, 0.9, 0.3, 1.3); }
+@keyframes rm-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.96); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+
+/* Card 1 trận */
+.rm-mcard {
+  position: relative;
+  display: flex;
+  align-items: stretch;
+  gap: 10px;
+  padding: 12px 14px 12px 12px;
+  border-radius: 14px;
+  background:
+    linear-gradient(135deg, rgba(216,174,82,0.06) 0%, rgba(255,255,255,0.02) 60%);
+  border: 1px solid rgba(216,174,82,0.16);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.18);
+}
+.rm-mcard-no {
+  position: absolute;
+  top: -8px;
+  left: -6px;
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d8ae52, #b8882a);
+  color: #10141b;
+  font-size: 0.74rem;
+  font-weight: 800;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.35);
+}
+.rm-mcard-body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.rm-mcard-team {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.rm-mcard-team-right { align-items: flex-end; }
+.rm-mcard-player {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  max-width: 100%;
+}
+.rm-mcard-team-right .rm-mcard-player { flex-direction: row-reverse; }
+.rm-mcard-ava {
+  width: 34px; height: 34px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+  border: 1.5px solid rgba(216,174,82,0.3);
+}
+.rm-mcard-ava-init {
+  display: flex; align-items: center; justify-content: center;
+  background: rgba(216,174,82,0.18);
+  color: #d8ae52;
+  font-weight: 700;
+  font-size: 0.78rem;
+}
+.rm-mcard-name {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #efe7d2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.rm-mcard-team-right .rm-mcard-name { text-align: right; }
+.rm-mcard-vs {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  flex-shrink: 0;
+  padding: 0 2px;
+}
+.rm-mcard-vs-text {
+  font-size: 0.9rem;
+  font-weight: 900;
+  color: #d8ae52;
+  line-height: 1;
+}
+.rm-mcard-type {
+  font-size: 0.62rem;
+  color: #8a94a0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+.rm-mcard-remove {
+  position: absolute;
+  top: 6px; right: 6px;
+  width: 24px; height: 24px;
+  border-radius: 8px;
+  border: 1px solid rgba(229,115,115,0.5);
+  background: rgba(229,115,115,0.9);
+  color: #fff;
+  font-size: 1.05rem;
+  font-weight: 700;
+  cursor: pointer;
+  line-height: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, transform 0.12s;
+}
+.rm-mcard-remove:hover { background: #e05555; transform: scale(1.08); }
+.rm-back-link {
+  align-self: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(239,231,210,0.15);
+  color: #c8d0dc;
+  font-size: 0.83rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 22px;
+  border-radius: 10px;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
+}
+.rm-back-link:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(239,231,210,0.3);
+  color: #efe7d2;
+}
+
+/* Matchmaker trên điện thoại nhỏ */
+@media (max-width: 480px) {
+  .rm-body { padding: 14px 14px 14px; gap: 14px; }
+  .rm-hero { height: 92px; }
+  .rm-title { font-size: 1.15rem; }
+  .rm-subtitle { font-size: 0.74rem; }
+
+  /* Slot quay gọn lại */
+  .rm-slots-row { gap: 8px; }
+  .rm-slot { min-width: 80px; padding: 8px 6px; }
+  .rm-slot-avatar { width: 42px; height: 42px; }
+  .rm-slot-name { max-width: 78px; font-size: 0.72rem; }
+  .rm-vs-divider { width: 30px; }
+
+  /* Card từng trận */
+  .rm-mcard { padding: 10px; gap: 6px; }
+  .rm-mcard-body { gap: 4px; }
+  .rm-mcard-ava { width: 28px; height: 28px; }
+  .rm-mcard-name { font-size: 0.76rem; }
+  .rm-mcard-vs { padding: 0; }
+  .rm-mcard-vs-text { font-size: 0.8rem; }
+  .rm-mcard-type { font-size: 0.56rem; }
+  .rm-mcard-player { gap: 6px; }
+
+  /* Số trận + ngày: xếp dọc cho dễ bấm */
+  .rm-count-row { flex-direction: column; gap: 10px; }
+  .rm-count-block { min-width: 0; }
+
+  /* Nút hành động */
+  .rm-result-actions { gap: 8px; }
+  .rm-create-btn, .rm-reroll-btn { padding: 12px 10px; font-size: 0.9rem; }
+}
+
