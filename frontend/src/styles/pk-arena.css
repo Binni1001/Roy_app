@@ -943,6 +943,21 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   gap: 18px;
 }
 
+/* Ẩn thanh cuộn (vẫn cuộn được) cho các vùng trong matchmaker */
+.rm-body,
+.rm-picker-list,
+.rm-batch-list {
+  scrollbar-width: none;        /* Firefox */
+  -ms-overflow-style: none;     /* IE/Edge cũ */
+}
+.rm-body::-webkit-scrollbar,
+.rm-picker-list::-webkit-scrollbar,
+.rm-batch-list::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;                /* Chrome/Safari */
+}
+
 /* Mode picker */
 .rm-mode-picker {
   display: grid;
@@ -1291,6 +1306,14 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   color: #efe7d2;
   font-size: 1rem;
   font-weight: 700;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+/* Ẩn mũi tên spinner mặc định (đã có nút − và +) */
+.rm-count-input::-webkit-outer-spin-button,
+.rm-count-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
 }
 .rm-date-input-mm {
   height: 38px;
