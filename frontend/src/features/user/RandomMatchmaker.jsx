@@ -1,5 +1,11 @@
 import { useState, useEffect, useRef } from 'react'
 import { initials } from '../../utils/appUtils'
+import { generateSchedule, appearanceStats } from './pk/scheduleUtils'
+
+function todayStr() {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
 
 /* ── Rank helpers ── */
 function buildRankMap(leaderboard) {
@@ -154,11 +160,15 @@ function PersonPicker({ people, selected, onToggle, onSelectAll, onClearAll, ran
 }
 
 /* ── Main component ── */
-export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, lockedPerson }) {
+export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCreateBatch, lockedPerson }) {
   const [mode, setMode] = useState('singles')
   const [phase, setPhase] = useState('config')
   const [result, setResult] = useState(null)
   const [selected, setSelected] = useState([])
+  const [count, setCount] = useState(1)
+  const [playedAt, setPlayedAt] = useState(todayStr())
+  const [batch, setBatch] = useState([])
+  const [creating, setCreating] = useState(false)
 
   const rankMap = buildRankMap(leaderboard || [])
   const isUserMode = !!lockedPerson
@@ -185,6 +195,14 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
   const spinPool = isUserMode ? [lockedPerson, ...selected] : selected
 
   function spin() {
+    // Batch mode: ghép nhiều trận, không quay xúc xắc
+    if (count > 1) {
+      const pool = isUserMode ? [lockedPerson, ...selected] : selected
+      const list = generateSchedule(pool, count, mode, rankMap)
+      setBatch(list)
+      setPhase('batch')
+      return
+    }
     setPhase('spinning')
     setTimeout(() => {
       const pool = isUserMode ? [lockedPerson, ...selected] : selected
@@ -199,6 +217,16 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
   function reroll() {
     setPhase('config')
     setResult(null)
+    setBatch([])
+  }
+
+  function rerollBatch() {
+    const pool = isUserMode ? [lockedPerson, ...selected] : selected
+    setBatch(generateSchedule(pool, count, mode, rankMap))
+  }
+
+  function removeBatchItem(idx) {
+    setBatch((prev) => prev.filter((_, i) => i !== idx))
   }
 
   function handleCreate() {
@@ -211,6 +239,25 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
       opponent_partner_id: result.opponent_partner?.id || '',
     })
     onClose()
+  }
+
+  async function handleCreateBatch() {
+    if (!batch.length || creating) return
+    setCreating(true)
+    try {
+      const payload = batch.map((m) => ({
+        match_type: m.match_type,
+        challenger_id: m.challenger?.id,
+        opponent_id: m.opponent?.id,
+        challenger_partner_id: m.challenger_partner?.id || '',
+        opponent_partner_id: m.opponent_partner?.id || '',
+        played_at: playedAt,
+      }))
+      await onCreateBatch(payload)
+      onClose()
+    } finally {
+      setCreating(false)
+    }
   }
 
   return (
@@ -270,6 +317,37 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
                 </div>
               </div>
 
+              {/* Số trận + ngày (batch) */}
+              <div className="rm-count-row">
+                <div className="rm-count-block">
+                  <span className="rm-count-label">🗓️ Số trận muốn tạo</span>
+                  <div className="rm-count-stepper">
+                    <button type="button" className="rm-count-btn" onClick={() => setCount((c) => Math.max(1, c - 1))}>−</button>
+                    <input
+                      type="number" min={1} max={30} value={count}
+                      className="rm-count-input"
+                      onChange={(e) => setCount(Math.min(30, Math.max(1, Number(e.target.value) || 1)))}
+                    />
+                    <button type="button" className="rm-count-btn" onClick={() => setCount((c) => Math.min(30, c + 1))}>+</button>
+                  </div>
+                </div>
+                {count > 1 && (
+                  <div className="rm-count-block">
+                    <span className="rm-count-label">📅 Ngày đấu</span>
+                    <input
+                      type="date" value={playedAt}
+                      className="rm-date-input-mm"
+                      onChange={(e) => setPlayedAt(e.target.value)}
+                    />
+                  </div>
+                )}
+              </div>
+              {count > 1 && (
+                <p className="rm-count-hint muted">
+                  Hệ thống chia đều số trận cho mọi người trong pool · {mode === 'doubles' ? 'hạn chế lặp cặp đồng đội' : 'ghép cân sức theo hạng'}
+                </p>
+              )}
+
               {/* Player picker */}
               <PersonPicker
                 people={pickable}
@@ -287,10 +365,62 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, locke
                 </p>
               ) : (
                 <button className="rm-spin-btn" onClick={spin}>
-                  🎲 Tung xúc xắc!
+                  {count > 1 ? `🗓️ Xếp lịch ${count} trận` : '🎲 Tung xúc xắc!'}
                 </button>
               )}
             </>
+          )}
+
+          {/* ── BATCH RESULT ── */}
+          {phase === 'batch' && (
+            <div className="rm-batch">
+              <div className="rm-result-banner">🗓️ Lịch {batch.length} trận · {new Date(playedAt).toLocaleDateString('vi-VN')}</div>
+
+              {batch.length === 0 ? (
+                <p className="rm-error">Không ghép được trận nào. Hãy chọn thêm người vào pool.</p>
+              ) : (
+                <>
+                  {/* Thống kê cân bằng */}
+                  <div className="rm-batch-stats">
+                    <span className="rm-batch-stats-title">Số trận mỗi người:</span>
+                    <div className="rm-batch-stats-list">
+                      {appearanceStats(batch).map(({ person, count: c }) => (
+                        <span key={person.id} className="rm-batch-stat-chip">
+                          {person.full_name?.split(' ').slice(-1)[0] || person.full_name} · {c}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* Danh sách trận */}
+                  <div className="rm-batch-list">
+                    {batch.map((m, idx) => (
+                      <div key={idx} className="rm-batch-item">
+                        <span className="rm-batch-no">{idx + 1}</span>
+                        <div className="rm-batch-teams">
+                          <span className="rm-batch-team">
+                            {m.challenger.full_name}{m.challenger_partner ? ` & ${m.challenger_partner.full_name}` : ''}
+                          </span>
+                          <span className="rm-batch-vs">vs</span>
+                          <span className="rm-batch-team">
+                            {m.opponent.full_name}{m.opponent_partner ? ` & ${m.opponent_partner.full_name}` : ''}
+                          </span>
+                        </div>
+                        <button className="rm-batch-remove" onClick={() => removeBatchItem(idx)} title="Bỏ trận này">×</button>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+
+              <div className="rm-result-actions">
+                <button className="rm-reroll-btn" onClick={rerollBatch}>🔄 Xếp lại</button>
+                <button className="rm-create-btn" onClick={handleCreateBatch} disabled={creating || batch.length === 0}>
+                  {creating ? 'Đang tạo...' : `⚡ Tạo ${batch.length} kèo`}
+                </button>
+              </div>
+              <button className="rm-back-link" onClick={reroll}>← Chỉnh lại pool</button>
+            </div>
           )}
 
           {/* ── SPINNING ── */}

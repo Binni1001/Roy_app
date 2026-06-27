@@ -97,6 +97,14 @@ export function PkArena({ activePerson }) {
     } catch (err) { setToastType('error'); setToast(err.message) }
   }
 
+  async function handleRandomBatch(payload) {
+    try {
+      const created = await api.pk.createBulk(payload)
+      setToastType('success'); setToast(`Đã tạo ${created.length} kèo!`)
+      void loadAll()
+    } catch (err) { setToastType('error'); setToast(err.message); throw err }
+  }
+
   function handleRandomResult(prefill) {
     setForm((f) => ({
       ...f,
@@ -382,6 +390,7 @@ export function PkArena({ activePerson }) {
           leaderboard={lbSingles}
           onClose={() => setShowRandom(false)}
           onCreate={handleRandomResult}
+          onCreateBatch={handleRandomBatch}
           lockedPerson={activePerson}
         />
       )}

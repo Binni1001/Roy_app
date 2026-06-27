@@ -39,7 +39,8 @@ export const pkMatchesService = {
     return data;
   },
 
-  async create(payload, isAdmin = false) {
+  // Validate + dựng object insert cho 1 kèo (không kiểm tra người active — caller tự gọi)
+  _buildInsert(payload, isAdmin = false) {
     const { match_type, challenger_id, opponent_id, challenger_partner_id, opponent_partner_id, bet_items, played_at, note, status, winner_side, set_scores, sets } = payload;
 
     if (!match_type || !['singles', 'doubles'].includes(match_type)) {
@@ -59,12 +60,13 @@ export const pkMatchesService = {
     if (match_type === 'doubles') {
       if (!challenger_partner_id) throw new Error("Đánh đôi cần chọn đồng đội phía thách đấu");
       if (!opponent_partner_id)   throw new Error("Đánh đôi cần chọn đồng đội phía đối thủ");
+      // Không cho trùng người trong cùng 1 kèo đôi
+      const ids = [challenger_id, opponent_id, challenger_partner_id, opponent_partner_id];
+      if (new Set(ids).size !== 4) throw new Error("Một người không thể xuất hiện 2 lần trong cùng kèo đôi");
     }
 
-    await assertPeopleActive([challenger_id, opponent_id, challenger_partner_id, opponent_partner_id]);
-
     const resolvedStatus = isAdmin && status ? status : 'pending';
-    const insert = {
+    return {
       match_type,
       challenger_id,
       opponent_id,
@@ -78,8 +80,30 @@ export const pkMatchesService = {
       winner_side: resolvedStatus === 'completed' ? (winner_side || null) : null,
       set_scores:  resolvedStatus === 'completed' && set_scores?.length ? set_scores : null,
     };
+  },
+
+  async create(payload, isAdmin = false) {
+    const insert = this._buildInsert(payload, isAdmin);
+    await assertPeopleActive([insert.challenger_id, insert.opponent_id, insert.challenger_partner_id, insert.opponent_partner_id]);
 
     const { data, error } = await pkMatchesRepository.create(insert);
+    if (error) throw new Error(error.message);
+    return data;
+  },
+
+  async createBulk(matches, isAdmin = false) {
+    if (!Array.isArray(matches) || matches.length === 0) throw new Error("Danh sách kèo trống");
+    if (matches.length > 30) throw new Error("Tối đa 30 kèo mỗi lần tạo");
+
+    const inserts = matches.map((m) => this._buildInsert(m, isAdmin));
+
+    // Kiểm tra tất cả người tham gia active 1 lần duy nhất
+    const allIds = [...new Set(
+      inserts.flatMap((i) => [i.challenger_id, i.opponent_id, i.challenger_partner_id, i.opponent_partner_id].filter(Boolean))
+    )];
+    await assertPeopleActive(allIds);
+
+    const { data, error } = await pkMatchesRepository.createMany(inserts);
     if (error) throw new Error(error.message);
     return data;
   },

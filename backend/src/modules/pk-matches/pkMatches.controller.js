@@ -47,6 +47,16 @@ export const pkMatchesController = {
     }
   },
 
+  async createBulk(req, res) {
+    try {
+      const isAdmin = req.authRole === 'admin' || req.authRole === 'owner';
+      const data = await pkMatchesService.createBulk(req.body.matches, isAdmin);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async update(req, res) {
     try {
       const isAdmin = req.authRole === 'admin' || req.authRole === 'owner';

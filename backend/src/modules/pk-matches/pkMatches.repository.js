@@ -44,6 +44,13 @@ export const pkMatchesRepository = {
       .single();
   },
 
+  async createMany(payloads) {
+    return supabase
+      .from("pk_matches")
+      .insert(payloads)
+      .select(MATCH_SELECT);
+  },
+
   async update(id, payload) {
     return supabase
       .from("pk_matches")

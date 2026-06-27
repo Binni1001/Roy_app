@@ -14,6 +14,7 @@ router.get("/:id", requireAuth, pkMatchesController.getById);
 
 // Write (any authenticated user can challenge / update their own)
 router.post("/", requireAuth, pkMatchesController.create);
+router.post("/bulk", requireAuth, pkMatchesController.createBulk);
 router.put("/:id", requireAuth, pkMatchesController.update);
 router.delete("/:id", requireAuth, requireAdmin, pkMatchesController.remove);
 

@@ -236,6 +236,14 @@ export function PkPanel() {
     } catch (err) { setToast(err.message) }
   }
 
+  async function handleCreateBatch(payload) {
+    try {
+      const created = await api.pk.createBulk(payload)
+      setToast(`Đã tạo ${created.length} kèo.`)
+      void loadAll()
+    } catch (err) { setToast(err.message); throw err }
+  }
+
   function matchInDateRange(m) {
     const d = new Date(m.played_at || m.created_at)
     const now = new Date()
@@ -388,6 +396,7 @@ export function PkPanel() {
             setShowRandom(false)
             setShowCreate({ prefill })
           }}
+          onCreateBatch={handleCreateBatch}
         />
       )}
 
