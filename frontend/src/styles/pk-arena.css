@@ -1253,15 +1253,23 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .rm-create-btn:hover { opacity: 0.9; }
 
 .rm-close-btn {
-  background: transparent;
-  border: none;
-  color: #5a6472;
-  font-size: 0.82rem;
+  align-self: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(239,231,210,0.15);
+  color: #c8d0dc;
+  font-size: 0.85rem;
+  font-weight: 600;
   cursor: pointer;
   text-align: center;
-  padding: 4px;
+  padding: 9px 28px;
+  border-radius: 10px;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
 }
-.rm-close-btn:hover { color: #8a94a0; }
+.rm-close-btn:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(239,231,210,0.3);
+  color: #efe7d2;
+}
 
 /* ── Batch / số trận ── */
 .rm-count-row {
@@ -1504,14 +1512,22 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 }
 .rm-mcard-remove:hover { background: #e05555; transform: scale(1.08); }
 .rm-back-link {
-  background: transparent;
-  border: none;
-  color: #5a6472;
-  font-size: 0.82rem;
+  align-self: center;
+  background: rgba(255,255,255,0.06);
+  border: 1px solid rgba(239,231,210,0.15);
+  color: #c8d0dc;
+  font-size: 0.83rem;
+  font-weight: 600;
   cursor: pointer;
-  padding: 2px;
+  padding: 8px 22px;
+  border-radius: 10px;
+  transition: background 0.18s, border-color 0.18s, color 0.18s;
 }
-.rm-back-link:hover { color: #8a94a0; }
+.rm-back-link:hover {
+  background: rgba(255,255,255,0.1);
+  border-color: rgba(239,231,210,0.3);
+  color: #efe7d2;
+}
 
 /* â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
    SEARCH BOX

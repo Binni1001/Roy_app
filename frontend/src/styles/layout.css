@@ -1861,16 +1861,19 @@ button.danger:hover {
 }
 
 .invite-back {
-  background: none;
-  border: none;
-  color: rgba(216,174,82,0.7);
+  background: rgba(216,174,82,0.1);
+  border: 1px solid rgba(216,174,82,0.3);
+  color: #d8ae52;
   cursor: pointer;
   font-size: 13px;
+  font-weight: 600;
   text-align: center;
-  padding: 4px;
+  padding: 9px 18px;
+  border-radius: 10px;
+  transition: background 0.18s, border-color 0.18s;
 }
 
-.invite-back:hover { color: #d8ae52; }
+.invite-back:hover { background: rgba(216,174,82,0.18); border-color: rgba(216,174,82,0.5); }
 
 .invite-error {
   color: #e05555;
@@ -1880,16 +1883,19 @@ button.danger:hover {
 }
 
 .invite-signout {
-  background: none;
-  border: none;
-  color: rgba(239,231,210,0.35);
+  background: rgba(255,255,255,0.05);
+  border: 1px solid rgba(239,231,210,0.12);
+  color: rgba(239,231,210,0.7);
   cursor: pointer;
   font-size: 12px;
+  font-weight: 600;
   margin-top: 12px;
-  padding: 4px;
+  padding: 8px 18px;
+  border-radius: 10px;
+  transition: background 0.18s, color 0.18s;
 }
 
-.invite-signout:hover { color: rgba(239,231,210,0.6); }
+.invite-signout:hover { background: rgba(255,255,255,0.1); color: #efe7d2; }
 
 .pending-icon,
 .rejected-icon {
