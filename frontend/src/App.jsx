@@ -48,8 +48,16 @@ function App() {
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
-      setSession(nextSession ?? null)
       if (event === 'PASSWORD_RECOVERY') setRecoveringPassword(true)
+      // Chỉ đổi session khi user thực sự thay đổi (đăng nhập/đăng xuất/đổi tài khoản).
+      // Bỏ qua TOKEN_REFRESHED / SIGNED_IN của cùng 1 người (xảy ra khi quay lại tab)
+      // — nếu không sẽ tạo object session mới → refetch → màn hình loading nhấp nháy.
+      setSession((prev) => {
+        const prevId = prev?.user?.id
+        const nextId = nextSession?.user?.id
+        if (prevId && prevId === nextId) return prev
+        return nextSession ?? null
+      })
     })
 
     return () => {
