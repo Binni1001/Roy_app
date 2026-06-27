@@ -39,25 +39,29 @@ function App() {
   useEffect(() => {
     let mounted = true
 
-    supabase.auth.getSession().then(({ data }) => {
+    // Chỉ đổi session state khi user thực sự thay đổi (đăng nhập / đăng xuất /
+    // đổi tài khoản). Bỏ qua TOKEN_REFRESHED / SIGNED_IN / INITIAL_SESSION của
+    // cùng 1 người — các sự kiện này fire khi quay lại tab, nếu set lại sẽ tạo
+    // object session mới → remount portal → màn hình loading nhấp nháy.
+    const applySession = (nextSession) => {
       if (!mounted) return
-      setSession(data.session ?? null)
-    }).catch(() => {
-      if (mounted) setSession(null)
-    })
+      setSession((prev) => {
+        if (prev === undefined) return nextSession ?? null
+        const prevId = prev?.user?.id ?? null
+        const nextId = nextSession?.user?.id ?? null
+        if (prevId === nextId) return prev
+        return nextSession ?? null
+      })
+    }
+
+    supabase.auth.getSession()
+      .then(({ data }) => applySession(data.session))
+      .catch(() => applySession(null))
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
       if (event === 'PASSWORD_RECOVERY') setRecoveringPassword(true)
-      // Chỉ đổi session khi user thực sự thay đổi (đăng nhập/đăng xuất/đổi tài khoản).
-      // Bỏ qua TOKEN_REFRESHED / SIGNED_IN của cùng 1 người (xảy ra khi quay lại tab)
-      // — nếu không sẽ tạo object session mới → refetch → màn hình loading nhấp nháy.
-      setSession((prev) => {
-        const prevId = prev?.user?.id
-        const nextId = nextSession?.user?.id
-        if (prevId && prevId === nextId) return prev
-        return nextSession ?? null
-      })
+      applySession(nextSession)
     })
 
     return () => {
@@ -66,9 +70,11 @@ function App() {
     }
   }, [])
 
-  // Fetch person record khi session thay đổi hoặc khi cần refresh (personTick)
+  // Fetch person record khi user id thay đổi hoặc khi cần refresh (personTick).
+  // Dùng userId (chuỗi) thay vì object session để token refresh không trigger.
+  const userId = session?.user?.id ?? null
   useEffect(() => {
-    if (!session) return
+    if (!userId) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPerson(undefined)
     api.people.me().then((data) => {
@@ -76,7 +82,7 @@ function App() {
     }).catch(() => {
       setPerson(null)
     })
-  }, [session, personTick])
+  }, [userId, personTick])
 
   if (session === undefined) return <AppLoading />
 
