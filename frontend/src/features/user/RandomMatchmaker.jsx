@@ -110,6 +110,45 @@ function PlayerSlot({ person, spinning, spinPool }) {
   )
 }
 
+/* ── Card 1 trận đã chốt (dùng cho reveal + danh sách cuối) ── */
+function BatchMatchCard({ match, index, onRemove }) {
+  const isDoubles = match.match_type === 'doubles'
+  return (
+    <div className="rm-mcard">
+      <span className="rm-mcard-no">{index + 1}</span>
+      <div className="rm-mcard-body">
+        <div className="rm-mcard-team">
+          {[match.challenger, match.challenger_partner].filter(Boolean).map((p) => (
+            <div key={p.id} className="rm-mcard-player">
+              {p.avatar_url
+                ? <img src={p.avatar_url} alt={p.full_name} className="rm-mcard-ava avatar-img" />
+                : <span className="rm-mcard-ava rm-mcard-ava-init">{initials(p.full_name)}</span>}
+              <span className="rm-mcard-name">{p.full_name}</span>
+            </div>
+          ))}
+        </div>
+        <div className="rm-mcard-vs">
+          <span className="rm-mcard-vs-text">VS</span>
+          <span className="rm-mcard-type">{isDoubles ? 'Đôi' : 'Đơn'}</span>
+        </div>
+        <div className="rm-mcard-team rm-mcard-team-right">
+          {[match.opponent, match.opponent_partner].filter(Boolean).map((p) => (
+            <div key={p.id} className="rm-mcard-player">
+              {p.avatar_url
+                ? <img src={p.avatar_url} alt={p.full_name} className="rm-mcard-ava avatar-img" />
+                : <span className="rm-mcard-ava rm-mcard-ava-init">{initials(p.full_name)}</span>}
+              <span className="rm-mcard-name">{p.full_name}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+      {onRemove && (
+        <button className="rm-mcard-remove" onClick={onRemove} title="Bỏ trận này">×</button>
+      )}
+    </div>
+  )
+}
+
 /* ── PersonPicker ── */
 function PersonPicker({ people, selected, onToggle, onSelectAll, onClearAll, rankMap, lockedPerson }) {
   return (
@@ -168,6 +207,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
   const [count, setCount] = useState(1)
   const [playedAt, setPlayedAt] = useState(todayStr())
   const [batch, setBatch] = useState([])
+  const [revealIdx, setRevealIdx] = useState(0)
   const [creating, setCreating] = useState(false)
 
   const rankMap = buildRankMap(leaderboard || [])
@@ -195,12 +235,13 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
   const spinPool = isUserMode ? [lockedPerson, ...selected] : selected
 
   function spin() {
-    // Batch mode: ghép nhiều trận, không quay xúc xắc
+    // Batch mode: ghép nhiều trận, tung xúc xắc lần lượt từng trận
     if (count > 1) {
       const pool = isUserMode ? [lockedPerson, ...selected] : selected
       const list = generateSchedule(pool, count, mode, rankMap)
       setBatch(list)
-      setPhase('batch')
+      setRevealIdx(0)
+      setPhase('batch-spin')
       return
     }
     setPhase('spinning')
@@ -223,6 +264,13 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
   function rerollBatch() {
     const pool = isUserMode ? [lockedPerson, ...selected] : selected
     setBatch(generateSchedule(pool, count, mode, rankMap))
+    setRevealIdx(0)
+    setPhase('batch-spin')
+  }
+
+  function skipReveal() {
+    setRevealIdx(batch.length)
+    setPhase('batch')
   }
 
   function removeBatchItem(idx) {
@@ -259,6 +307,17 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
       setCreating(false)
     }
   }
+
+  // Reveal lần lượt từng trận trong batch (tung xúc xắc rồi chốt)
+  useEffect(() => {
+    if (phase !== 'batch-spin') return undefined
+    if (revealIdx >= batch.length) {
+      const t = setTimeout(() => setPhase('batch'), 450)
+      return () => clearTimeout(t)
+    }
+    const t = setTimeout(() => setRevealIdx((i) => i + 1), 1100)
+    return () => clearTimeout(t)
+  }, [phase, revealIdx, batch.length])
 
   return (
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
@@ -371,6 +430,42 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
             </>
           )}
 
+          {/* ── BATCH SPIN (reveal lần lượt) ── */}
+          {phase === 'batch-spin' && (
+            <div className="rm-batch">
+              <div className="rm-batch-progress">
+                <span className="rm-spin-label">🎲 Đang xếp trận {Math.min(revealIdx + 1, batch.length)}/{batch.length}...</span>
+                <button className="rm-skip-btn" onClick={skipReveal}>Bỏ qua ⏭</button>
+              </div>
+
+              {/* Trận đang quay */}
+              {revealIdx < batch.length && (
+                <div className="rm-arena rm-arena-compact">
+                  <div className="rm-slots-row">
+                    <div className="rm-team-slots">
+                      <PlayerSlot person={null} spinning spinPool={spinPool} />
+                      {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
+                    </div>
+                    <div className="rm-vs-divider"><span className="rm-vs-anim">VS</span></div>
+                    <div className="rm-team-slots">
+                      <PlayerSlot person={null} spinning spinPool={spinPool} />
+                      {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {/* Các trận đã chốt */}
+              <div className="rm-batch-list">
+                {batch.slice(0, revealIdx).map((m, idx) => (
+                  <div key={idx} className="rm-reveal-in">
+                    <BatchMatchCard match={m} index={idx} />
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* ── BATCH RESULT ── */}
           {phase === 'batch' && (
             <div className="rm-batch">
@@ -382,11 +477,12 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                 <>
                   {/* Thống kê cân bằng */}
                   <div className="rm-batch-stats">
-                    <span className="rm-batch-stats-title">Số trận mỗi người:</span>
+                    <span className="rm-batch-stats-title">Số trận mỗi người</span>
                     <div className="rm-batch-stats-list">
                       {appearanceStats(batch).map(({ person, count: c }) => (
                         <span key={person.id} className="rm-batch-stat-chip">
-                          {person.full_name?.split(' ').slice(-1)[0] || person.full_name} · {c}
+                          {person.full_name?.split(' ').slice(-1)[0] || person.full_name}
+                          <b>{c}</b>
                         </span>
                       ))}
                     </div>
@@ -395,19 +491,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                   {/* Danh sách trận */}
                   <div className="rm-batch-list">
                     {batch.map((m, idx) => (
-                      <div key={idx} className="rm-batch-item">
-                        <span className="rm-batch-no">{idx + 1}</span>
-                        <div className="rm-batch-teams">
-                          <span className="rm-batch-team">
-                            {m.challenger.full_name}{m.challenger_partner ? ` & ${m.challenger_partner.full_name}` : ''}
-                          </span>
-                          <span className="rm-batch-vs">vs</span>
-                          <span className="rm-batch-team">
-                            {m.opponent.full_name}{m.opponent_partner ? ` & ${m.opponent_partner.full_name}` : ''}
-                          </span>
-                        </div>
-                        <button className="rm-batch-remove" onClick={() => removeBatchItem(idx)} title="Bỏ trận này">×</button>
-                      </div>
+                      <BatchMatchCard key={idx} match={m} index={idx} onRemove={() => removeBatchItem(idx)} />
                     ))}
                   </div>
                 </>
