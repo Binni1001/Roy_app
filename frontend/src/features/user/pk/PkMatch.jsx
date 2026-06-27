@@ -212,17 +212,25 @@ export function ResultModal({ match, onClose, onSubmit }) {
           <button type="button"
             className={`rs-side-btn${winner === 'challenger' ? ' rs-side-active' : ''}`}
             onClick={() => setWinner('challenger')}>
+            {winner === 'challenger' && <span className="rs-check">✓</span>}
+            <div className="rs-side-avas">
+              <FightAvatar person={match.challenger} size="sm" />
+              {match.challenger_partner && <FightAvatar person={match.challenger_partner} size="sm" />}
+            </div>
             <span className="rs-side-name">{cName}</span>
-            <small>Bên thách đấu</small>
-            {winner === 'challenger' && <span className="rs-crown">🏆</span>}
+            <small className="rs-side-role">Bên thách đấu</small>
           </button>
           <span className="rs-vs">VS</span>
           <button type="button"
             className={`rs-side-btn${winner === 'opponent' ? ' rs-side-active' : ''}`}
             onClick={() => setWinner('opponent')}>
+            {winner === 'opponent' && <span className="rs-check">✓</span>}
+            <div className="rs-side-avas">
+              <FightAvatar person={match.opponent} size="sm" />
+              {match.opponent_partner && <FightAvatar person={match.opponent_partner} size="sm" />}
+            </div>
             <span className="rs-side-name">{oName}</span>
-            <small>Bên đối thủ</small>
-            {winner === 'opponent' && <span className="rs-crown">🏆</span>}
+            <small className="rs-side-role">Bên đối thủ</small>
           </button>
         </div>
 
