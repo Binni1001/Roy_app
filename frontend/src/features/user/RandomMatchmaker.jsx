@@ -352,30 +352,6 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                 </button>
               </div>
 
-              {/* Pairing rule info */}
-              <div className="rm-balance-info">
-                {isUserMode && (
-                  <div className="rm-info-row rm-info-self">
-                    <span className="rm-info-icon">👤</span>
-                    <div>
-                      <strong>Bạn luôn có mặt</strong>
-                      <p className="muted">{lockedPerson?.full_name} · bên thách đấu</p>
-                    </div>
-                  </div>
-                )}
-                <div className="rm-info-row">
-                  <span className="rm-info-icon">🏆</span>
-                  <div>
-                    <strong>{mode === 'singles' ? 'Ghép snake: top vs bottom' : 'Ghép đôi: r1+r4 vs r2+r3'}</strong>
-                    <p className="muted">
-                      {mode === 'singles'
-                        ? 'Xếp hạng 1 gặp xếp hạng cuối, 2 gặp áp chót... random chọn 1 cặp'
-                        : 'Mạnh nhất + Yếu nhất vs 2 người giữa — tổng sức cân bằng'}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
               {/* Số trận + ngày (batch) */}
               <div className="rm-count-row">
                 <div className="rm-count-block">
