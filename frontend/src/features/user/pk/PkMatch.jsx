@@ -1,44 +1,54 @@
 import { useState } from 'react'
 import { Modal } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
-import { STATUS_LABEL, getResultLock, isParticipant } from './pkUtils'
+import { STATUS_LABEL, getResultLock, isParticipant, getWinnerSide } from './pkUtils'
 
-function Avatar({ person, size = 'md' }) {
-  const cls = size === 'lg' ? 'pk-avatar-lg' : 'pk-avatar-sm'
-  if (!person) return <div className={`pk-avatar-circle ${cls} muted`}>?</div>
-  if (person.avatar_url) return <img src={person.avatar_url} alt={person.full_name} className={`pk-avatar-circle ${cls} avatar-img`} />
-  return <div className={`pk-avatar-circle ${cls}`}>{initials(person.full_name)}</div>
+/* Avatar trong fight card — size: xl (đơn) | lg (đội chính) | sm (đồng đội) */
+function FightAvatar({ person, size = 'lg' }) {
+  const cls = `pk-fight-ava pk-fight-ava-${size}`
+  if (!person) return <div className={`${cls} pk-fight-ava-empty`}>?</div>
+  if (person.avatar_url) return <img src={person.avatar_url} alt={person.full_name} className={`${cls} avatar-img`} />
+  return <div className={cls}>{initials(person.full_name)}</div>
 }
 
-function TeamBlock({ main, partner, label, isWinner }) {
+/* Một phe (đội) trong fight card */
+function FightTeam({ main, partner, role, side, isWinner }) {
+  const isDoubles = !!partner
   return (
-    <div className={`pk-team-block${isWinner ? ' pk-winner-side' : ''}`}>
-      <div className="pk-team-avatars">
-        <Avatar person={main} size="lg" />
-        {partner && <Avatar person={partner} size="md" />}
+    <div className={`pk-fight-team pk-fight-team-${side}${isWinner ? ' pk-fight-winner' : ''}`}>
+      {isWinner && <span className="pk-fight-ribbon">🏆 WINNER</span>}
+      <div className="pk-fight-avatars">
+        <FightAvatar person={main} size={isDoubles ? 'lg' : 'xl'} />
+        {partner && <FightAvatar person={partner} size="sm" />}
       </div>
-      <div className="pk-team-names">
-        <strong>{main?.full_name || '?'}</strong>
-        {partner && <span className="pk-partner-name">& {partner.full_name}</span>}
+      <div className="pk-fight-names">
+        <span className="pk-fight-name">{(main?.full_name || '?').toUpperCase()}</span>
+        {partner && <span className="pk-fight-partner">&amp; {partner.full_name}</span>}
       </div>
-      <span className="pk-team-label">{label}</span>
-      {isWinner && <span className="pk-crown">🏆</span>}
+      <span className="pk-fight-role">{role}</span>
     </div>
   )
 }
 
-function SetScores({ scores }) {
-  if (!scores || scores.length === 0) return null
+/* Khu vực giữa: badge VS + tỉ số set nếu đã kết thúc */
+function FightCenter({ m }) {
+  const completed = m.status === 'completed'
+  let cWon = 0, oWon = 0
+  if (m.set_scores?.length) {
+    for (const s of m.set_scores) {
+      if (s.challenger > s.opponent) cWon++
+      else if (s.opponent > s.challenger) oWon++
+    }
+  }
   return (
-    <div className="pk-set-scores">
-      {scores.map((s, i) => (
-        <div key={i} className="pk-set-row">
-          <span className="pk-set-label">Set {i + 1}</span>
-          <span className={`pk-set-score${s.challenger > s.opponent ? ' pk-score-win' : ' pk-score-lose'}`}>{s.challenger}</span>
-          <span className="pk-set-dash">–</span>
-          <span className={`pk-set-score${s.opponent > s.challenger ? ' pk-score-win' : ' pk-score-lose'}`}>{s.opponent}</span>
-        </div>
-      ))}
+    <div className="pk-fight-center">
+      <div className="pk-fight-net" aria-hidden="true" />
+      <div className="pk-fight-vs">VS</div>
+      {completed && (
+        m.set_scores?.length
+          ? <div className="pk-fight-score">{cWon}<span>–</span>{oWon}</div>
+          : <div className="pk-fight-score">{m.winner_side === 'challenger' ? '1–0' : '0–1'}</div>
+      )}
     </div>
   )
 }
@@ -86,37 +96,39 @@ export function UserEditModal({ match, onClose, onSubmit }) {
   )
 }
 
-export function MatchCard({ m, activePerson, onSetResult, onCancel, onStart, onEdit }) {
+export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel, onStart, onEdit }) {
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
-  const challengerWon = m.winner_side === 'challenger'
-  const opponentWon   = m.winner_side === 'opponent'
+  const winner = getWinnerSide(m)
+  const showActions = amParticipant && m.status !== 'cancelled'
 
   return (
-    <div className={`pk-match-card pk-match-card-v2 pk-status-${m.status}`}>
-      <div className="pk-card-header">
-        <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
-        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
-        {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
-        {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
-      </div>
-
-      <div className="pk-card-vs-row">
-        <TeamBlock main={m.challenger} partner={m.challenger_partner} label="Thách đấu" isWinner={m.status === 'completed' && challengerWon} />
-        <div className="pk-vs-center">
-          <span className="pk-vs-text">VS</span>
-          {m.status === 'completed' && <SetScores scores={m.set_scores} />}
+    <div className={`pk-fight-card pk-fight-${m.status}`}>
+      <div className="pk-fight-head">
+        <div className="pk-fight-head-left">
+          {matchNumber != null && <span className="pk-fight-no">Trận {matchNumber}</span>}
+          <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
+          <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '🏸 Đơn' : '👥 Đôi'}</span>
+          {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
         </div>
-        <TeamBlock main={m.opponent} partner={m.opponent_partner} label="Đối thủ" isWinner={m.status === 'completed' && opponentWon} />
+        {m.played_at && <span className="pk-fight-date">📅 {formatDate(m.played_at)}</span>}
       </div>
 
-      {(m.bet_items || m.note || amParticipant) && (
-        <div className="pk-card-footer">
-          {m.bet_items && <span className="pk-bet">🎁 {m.bet_items}</span>}
-          {m.note      && <span className="pk-note muted">{m.note}</span>}
+      <div className="pk-fight-body">
+        <FightTeam main={m.challenger} partner={m.challenger_partner} role="Thách đấu" side="a" isWinner={winner === 'challenger'} />
+        <FightCenter m={m} />
+        <FightTeam main={m.opponent} partner={m.opponent_partner} role="Đối thủ" side="b" isWinner={winner === 'opponent'} />
+      </div>
 
-          {amParticipant && m.status !== 'cancelled' && (
-            <div className="pk-match-actions">
+      {(m.bet_items || m.note || showActions) && (
+        <div className="pk-fight-foot">
+          <div className="pk-fight-foot-info">
+            {m.bet_items && <span className="pk-fight-bet">🎁 {m.bet_items}</span>}
+            {m.note && <span className="pk-fight-note muted">{m.note}</span>}
+          </div>
+
+          {showActions && (
+            <div className="pk-fight-actions">
               {m.status === 'pending' && (
                 <button className="btn-start" onClick={() => onStart(m.id)}>▶ Bắt đầu đấu</button>
               )}

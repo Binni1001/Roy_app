@@ -7,7 +7,7 @@ import { RandomMatchmaker } from './RandomMatchmaker'
 import { LeaderboardLegend, LeaderboardRow, RankingGuideModal } from './pk/PkLeaderboard'
 import { MatchCard, ResultModal, UserEditModal } from './pk/PkMatch'
 import { CreateMatchModal } from './pk/CreateMatchModal'
-import { sortByDate } from './pk/pkUtils'
+import { sortByDate, groupMatchesByDate, formatMatchDate } from './pk/pkUtils'
 
 export function PkArena({ activePerson }) {
   const [tab, setTab]             = useState('leaderboard')
@@ -322,25 +322,40 @@ export function PkArena({ activePerson }) {
 
           {loading ? <SkeletonMatchCards count={3} /> : filteredMatches.length === 0 ? (
             <div className="pk-empty-state">
-              <img src="/images/cat-shuttle.jpg" alt="" className="pk-empty-img" />
+              <span className="pk-empty-icon">🏸</span>
+              <p className="pk-empty-title">Chưa có trận đấu nào</p>
               <p className="pk-empty-msg">
-                {matchFilter === 'upcoming'  && 'Chưa có kèo nào sắp tới. Hãy thách đấu đi!'}
+                {matchFilter === 'upcoming'  && 'Tạo một trận thách đấu mới để bắt đầu Đấu trường Roy Badminton.'}
                 {matchFilter === 'completed' && 'Chưa có trận đấu nào kết thúc.'}
                 {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
               </p>
+              {matchFilter === 'upcoming' && (
+                <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
+              )}
             </div>
           ) : (
-            <div className="pk-match-list">
-              {filteredMatches.map((m) => (
-                <MatchCard
-                  key={m.id}
-                  m={m}
-                  activePerson={activePerson}
-                  onSetResult={setShowResult}
-                  onCancel={(id) => setCancelId(id)}
-                  onStart={(id) => setStartingId(id)}
-                  onEdit={(match) => setEditingMatch(match)}
-                />
+            <div className="pk-day-groups">
+              {groupMatchesByDate(filteredMatches).map(({ key, matches: dayMatches }) => (
+                <section key={key} className="pk-day-group">
+                  <div className="pk-day-header">
+                    <span className="pk-day-date">📅 {formatMatchDate(key)}</span>
+                    <span className="pk-day-count">{dayMatches.length} trận</span>
+                  </div>
+                  <div className="pk-match-list">
+                    {dayMatches.map((m, idx) => (
+                      <MatchCard
+                        key={m.id}
+                        m={m}
+                        matchNumber={idx + 1}
+                        activePerson={activePerson}
+                        onSetResult={setShowResult}
+                        onCancel={(id) => setCancelId(id)}
+                        onStart={(id) => setStartingId(id)}
+                        onEdit={(match) => setEditingMatch(match)}
+                      />
+                    ))}
+                  </div>
+                </section>
               ))}
             </div>
           )}

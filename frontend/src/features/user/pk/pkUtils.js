@@ -40,3 +40,53 @@ export function isParticipant(m, activePerson) {
     .filter(Boolean)
     .includes(activePerson.id)
 }
+
+/* ── Gom trận theo ngày + đánh số "Trận N" theo từng ngày ── */
+
+// Khoá ngày dạng YYYY-MM-DD theo giờ địa phương
+export function getDateKey(dateStr) {
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return 'unknown'
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+const WEEKDAYS = ['Chủ nhật', 'Thứ hai', 'Thứ ba', 'Thứ tư', 'Thứ năm', 'Thứ sáu', 'Thứ bảy']
+
+// "Thứ sáu, 26/06/2026"
+export function formatMatchDate(dateStr) {
+  if (!dateStr || dateStr === 'unknown') return 'Chưa có ngày'
+  const d = new Date(dateStr)
+  if (Number.isNaN(d.getTime())) return 'Chưa có ngày'
+  return `${WEEKDAYS[d.getDay()]}, ${formatDate(dateStr)}`
+}
+
+// 'challenger' | 'opponent' | null
+export function getWinnerSide(m) {
+  if (m.status !== 'completed') return null
+  return m.winner_side || null
+}
+
+// Trả về [{ key, matches }] — ngày mới nhất trước; trong ngày: trận cũ trước (Trận 1 = sớm nhất)
+export function groupMatchesByDate(matches) {
+  const byDay = new Map()
+  for (const m of matches) {
+    const key = getDateKey(m.played_at || m.created_at)
+    if (!byDay.has(key)) byDay.set(key, [])
+    byDay.get(key).push(m)
+  }
+  const groups = []
+  for (const [key, list] of byDay) {
+    const sorted = [...list].sort((a, b) => {
+      const ca = new Date(a.created_at || a.played_at)
+      const cb = new Date(b.created_at || b.played_at)
+      return ca - cb
+    })
+    groups.push({ key, matches: sorted })
+  }
+  groups.sort((a, b) => {
+    if (a.key === 'unknown') return 1
+    if (b.key === 'unknown') return -1
+    return new Date(b.key) - new Date(a.key)
+  })
+  return groups
+}

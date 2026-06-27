@@ -1040,3 +1040,171 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   .pk-arena-hero-deco { font-size: 2.5rem; right: 18px; }
 }
 
+
+/* ════════════════════════════════════════
+   FIGHT CARD — Đấu trường (user) redesign
+   ════════════════════════════════════════ */
+
+/* Nhóm theo ngày */
+.pk-day-groups { display: flex; flex-direction: column; gap: 24px; }
+.pk-day-group { display: flex; flex-direction: column; gap: 14px; }
+.pk-day-header {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; padding-bottom: 8px;
+  border-bottom: 1px solid rgba(216,174,82,0.18);
+}
+.pk-day-date { font-weight: 700; color: #f0e4b8; font-size: 0.95rem; }
+.pk-day-count {
+  font-size: 0.72rem; color: #9CA3AF;
+  background: rgba(255,255,255,0.05);
+  padding: 3px 12px; border-radius: 999px; white-space: nowrap;
+}
+
+/* Card trận */
+.pk-fight-card {
+  position: relative;
+  border-radius: 16px;
+  overflow: hidden;
+  background: linear-gradient(160deg, #131a26 0%, #0f1620 100%);
+  border: 1px solid rgba(216,174,82,0.22);
+  box-shadow: 0 6px 22px rgba(0,0,0,0.32);
+  transition: border-color 0.2s, box-shadow 0.2s, transform 0.2s;
+}
+.pk-fight-card:hover {
+  border-color: rgba(216,174,82,0.45);
+  box-shadow: 0 12px 32px rgba(0,0,0,0.45);
+  transform: translateY(-2px);
+}
+/* Vạch màu trạng thái trên đầu card */
+.pk-fight-card::before {
+  content: ''; position: absolute; top: 0; left: 0; right: 0; height: 3px; z-index: 3;
+}
+.pk-fight-completed::before { background: linear-gradient(90deg, #34D399, transparent 80%); }
+.pk-fight-pending::before,
+.pk-fight-active::before    { background: linear-gradient(90deg, #d8ae52, transparent 80%); }
+.pk-fight-cancelled::before { background: linear-gradient(90deg, #ef4444, transparent 80%); }
+.pk-fight-cancelled { opacity: 0.7; }
+
+/* Header */
+.pk-fight-head {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+  padding: 11px 16px;
+  background: rgba(0,0,0,0.2);
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.pk-fight-head-left { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.pk-fight-no { font-weight: 800; color: #f5f0e6; font-size: 0.9rem; margin-right: 2px; }
+.pk-fight-date { font-size: 0.78rem; color: #9CA3AF; white-space: nowrap; }
+
+/* Body — 2 phe + giữa */
+.pk-fight-body {
+  position: relative;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 16px;
+}
+
+.pk-fight-team {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  gap: 8px; text-align: center; padding: 6px;
+}
+.pk-fight-avatars { position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.pk-fight-ava {
+  border-radius: 50%; object-fit: cover;
+  background: rgba(216,174,82,0.16); color: #d8ae52;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 700; flex-shrink: 0;
+  border: 2px solid rgba(239,231,210,0.12);
+}
+.pk-fight-ava-xl { width: 72px; height: 72px; font-size: 1.3rem; }
+.pk-fight-ava-lg { width: 60px; height: 60px; font-size: 1.05rem; }
+.pk-fight-ava-sm { width: 40px; height: 40px; font-size: 0.78rem; margin-left: -14px; border-color: rgba(239,231,210,0.2); }
+.pk-fight-ava-empty { color: #5a6472; background: rgba(255,255,255,0.04); }
+
+.pk-fight-names { display: flex; flex-direction: column; gap: 2px; max-width: 100%; }
+.pk-fight-name { font-weight: 800; font-size: 0.9rem; color: #f5f0e6; line-height: 1.2; word-break: break-word; }
+.pk-fight-partner { font-size: 0.76rem; color: #9CA3AF; }
+.pk-fight-role {
+  font-size: 0.62rem; text-transform: uppercase;
+  letter-spacing: 0.09em; color: #7d8794; margin-top: 2px;
+}
+
+/* Đội thắng */
+.pk-fight-winner .pk-fight-ava-xl,
+.pk-fight-winner .pk-fight-ava-lg {
+  border-color: #d8ae52;
+  box-shadow: 0 0 0 2px rgba(216,174,82,0.3), 0 0 16px rgba(216,174,82,0.4);
+}
+.pk-fight-winner .pk-fight-name { color: #f0d486; }
+.pk-fight-ribbon {
+  position: absolute; top: -6px; left: 50%; transform: translateX(-50%);
+  background: linear-gradient(135deg, #d8ae52, #b8882a);
+  color: #10141b; font-size: 0.58rem; font-weight: 800; letter-spacing: 0.05em;
+  padding: 2px 10px; border-radius: 999px; white-space: nowrap; z-index: 2;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.45);
+}
+
+/* Giữa: lưới + VS + tỉ số */
+.pk-fight-center {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 8px; min-width: 58px; padding: 0 6px;
+}
+.pk-fight-net {
+  position: absolute; top: -16px; bottom: -16px; left: 50%;
+  border-left: 2px dashed rgba(216,174,82,0.22); transform: translateX(-50%);
+}
+.pk-fight-vs {
+  position: relative; z-index: 1;
+  width: 44px; height: 44px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 40%, #1b2433, #0d131c);
+  border: 1px solid rgba(216,174,82,0.5);
+  color: #d8ae52; font-weight: 900; font-size: 0.95rem;
+  box-shadow: 0 0 14px rgba(216,174,82,0.28);
+}
+.pk-fight-score {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; gap: 6px;
+  font-weight: 800; font-size: 1.05rem; color: #f5f0e6;
+  background: rgba(0,0,0,0.35); border: 1px solid rgba(216,174,82,0.25);
+  border-radius: 8px; padding: 2px 10px;
+}
+.pk-fight-score span { color: #7d8794; }
+
+/* Footer */
+.pk-fight-foot {
+  display: flex; align-items: center; justify-content: space-between;
+  gap: 10px; flex-wrap: wrap;
+  padding: 10px 16px;
+  background: rgba(0,0,0,0.16);
+  border-top: 1px solid rgba(255,255,255,0.05);
+}
+.pk-fight-foot-info { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; min-width: 0; }
+.pk-fight-bet { font-size: 0.82rem; color: #f0d486; }
+.pk-fight-note { font-size: 0.8rem; }
+.pk-fight-actions { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+
+/* Empty state */
+.pk-empty-state {
+  display: flex; flex-direction: column; align-items: center; gap: 8px;
+  text-align: center; padding: 44px 20px;
+}
+.pk-empty-icon { font-size: 2.6rem; }
+.pk-empty-title { font-size: 1.05rem; font-weight: 700; color: #f5f0e6; margin: 0; }
+.pk-empty-msg { color: #9CA3AF; font-size: 0.86rem; margin: 0; max-width: 320px; }
+.pk-empty-state .pk-create-btn { margin-top: 8px; }
+
+/* Mobile: 2 phe xếp dọc */
+@media (max-width: 560px) {
+  .pk-fight-body { grid-template-columns: 1fr; gap: 12px; padding: 18px 14px; }
+  .pk-fight-net { display: none; }
+  .pk-fight-center { flex-direction: row; gap: 14px; }
+  .pk-fight-ava-xl { width: 60px; height: 60px; }
+  .pk-fight-head, .pk-fight-foot { padding-left: 14px; padding-right: 14px; }
+}
