@@ -6,6 +6,16 @@
   background: #0A0E14;
 }
 
+/* Global dropdown readability: dark popup + light text for all native selects */
+select option,
+select optgroup {
+  background-color: #161b24;
+  color: #efe7d2;
+}
+select {
+  color-scheme: dark;
+}
+
 /* â”€â”€ MÃ n hÃ¬nh chá» khá»Ÿi táº¡o â”€â”€ */
 .app-loading {
   display: flex;
