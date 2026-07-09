@@ -171,11 +171,11 @@ export const api = {
   },
 
   pk: {
-    matches: () => request({ url: '/api/pk-matches' }),
-    myMatches: () => request({ url: '/api/pk-matches/me' }),
-    byPerson: (personId) => request({ url: `/api/pk-matches/person/${personId}` }),
+    matches: (periodId) => request({ url: '/api/pk-matches', params: periodId ? { period_id: periodId } : undefined }),
+    myMatches: (periodId) => request({ url: '/api/pk-matches/me', params: periodId ? { period_id: periodId } : undefined }),
+    byPerson: (personId, periodId) => request({ url: `/api/pk-matches/person/${personId}`, params: periodId ? { period_id: periodId } : undefined }),
     create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
-    createBulk: (matches) => request({ url: '/api/pk-matches/bulk', method: 'POST', data: { matches } }),
+    createBulk: (matches, periodId) => request({ url: '/api/pk-matches/bulk', method: 'POST', data: { matches, period_id: periodId } }),
     update: (id, payload) => request({ url: `/api/pk-matches/${id}`, method: 'PUT', data: payload }),
     remove: (id) => request({ url: `/api/pk-matches/${id}`, method: 'DELETE' }),
     leaderboard: () => request({ url: '/api/pk-matches/leaderboard' }),

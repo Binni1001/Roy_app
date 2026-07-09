@@ -13,9 +13,8 @@ function sortByDate(arr) {
   return [...arr].sort((a, b) => new Date(b.played_at || b.created_at) - new Date(a.played_at || a.created_at))
 }
 
-export function PkPanel() {
+export function PkPanel({ periodId }) {
   const [matches, setMatches]     = useState([])
-  const [leaderboard, setLeaderboard] = useState([])
   const [people, setPeople]       = useState([])
   const [filter, setFilter]       = useState('all')
   const [loading, setLoading]     = useState(false)
@@ -29,7 +28,8 @@ export function PkPanel() {
   const [dateFilter, setDateFilter]     = useState('all')
   const [specificDate, setSpecificDate] = useState('')
 
-  useEffect(() => { loadAll() }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadAll() }, [periodId])
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(''), 3000)
@@ -37,15 +37,14 @@ export function PkPanel() {
   }, [toast])
 
   async function loadAll() {
+    if (!periodId) { setMatches([]); return }
     setLoading(true)
     try {
-      const [ms, lb, pp] = await Promise.all([
-        api.pk.matches().catch(() => []),
-        api.pk.leaderboard().catch(() => []),
+      const [ms, pp] = await Promise.all([
+        api.pk.matches(periodId).catch(() => []),
         api.pk.people().catch(() => []),
       ])
       setMatches(ms)
-      setLeaderboard(lb)
       setPeople(pp)
     } finally {
       setLoading(false)
@@ -72,7 +71,7 @@ export function PkPanel() {
 
   async function handleCreate(payload) {
     try {
-      await api.pk.create(payload)
+      await api.pk.create({ ...payload, period_id: periodId })
       setToast('Đã tạo kèo.')
       setShowCreate(false)
       void loadAll()
@@ -81,7 +80,7 @@ export function PkPanel() {
 
   async function handleCreateBatch(payload) {
     try {
-      const created = await api.pk.createBulk(payload)
+      const created = await api.pk.createBulk(payload, periodId)
       setToast(`Đã tạo ${created.length} kèo.`)
       void loadAll()
     } catch (err) { setToast(err.message); throw err }
@@ -233,7 +232,7 @@ export function PkPanel() {
       {showRandom && (
         <RandomMatchmaker
           people={people}
-          leaderboard={leaderboard}
+          leaderboard={lbSingles}
           onClose={() => setShowRandom(false)}
           onCreate={(prefill) => {
             setShowRandom(false)

@@ -3,7 +3,7 @@ import { pkMatchesService } from "./pkMatches.service.js";
 export const pkMatchesController = {
   async getAll(req, res) {
     try {
-      const data = await pkMatchesService.getAll();
+      const data = await pkMatchesService.getAll(req.query.period_id || null);
       res.json(data);
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -12,7 +12,7 @@ export const pkMatchesController = {
 
   async getMyMatches(req, res) {
     try {
-      const data = await pkMatchesService.getMyMatches(req.authUser)
+      const data = await pkMatchesService.getMyMatches(req.authUser, req.query.period_id || null)
       res.json(data)
     } catch (error) {
       res.status(500).json({ message: error.message })
@@ -21,7 +21,7 @@ export const pkMatchesController = {
 
   async getByPerson(req, res) {
     try {
-      const data = await pkMatchesService.getByPerson(req.params.personId);
+      const data = await pkMatchesService.getByPerson(req.params.personId, req.query.period_id || null);
       res.json(data);
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -50,7 +50,7 @@ export const pkMatchesController = {
   async createBulk(req, res) {
     try {
       const isAdmin = req.authRole === 'admin' || req.authRole === 'owner';
-      const data = await pkMatchesService.createBulk(req.body.matches, isAdmin);
+      const data = await pkMatchesService.createBulk(req.body.matches, isAdmin, req.body.period_id || null);
       res.status(201).json(data);
     } catch (error) {
       res.status(400).json({ message: error.message });

@@ -9,7 +9,7 @@ import { MatchCard, ResultModal, UserEditModal } from './pk/PkMatch'
 import { CreateMatchModal } from './pk/CreateMatchModal'
 import { sortByDate, groupMatchesByDate, formatMatchDate } from './pk/pkUtils'
 
-export function PkArena({ activePerson }) {
+export function PkArena({ activePerson, periodId }) {
   const [tab, setTab]             = useState('leaderboard')
   const [matchFilter, setMatchFilter] = useState('upcoming')
   const [matches, setMatches]     = useState([])
@@ -41,7 +41,8 @@ export function PkArena({ activePerson }) {
     note: '',
   })
 
-  useEffect(() => { loadAll() }, [])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  useEffect(() => { loadAll() }, [periodId])
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(''), 3000)
@@ -49,10 +50,11 @@ export function PkArena({ activePerson }) {
   }, [toast])
 
   async function loadAll() {
+    if (!periodId) { setMatches([]); return }
     setLoading(true)
     try {
       const [ms, pp] = await Promise.all([
-        api.pk.matches().catch(() => []),
+        api.pk.matches(periodId).catch(() => []),
         api.pk.people().catch(() => []),
       ])
       setMatches(ms)
@@ -73,6 +75,7 @@ export function PkArena({ activePerson }) {
     try {
       await api.pk.create({
         ...form,
+        period_id: periodId,
         challenger_id: activePerson.id,
         sets: Number(form.sets) || 1,
         challenger_partner_id: form.match_type === 'doubles' ? form.challenger_partner_id : undefined,
@@ -100,7 +103,7 @@ export function PkArena({ activePerson }) {
 
   async function handleRandomBatch(payload) {
     try {
-      const created = await api.pk.createBulk(payload)
+      const created = await api.pk.createBulk(payload, periodId)
       setToastType('success'); setToast(`Đã tạo ${created.length} kèo!`)
       void loadAll()
     } catch (err) { setToastType('error'); setToast(err.message); throw err }

@@ -156,7 +156,7 @@ export function AdminContent(props) {
   }
 
   if (activeTab === 'pk') {
-    return <PanelSuspense><PkPanel /></PanelSuspense>
+    return <PanelSuspense><PkPanel periodId={selectedPeriodId} /></PanelSuspense>
   }
 
   if (activeTab === 'members' && GROUPS_ENABLED) {

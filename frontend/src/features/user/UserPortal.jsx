@@ -122,7 +122,7 @@ export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
           />
         ) : activeTab === 'pk' ? (
           <Suspense fallback={<div style={{ padding: 24 }}><SkeletonMatchCards count={3} /></div>}>
-            <PkArena activePerson={activePerson} />
+            <PkArena activePerson={activePerson} periodId={selectedPeriodId} />
           </Suspense>
         ) : (
           <>

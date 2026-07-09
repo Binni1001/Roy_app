@@ -14,21 +14,21 @@ function formatDateStr(isoStr) {
 }
 
 export const pkMatchesService = {
-  async getAll() {
-    const { data, error } = await pkMatchesRepository.getAll();
+  async getAll(periodId) {
+    const { data, error } = await pkMatchesRepository.getAll(periodId);
     if (error) throw new Error(error.message);
     return data;
   },
 
-  async getMyMatches(user) {
+  async getMyMatches(user, periodId) {
     const { data: person, error: personError } = await import('../../config/supabase.js')
       .then(({ supabase }) => supabase.from('people').select('id').ilike('email', user.email).maybeSingle())
     if (personError || !person) return []
-    return this.getByPerson(person.id)
+    return this.getByPerson(person.id, periodId)
   },
 
-  async getByPerson(personId) {
-    const { data, error } = await pkMatchesRepository.getByPerson(personId);
+  async getByPerson(personId, periodId) {
+    const { data, error } = await pkMatchesRepository.getByPerson(personId, periodId);
     if (error) throw new Error(error.message);
     return data;
   },
@@ -41,11 +41,12 @@ export const pkMatchesService = {
 
   // Validate + dựng object insert cho 1 kèo (không kiểm tra người active — caller tự gọi)
   _buildInsert(payload, isAdmin = false) {
-    const { match_type, challenger_id, opponent_id, challenger_partner_id, opponent_partner_id, bet_items, played_at, note, status, winner_side, set_scores, sets } = payload;
+    const { match_type, challenger_id, opponent_id, challenger_partner_id, opponent_partner_id, bet_items, played_at, note, status, winner_side, set_scores, sets, period_id } = payload;
 
     if (!match_type || !['singles', 'doubles'].includes(match_type)) {
       throw new Error("match_type phải là 'singles' hoặc 'doubles'");
     }
+    if (!period_id) throw new Error("Chưa chọn kỳ cho kèo đấu");
     if (!challenger_id) throw new Error("challenger_id là bắt buộc");
     if (!opponent_id)   throw new Error("opponent_id là bắt buộc");
     if (challenger_id === opponent_id) throw new Error("Không thể thách đấu chính mình");
@@ -68,6 +69,7 @@ export const pkMatchesService = {
     const resolvedStatus = isAdmin && status ? status : 'pending';
     return {
       match_type,
+      period_id,
       challenger_id,
       opponent_id,
       challenger_partner_id: match_type === 'doubles' ? challenger_partner_id : null,
@@ -91,11 +93,11 @@ export const pkMatchesService = {
     return data;
   },
 
-  async createBulk(matches, isAdmin = false) {
+  async createBulk(matches, isAdmin = false, periodId = null) {
     if (!Array.isArray(matches) || matches.length === 0) throw new Error("Danh sách kèo trống");
     if (matches.length > 30) throw new Error("Tối đa 30 kèo mỗi lần tạo");
 
-    const inserts = matches.map((m) => this._buildInsert(m, isAdmin));
+    const inserts = matches.map((m) => this._buildInsert({ ...m, period_id: m.period_id || periodId }, isAdmin));
 
     // Kiểm tra tất cả người tham gia active 1 lần duy nhất
     const allIds = [...new Set(
