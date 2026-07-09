@@ -1,6 +1,7 @@
 import { CalendarDays, History, Home, LogOut, Swords, UserPen, Wallet } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
 import { GroupSwitcher } from '../../components/GroupSwitcher'
+import { GROUPS_ENABLED } from '../../config/features'
 import { formatMoney, initials } from '../../utils/appUtils'
 
 const USER_NAV = [
@@ -43,12 +44,14 @@ export function UserSidebar({ activeTab, setActiveTab, activePerson, onSignOut, 
         )}
 
         {/* ── Group switcher ── */}
-        <GroupSwitcher
-          activeGroupId={activePerson?.active_group_id}
-          onSwitched={onSwitchGroup}
-          onAddGroup={onSwitchGroup}
-          canCreate={false}
-        />
+        {GROUPS_ENABLED && (
+          <GroupSwitcher
+            activeGroupId={activePerson?.active_group_id}
+            onSwitched={onSwitchGroup}
+            onAddGroup={onSwitchGroup}
+            canCreate={false}
+          />
+        )}
 
         {/* ── Nav ── */}
         <nav className="sb-nav">

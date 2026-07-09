@@ -1,5 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { SkeletonTable } from '../../components/common'
+import { GROUPS_ENABLED } from '../../config/features'
 
 const DashboardPanel  = lazy(() => import('./panels/DashboardPanel'))
 const AnalyticsPanel  = lazy(() => import('./panels/AnalyticsPanel'))
@@ -158,7 +159,7 @@ export function AdminContent(props) {
     return <PanelSuspense><PkPanel /></PanelSuspense>
   }
 
-  if (activeTab === 'members') {
+  if (activeTab === 'members' && GROUPS_ENABLED) {
     return <PanelSuspense><MembersPanel role={role} /></PanelSuspense>
   }
 
