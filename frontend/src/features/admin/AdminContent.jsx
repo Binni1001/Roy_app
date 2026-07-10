@@ -170,6 +170,7 @@ export function AdminContent(props) {
         fund={data.fund}
         debts={data.debts}
         people={people}
+        periods={periods}
         fundForm={forms.fund}
         selectedPeriodId={selectedPeriodId}
         setForm={setForm}

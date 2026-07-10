@@ -41,6 +41,16 @@ export const paymentsRepository = {
       .single();
   },
 
+  async getOpenPeriod() {
+    return await supabase
+      .from("periods")
+      .select("id, status")
+      .eq("status", "open")
+      .order("start_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+  },
+
   async createPayment(payload) {
     return await supabase
       .from("payments")

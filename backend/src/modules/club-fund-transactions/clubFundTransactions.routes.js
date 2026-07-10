@@ -9,6 +9,7 @@ router.get("/period/:periodId", requireAuth, requireAdmin, clubFundTransactionsC
 router.post("/", requireAuth, requireAdmin, clubFundTransactionsController.create);
 router.post("/deposit", requireAuth, requireAdmin, clubFundTransactionsController.deposit);
 router.post("/refund", requireAuth, requireAdmin, clubFundTransactionsController.refund);
+router.post("/carry-over", requireAuth, requireAdmin, clubFundTransactionsController.carryOver);
 router.put("/:id", requireAuth, requireAdmin, clubFundTransactionsController.update);
 router.delete("/:id", requireAuth, requireAdmin, clubFundTransactionsController.remove);
 

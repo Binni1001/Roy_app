@@ -246,6 +246,10 @@ export const paymentsService = {
     const updatedDebts = [];
     const fundTransactions = [];
 
+    // Kỳ đang mở (để ghi tiền trả nợ cũ vào đúng kỳ hiện tại nếu kỳ gốc đã chốt)
+    const openPeriodResult = await paymentsRepository.getOpenPeriod();
+    const openPeriodId = openPeriodResult?.data?.id || null;
+
     for (const item of paymentDebts) {
       const debt = item.debt;
 
@@ -281,8 +285,14 @@ export const paymentsService = {
         continue;
       }
 
+      // Kỳ gốc còn mở -> ghi kỳ gốc; đã chốt -> ghi vào kỳ đang mở
+      const periodResult = await paymentsRepository.getPeriod(debt.period_id);
+      const debtPeriodStatus = periodResult?.data?.status;
+      const targetPeriodId =
+        debtPeriodStatus === "open" || !openPeriodId ? debt.period_id : openPeriodId;
+
       const fundResult = await paymentsRepository.createFundTransaction({
-        period_id: debt.period_id,
+        period_id: targetPeriodId,
         person_id: debt.person_id,
         payment_id: payment.id,
         debt_id: debt.id,
