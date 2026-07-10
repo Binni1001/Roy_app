@@ -75,7 +75,7 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
           periodId={selectedPeriodId}
           onClose={() => setShowRefund(false)}
           onSubmit={(payload) => {
-            submit(() => api.fund.create(payload), 'Đã hoàn tiền từ quỹ.')
+            submit(() => api.fund.refund(payload), 'Đã hoàn tiền — số dư đã trừ về đúng.')
             setShowRefund(false)
           }}
         />
@@ -259,7 +259,7 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
         </label>
 
         {personId && positiveBalance > 0 && (
-          <p className="hint">Người này đang dư <strong>{formatMoney(positiveBalance)}</strong> — hoàn xong nhớ bấm "Bù trừ" để số dư về 0, tránh trả 2 lần.</p>
+          <p className="hint">Người này đang dư <strong>{formatMoney(positiveBalance)}</strong>. Hoàn đúng số này thì số dư tự về <strong>0</strong> (đã trừ luôn, khỏi cần bù trừ).</p>
         )}
 
         <Input label="Số tiền hoàn" type="number" value={amount} onChange={setAmount} />

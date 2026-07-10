@@ -8,6 +8,7 @@ router.get("/", requireAuth, requireAdmin, clubFundTransactionsController.getAll
 router.get("/period/:periodId", requireAuth, requireAdmin, clubFundTransactionsController.getByPeriod);
 router.post("/", requireAuth, requireAdmin, clubFundTransactionsController.create);
 router.post("/deposit", requireAuth, requireAdmin, clubFundTransactionsController.deposit);
+router.post("/refund", requireAuth, requireAdmin, clubFundTransactionsController.refund);
 router.put("/:id", requireAuth, requireAdmin, clubFundTransactionsController.update);
 router.delete("/:id", requireAuth, requireAdmin, clubFundTransactionsController.remove);
 

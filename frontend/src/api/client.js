@@ -158,6 +158,8 @@ export const api = {
       request({ url: '/api/club-fund-transactions', method: 'POST', data: payload }),
     deposit: (payload) =>
       request({ url: '/api/club-fund-transactions/deposit', method: 'POST', data: payload }),
+    refund: (payload) =>
+      request({ url: '/api/club-fund-transactions/refund', method: 'POST', data: payload }),
     update: (id, payload) =>
       request({ url: `/api/club-fund-transactions/${id}`, method: 'PUT', data: payload }),
     remove: (id) =>

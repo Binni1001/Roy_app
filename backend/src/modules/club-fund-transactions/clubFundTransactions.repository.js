@@ -49,4 +49,21 @@ export const clubFundTransactionsRepository = {
       .delete()
       .eq("id", id);
   },
+
+  async getPersonBalance(personId) {
+    return await supabase
+      .from("person_balances")
+      .select("*")
+      .eq("person_id", personId)
+      .maybeSingle();
+  },
+
+  async setPersonBalance(personId, newBalance) {
+    return await supabase
+      .from("person_balances")
+      .update({ balance: newBalance, updated_at: new Date().toISOString() })
+      .eq("person_id", personId)
+      .select()
+      .single();
+  },
 };

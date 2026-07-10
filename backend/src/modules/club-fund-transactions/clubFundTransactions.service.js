@@ -76,6 +76,45 @@ export const clubFundTransactionsService = {
     return { id };
   },
 
+  // Hoàn tiền cho 1 người: ghi khoản 'refund' (giảm quỹ) VÀ trừ luôn số dư của họ
+  // => một thao tác đưa số dư về 0 (dùng cho người mua cầu nhiều CLB nợ lại).
+  async refundPerson(payload = {}) {
+    if (!payload.person_id) throw new Error("Vui long chon nguoi can hoan tien");
+    assertValid(validateAmount(payload.amount, "So tien hoan"));
+    assertValid(validateText(payload.description, "Ly do hoan tien", 500));
+
+    await assertPeopleActive([payload.person_id]);
+
+    const amount = Number(payload.amount);
+
+    // 1) Ghi khoản hoàn tiền -> giảm quỹ
+    const fundResult = await clubFundTransactionsRepository.create({
+      period_id: payload.period_id || null,
+      person_id: payload.person_id,
+      payment_id: null,
+      transaction_type: "refund",
+      amount,
+      description: payload.description || "Hoan tien cho nguoi mua cau nhieu"
+    });
+    if (fundResult.error) throw new Error(fundResult.error.message);
+
+    // 2) Trừ số dư cá nhân (CLB đã trả bớt phần nợ họ) -> số dư về đúng
+    const balanceResult = await clubFundTransactionsRepository.getPersonBalance(payload.person_id);
+    if (balanceResult.error) throw new Error(balanceResult.error.message);
+
+    let newBalance = null;
+    if (balanceResult.data) {
+      newBalance = Number(balanceResult.data.balance) - amount;
+      const updateResult = await clubFundTransactionsRepository.setPersonBalance(
+        payload.person_id,
+        newBalance
+      );
+      if (updateResult.error) throw new Error(updateResult.error.message);
+    }
+
+    return { ...fundResult.data, new_balance: newBalance };
+  },
+
   async deposit(payload = {}) {
     if (!payload.person_id) throw new Error("Vui lòng chọn người nộp quỹ");
     assertValid(validateAmount(payload.amount, "Số tiền nộp quỹ"));

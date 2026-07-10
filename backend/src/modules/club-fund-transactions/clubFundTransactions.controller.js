@@ -54,4 +54,13 @@ export const clubFundTransactionsController = {
       res.status(400).json({ message: error.message });
     }
   },
+
+  async refund(req, res) {
+    try {
+      const data = await clubFundTransactionsService.refundPerson(req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
 };
