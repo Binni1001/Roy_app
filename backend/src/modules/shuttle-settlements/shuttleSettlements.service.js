@@ -142,71 +142,8 @@ export const shuttleSettlementsService = {
     for (const item of preview.details) {
       const netAmount = Number(item.net_amount);
 
-      if (netAmount === 0) {
-        results.push({
-          person_id: item.person_id,
-          action: "no_action",
-          amount: 0
-        });
-        continue;
-      }
-
-      const balanceResult = await shuttleSettlementsRepository.findPersonBalance(
-        item.person_id
-      );
-
-      if (balanceResult.error) {
-        throw new Error(balanceResult.error.message);
-      }
-
-      const currentBalance = balanceResult.data
-        ? Number(balanceResult.data.balance)
-        : 0;
-
-      const newBalance = currentBalance + netAmount;
-
-      if (balanceResult.data) {
-        const updateBalanceResult =
-          await shuttleSettlementsRepository.updatePersonBalance(
-            item.person_id,
-            newBalance
-          );
-
-        if (updateBalanceResult.error) {
-          throw new Error(updateBalanceResult.error.message);
-        }
-      } else {
-        const createBalanceResult =
-          await shuttleSettlementsRepository.createPersonBalance(
-            item.person_id,
-            newBalance
-          );
-
-        if (createBalanceResult.error) {
-          throw new Error(createBalanceResult.error.message);
-        }
-      }
-
-      const transactionResult =
-        await shuttleSettlementsRepository.createBalanceTransaction({
-          person_id: item.person_id,
-          period_id: periodId,
-          transaction_type:
-            netAmount > 0
-              ? "credit_from_shuttle_purchase"
-              : "debit_shuttle_share",
-          amount: Math.abs(netAmount),
-          direction: netAmount > 0 ? "plus" : "minus",
-          description:
-            netAmount > 0
-              ? "Duong tien do mua cau nhieu hon phan phai chiu"
-              : "Am tien do chua dong du phan cau phai chiu"
-        });
-
-      if (transactionResult.error) {
-        throw new Error(transactionResult.error.message);
-      }
-
+      // Chỉ tạo NỢ cho người đóng thiếu. KHÔNG đụng person_balances (Cách A).
+      // Người mua cầu nhiều -> CLB hoàn qua quỹ (nút "Hoàn tiền").
       if (netAmount < 0) {
         const debtResult = await shuttleSettlementsRepository.createDebt({
           period_id: periodId,
@@ -214,7 +151,7 @@ export const shuttleSettlementsService = {
           debt_type: "shuttle_extra",
           amount: Math.abs(netAmount),
           status: "unpaid",
-          description: "Tien cau can dong them"
+          description: "Tien cau phai dong them cuoi ky"
         });
 
         if (debtResult.error) {
@@ -223,17 +160,15 @@ export const shuttleSettlementsService = {
 
         results.push({
           person_id: item.person_id,
-          action: "created_shuttle_debt",
+          action: "created_debt",
           amount: Math.abs(netAmount),
-          new_balance: newBalance,
           debt: debtResult.data
         });
       } else {
         results.push({
           person_id: item.person_id,
-          action: "added_positive_balance",
-          amount: netAmount,
-          new_balance: newBalance
+          action: netAmount > 0 ? "refund_via_fund" : "no_action",
+          amount: netAmount
         });
       }
     }

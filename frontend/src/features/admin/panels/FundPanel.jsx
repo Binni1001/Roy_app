@@ -7,6 +7,7 @@ import { formatDate, formatMoney } from '../../../utils/appUtils'
 export function FundPanel({ balances, fund, debts = [], people = [], fundForm, selectedPeriodId, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showDeposit, setShowDeposit] = useState(false)
+  const [showRefund, setShowRefund] = useState(false)
   const [offsetBalance, setOffsetBalance] = useState(null)
   const [offsetAllConfirm, setOffsetAllConfirm] = useState(false)
   const [fundQuery, setFundQuery] = useState('')
@@ -44,6 +45,7 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
           action={(
             <ActionGroup>
               <button onClick={() => setShowDeposit(true)}>+ Nộp quỹ</button>
+              <button onClick={() => setShowRefund(true)}>💸 Hoàn tiền</button>
               <button onClick={() => setShowAdd(true)}>+ Ghi thu/chi</button>
             </ActionGroup>
           )}
@@ -62,6 +64,19 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
           onSubmit={(payload) => {
             submit(() => api.fund.deposit(payload), 'Đã nộp quỹ.')
             setShowDeposit(false)
+          }}
+        />
+      )}
+
+      {showRefund && (
+        <RefundModal
+          people={people}
+          balances={balances}
+          periodId={selectedPeriodId}
+          onClose={() => setShowRefund(false)}
+          onSubmit={(payload) => {
+            submit(() => api.fund.create(payload), 'Đã hoàn tiền từ quỹ.')
+            setShowRefund(false)
           }}
         />
       )}
@@ -196,6 +211,62 @@ function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Nộp quỹ</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
+  const [personId, setPersonId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [description, setDescription] = useState('')
+
+  // Số dư dương hiện tại của người đang chọn (gợi ý số cần hoàn)
+  const positiveBalance = useMemo(() => {
+    const row = balances.find((b) => (b.person_id || b.person?.id) === personId)
+    const val = Number(row?.balance || 0)
+    return val > 0 ? val : 0
+  }, [balances, personId])
+
+  function selectPerson(id) {
+    setPersonId(id)
+    const row = balances.find((b) => (b.person_id || b.person?.id) === id)
+    const val = Number(row?.balance || 0)
+    setAmount(val > 0 ? String(val) : '')
+  }
+
+  return (
+    <Modal title="💸 Hoàn tiền từ quỹ" onClose={onClose}>
+      <form className="form" onSubmit={(e) => {
+        e.preventDefault()
+        if (!personId || Number(amount) <= 0) return
+        onSubmit({
+          transaction_type: 'refund',
+          person_id: personId,
+          period_id: periodId,
+          amount: Number(amount),
+          description: description || 'Hoàn tiền cầu cho người mua nhiều',
+        })
+      }}>
+        <label>Hoàn cho ai
+          <select value={personId} onChange={(e) => selectPerson(e.target.value)} required>
+            <option value="">-- Chọn người --</option>
+            {people.map((p) => (
+              <option key={p.id} value={p.id}>{p.full_name || p.nickname}</option>
+            ))}
+          </select>
+        </label>
+
+        {personId && positiveBalance > 0 && (
+          <p className="hint">Người này đang dư <strong>{formatMoney(positiveBalance)}</strong> — hoàn xong nhớ bấm "Bù trừ" để số dư về 0, tránh trả 2 lần.</p>
+        )}
+
+        <Input label="Số tiền hoàn" type="number" value={amount} onChange={setAmount} />
+        <Input label="Lý do" value={description} onChange={setDescription} />
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Hủy</button>
+          <button type="submit">Hoàn tiền (giảm quỹ)</button>
         </footer>
       </form>
     </Modal>
