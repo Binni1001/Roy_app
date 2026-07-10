@@ -111,6 +111,11 @@ export const api = {
         url: `/api/balance-offsets/person/${personId}/period/${periodId}`,
         method: 'POST',
       }),
+    offsetAll: (periodId) =>
+      request({
+        url: `/api/balance-offsets/period/${periodId}/all`,
+        method: 'POST',
+      }),
   },
 
   payments: {

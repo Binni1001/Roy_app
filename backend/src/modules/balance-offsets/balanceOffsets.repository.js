@@ -16,6 +16,13 @@ export const balanceOffsetsRepository = {
       .maybeSingle();
   },
 
+  async getPositiveBalances() {
+    return await supabase
+      .from("person_balances")
+      .select("person_id, balance")
+      .gt("balance", 0);
+  },
+
   async getUnpaidDebts(personId, periodId) {
     return await supabase
       .from("debts")

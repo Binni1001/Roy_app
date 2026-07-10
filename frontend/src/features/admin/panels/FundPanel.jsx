@@ -8,7 +8,10 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
   const [showAdd, setShowAdd] = useState(false)
   const [showDeposit, setShowDeposit] = useState(false)
   const [offsetBalance, setOffsetBalance] = useState(null)
+  const [offsetAllConfirm, setOffsetAllConfirm] = useState(false)
   const [fundQuery, setFundQuery] = useState('')
+
+  const hasPositiveBalance = (balances || []).some((b) => Number(b.balance) > 0)
 
   const filteredFund = useMemo(
     () => filterRows(fund, fundQuery, ['description', 'person.full_name', 'transaction_type']),
@@ -18,7 +21,14 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
   return (
     <>
       <section className="grid one">
-        <Panel title="Số dư từng người">
+        <Panel
+          title="Số dư từng người"
+          action={hasPositiveBalance && (
+            <ActionGroup>
+              <button onClick={() => setOffsetAllConfirm(true)}>⇄ Bù trừ tất cả</button>
+            </ActionGroup>
+          )}
+        >
           <SimpleTable
             rows={balances}
             columns={[['person.full_name', 'Người'], ['balance', 'Số dư', formatMoney], ['updated_at', 'Cập nhật', formatDate]]}
@@ -93,6 +103,19 @@ export function FundPanel({ balances, fund, debts = [], people = [], fundForm, s
           onConfirm={() => {
             submitOffsetBalance(offsetBalance, selectedPeriodId, submit)
             setOffsetBalance(null)
+          }}
+        />
+      )}
+
+      {offsetAllConfirm && (
+        <ConfirmModal
+          title="Bù trừ tất cả"
+          message="Lấy số dư dương của MỌI người bù vào nợ chưa trả của kỳ đang chọn? Người nào dư tiền sẽ được trừ thẳng vào khoản phải nộp kỳ này."
+          confirmText="Bù trừ tất cả"
+          onClose={() => setOffsetAllConfirm(false)}
+          onConfirm={() => {
+            if (selectedPeriodId) submit(() => api.balances.offsetAll(selectedPeriodId), 'Đã bù trừ số dư cho cả nhóm.')
+            setOffsetAllConfirm(false)
           }}
         />
       )}

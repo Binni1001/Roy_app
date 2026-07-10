@@ -5,6 +5,35 @@ function isMissingRpc(error) {
 }
 
 export const balanceOffsetsService = {
+  // Bù trừ số dư dương của TẤT CẢ mọi người vào nợ chưa trả của 1 kỳ
+  async offsetAllForPeriod(periodId) {
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
+
+    const balancesResult = await balanceOffsetsRepository.getPositiveBalances();
+    if (balancesResult.error) throw new Error(balancesResult.error.message);
+
+    const positives = balancesResult.data || [];
+    let totalOffset = 0;
+    let affectedPeople = 0;
+
+    for (const row of positives) {
+      const result = await this.offsetPersonPeriod(row.person_id, periodId);
+      const offset = Number(result?.offset_amount || 0);
+      if (offset > 0) {
+        totalOffset += offset;
+        affectedPeople += 1;
+      }
+    }
+
+    return {
+      message: affectedPeople > 0
+        ? `Da bu tru cho ${affectedPeople} nguoi, tong ${totalOffset}d`
+        : "Khong co so du duong nao de bu tru vao ky nay",
+      total_offset: totalOffset,
+      affected_people: affectedPeople,
+    };
+  },
+
   async offsetPersonPeriod(personId, periodId) {
     if (!personId) throw new Error("Person ID khong duoc de trong");
     if (!periodId) throw new Error("Period ID khong duoc de trong");
