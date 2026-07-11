@@ -143,12 +143,12 @@ export function PkPanel({ periodId }) {
                       <th>#</th><th>Người chơi</th>
                       <th>Thắng</th><th>Thua</th><th>Tổng</th>
                       <th title="Điểm tích lũy: +3 thắng, -1 thua">Điểm</th>
-                      <th title="Wilson Score: xếp hạng thống kê cân bằng">Chỉ số ★</th>
+                      <th title="Điểm trung bình mỗi trận — chỉ số xếp hạng chính">Điểm TB/trận</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeLb.map((row) => (
-                      <AdminLeaderboardRow key={row.id} row={row} total={activeLb.length} />
+                      <AdminLeaderboardRow key={row.id} row={row} total={activeLb.filter((r) => r.qualified).length} />
                     ))}
                   </tbody>
                 </table>

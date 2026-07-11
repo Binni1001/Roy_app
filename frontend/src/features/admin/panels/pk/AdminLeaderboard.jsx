@@ -1,4 +1,5 @@
 import { initials } from '../../../../utils/appUtils'
+import { MIN_MATCHES_FOR_RANK } from '../../../../utils/leaderboardUtils'
 
 export function getTierCls(rank, total) {
   if (rank === 1) return 'lb-tier-gold'
@@ -17,18 +18,12 @@ function RankBadge({ rank, total }) {
   return <span className="lb-rank-num">{rank}</span>
 }
 
-function WilsonBar({ score }) {
-  const pct = Math.min(100, Math.max(0, (score || 0) * 100))
-  let cls = 'lb-bar-low'
-  if (pct >= 60) cls = 'lb-bar-high'
-  else if (pct >= 40) cls = 'lb-bar-mid'
-  const display = Math.round(pct)
-  return (
-    <div className="lb-bar-wrap" title={`${display}%`}>
-      <div className={`lb-bar-fill ${cls}`} style={{ width: `${pct}%` }} />
-      <span className="lb-bar-label">{display}%</span>
-    </div>
-  )
+function AvgPointsCell({ value, qualified }) {
+  if (!qualified) return <small className="muted">Chưa đủ {MIN_MATCHES_FOR_RANK} trận</small>
+  const v = value || 0
+  const txt = (v >= 0 ? '+' : '') + v.toFixed(1)
+  const color = v > 0.5 ? '#5ee0a8' : v < 0 ? '#f08a8a' : '#f0d486'
+  return <strong className="lb-avg" style={{ color }}>{txt}<small className="muted"> đ/trận</small></strong>
 }
 
 export function PersonCell({ p }) {
@@ -38,21 +33,21 @@ export function PersonCell({ p }) {
       {p.avatar_url
         ? <img src={p.avatar_url} className="avatar avatar-img pk-avatar" alt={p.full_name} />
         : <span className="avatar pk-avatar">{initials(p.full_name)}</span>}
-      <span>{p.full_name}</span>
+      <span>{p.full_name}{p.is_guest && <small className="lb-guest-tag">Vãng lai</small>}</span>
     </div>
   )
 }
 
 export function AdminLeaderboardRow({ row, total }) {
   return (
-    <tr className={getTierCls(row.rank, total)}>
-      <td><RankBadge rank={row.rank} total={total} /></td>
+    <tr className={row.qualified ? getTierCls(row.rank, total) : 'lb-row-unqualified'}>
+      <td>{row.rank ? <RankBadge rank={row.rank} total={total} /> : <span className="lb-rank-num muted">–</span>}</td>
       <td><PersonCell p={row} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
       <td className="lb-points"><span className="lb-points-chip">{row.points ?? 0}</span></td>
-      <td><WilsonBar score={row.wilson_score} /></td>
+      <td><AvgPointsCell value={row.avg_points} qualified={row.qualified} /></td>
     </tr>
   )
 }
@@ -64,7 +59,7 @@ export function AdminLeaderboardLegend({ total }) {
       <span className="lb-legend-item"><span className="lb-dot lb-dot-mid" />Trung bình</span>
       {total >= 5 && <span className="lb-legend-item"><span className="lb-dot lb-dot-bottom" />Cần cố gắng</span>}
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">★ Wilson Score — đánh nhiều trận mới cao</span>
+      <span className="lb-legend-hint">Xếp theo điểm TB mỗi trận · cần ≥ {MIN_MATCHES_FOR_RANK} trận</span>
     </div>
   )
 }

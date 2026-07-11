@@ -253,12 +253,12 @@ export function PkArena({ activePerson, periodId }) {
                       <th>#</th><th>Người chơi</th>
                       <th>Thắng</th><th>Thua</th><th>Tổng</th>
                       <th title="Điểm tích lũy: +3 mỗi trận thắng, -1 mỗi trận thua">Điểm</th>
-                      <th title="Wilson Score: xếp hạng thống kê, người ít trận bị kéo về trung bình">Chỉ số ★</th>
+                      <th title="Điểm trung bình mỗi trận — chỉ số xếp hạng chính">Điểm TB/trận</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeLb.map((row) => (
-                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={activeLb.length} />
+                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={activeLb.filter((r) => r.qualified).length} />
                     ))}
                   </tbody>
                 </table>

@@ -1,3 +1,6 @@
+// Số trận tối thiểu để được xếp hạng chính thức (đủ trận mới "lên bảng").
+export const MIN_MATCHES_FOR_RANK = 4
+
 export function wilsonScore(wins, total) {
   if (total === 0) return 0
   const z = 1.96
@@ -30,8 +33,9 @@ export function computeLeaderboard(matches, matchType, people) {
   }
 
   const rows = Object.entries(stats).map(([id, s]) => {
-    const total  = s.wins + s.losses
-    const person = people.find((p) => p.id === id) || { id, full_name: '?' }
+    const total   = s.wins + s.losses
+    const person  = people.find((p) => p.id === id) || { id, full_name: '?' }
+    const rawPts  = s.wins * 3 - s.losses
     return {
       id,
       full_name:    person.full_name,
@@ -39,12 +43,28 @@ export function computeLeaderboard(matches, matchType, people) {
       wins:         s.wins,
       losses:       s.losses,
       total_matches: total,
-      points:       Math.max(0, s.wins * 3 - s.losses),
+      points:       Math.max(0, rawPts),
+      avg_points:   total > 0 ? rawPts / total : 0,   // điểm trung bình mỗi trận (có thể âm)
       win_rate:     total > 0 ? s.wins / total : 0,
       wilson_score: wilsonScore(s.wins, total),
+      attendance_type: person.attendance_type || null,
+      is_guest:     person.attendance_type === 'guest',
+      qualified:    total >= MIN_MATCHES_FOR_RANK,   // đủ số trận để lên bảng chính
     }
   })
 
-  rows.sort((a, b) => b.wilson_score - a.wilson_score || b.wins - a.wins)
-  return rows.map((r, i) => ({ ...r, rank: i + 1 }))
+  // Người ĐỦ TRẬN xếp trước (theo điểm TB mỗi trận), người CHƯA ĐỦ TRẬN xuống cuối.
+  rows.sort((a, b) => {
+    if (a.qualified !== b.qualified) return a.qualified ? -1 : 1
+    return b.avg_points - a.avg_points
+      || b.win_rate - a.win_rate
+      || b.total_matches - a.total_matches
+  })
+
+  // Rank chỉ đánh cho người đủ trận; chưa đủ trận rank = null.
+  let rank = 0
+  return rows.map((r) => {
+    if (r.qualified) { rank += 1; return { ...r, rank } }
+    return { ...r, rank: null }
+  })
 }

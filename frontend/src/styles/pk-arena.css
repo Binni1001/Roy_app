@@ -1248,3 +1248,20 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   .pk-fight-ava-xl { width: 60px; height: 60px; }
   .pk-fight-head, .pk-fight-foot { padding-left: 14px; padding-right: 14px; }
 }
+
+/* ── Nhãn vãng lai + hàng chưa đủ trận trên bảng xếp hạng ── */
+.lb-guest-tag {
+  display: inline-block;
+  margin-left: 6px;
+  padding: 1px 7px;
+  border-radius: 10px;
+  font-size: 0.68rem;
+  font-weight: 600;
+  background: rgba(120,144,180,0.18);
+  color: #9fb2cf;
+  border: 1px solid rgba(120,144,180,0.3);
+  vertical-align: middle;
+}
+.lb-row-unqualified td { opacity: 0.55; }
+.lb-row-unqualified:hover td { opacity: 0.8; }
+.lb-avg { font-size: 0.95rem; white-space: nowrap; }
