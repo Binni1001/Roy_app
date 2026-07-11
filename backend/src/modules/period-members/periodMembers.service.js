@@ -264,6 +264,25 @@ export const periodMembersService = {
       throw new Error("Period member ID khong duoc de trong");
     }
 
+    // Huỷ nợ tháng chưa trả của người này trong kỳ (nếu có) trước khi xoá,
+    // tránh để nợ "mồ côi" còn treo sau khi đã rời kỳ.
+    let debt_action = null;
+    const memberResult = await periodMembersRepository.getById(id);
+    const member = memberResult?.data;
+    if (member) {
+      const personId = member.person_id || member.person?.id;
+      const periodId = member.period_id || member.period?.id;
+      if (personId && periodId) {
+        const debtResult = await periodMembersRepository.findMonthlyDebt(periodId, personId);
+        const debt = debtResult?.data;
+        if (debt && debt.status === "unpaid") {
+          const cancelResult = await periodMembersRepository.cancelDebt(debt.id);
+          if (cancelResult.error) throw new Error(cancelResult.error.message);
+          debt_action = { action: "cancelled_unpaid_monthly_fee_debt", debt: cancelResult.data };
+        }
+      }
+    }
+
     const { data, error } = await periodMembersRepository.remove(id);
 
     if (error) {
@@ -275,6 +294,6 @@ export const periodMembersService = {
       throw new Error(error.message);
     }
 
-    return data;
+    return { ...data, debt_action };
   }
 };

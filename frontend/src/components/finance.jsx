@@ -17,6 +17,9 @@ export function DebtTable({ debts, admin = false, submit }) {
         <ActionGroup>
           <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'paid'), 'Đã đánh dấu đã thanh toán.')}>Đã thu</button>
           <button onClick={() => submit(() => api.debts.updateStatus(debt.id, 'unpaid'), 'Đã chuyển về chưa thanh toán.')}>Chưa thu</button>
+          {debt.status !== 'cancelled' && (
+            <button className="danger" onClick={() => submit(() => api.debts.updateStatus(debt.id, 'cancelled'), 'Đã hủy khoản nợ.')}>Hủy nợ</button>
+          )}
         </ActionGroup>
       ) : null}
     />
