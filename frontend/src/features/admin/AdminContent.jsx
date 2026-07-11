@@ -131,6 +131,12 @@ export function AdminContent(props) {
           settlementPreview={data.settlementPreview}
           shuttleForm={forms.shuttle}
           selectedPeriodId={selectedPeriodId}
+          fundBalance={(data.fund || []).reduce((s, t) => {
+            const a = Number(t.amount) || 0
+            if (t.transaction_type === 'income' || t.transaction_type === 'adjustment') return s + a
+            if (t.transaction_type === 'expense' || t.transaction_type === 'refund') return s - a
+            return s
+          }, 0)}
           setForm={setForm}
           submit={submit}
         />

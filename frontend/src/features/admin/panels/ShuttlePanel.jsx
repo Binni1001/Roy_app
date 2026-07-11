@@ -3,7 +3,7 @@ import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
 import { formatMoney } from '../../../utils/appUtils'
 
-export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm, selectedPeriodId, setForm, submit }) {
+export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm, selectedPeriodId, fundBalance = 0, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFundSplit, setShowFundSplit] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
@@ -90,6 +90,7 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
         <FundSplitModal
           people={people}
           periodId={selectedPeriodId}
+          fundBalance={fundBalance}
           onClose={() => setShowFundSplit(false)}
           onSubmit={(payload) => {
             submit(() => api.shuttleExpenses.createWithFundSplit(payload), 'Đã ghi nhận mua cầu (chia nguồn quỹ/cá nhân).')
@@ -174,7 +175,7 @@ function ShuttleExpenseEditModal({ expense, onClose, onSubmit }) {
   )
 }
 
-function FundSplitModal({ people, periodId, onClose, onSubmit }) {
+function FundSplitModal({ people, periodId, fundBalance = 0, onClose, onSubmit }) {
   const [draft, setDraft] = useState({
     buyer_id: '',
     buy_type: 'tube',
@@ -191,6 +192,14 @@ function FundSplitModal({ people, periodId, onClose, onSubmit }) {
   function update(field, value) {
     setError('')
     setDraft((d) => ({ ...d, [field]: value }))
+  }
+
+  // Khi nhập tổng giá: quỹ trả tối đa (bằng số dư quỹ), phần thiếu thành viên bù
+  function updateTotalPrice(value) {
+    setError('')
+    const total = Number(value || 0)
+    const suggestedFund = Math.max(0, Math.min(total, Number(fundBalance) || 0))
+    setDraft((d) => ({ ...d, total_price: value, fund_amount: suggestedFund ? String(suggestedFund) : '' }))
   }
 
   const totalPrice = Number(draft.total_price || 0)
@@ -236,9 +245,14 @@ function FundSplitModal({ people, periodId, onClose, onSubmit }) {
         })
       }}>
         <p className="empty">
-          Dùng khi quỹ không đủ tiền mua cầu và có thành viên bỏ thêm tiền cá nhân để bù vào.
-          Phần quỹ chi sẽ tự ghi vào Sổ quỹ, phần thành viên tự bỏ sẽ được chia/hoàn lại khi chốt tiền cầu.
+          Quỹ trả tiền cầu trước; quỹ thiếu bao nhiêu thì thành viên bù bấy nhiêu.
+          Phần quỹ chi tự ghi vào Sổ quỹ; phần thành viên bù sẽ được chia khi chốt tiền cầu.
         </p>
+        <div className="stack" style={{ background: 'rgba(216,174,82,0.08)', border: '1px solid rgba(216,174,82,0.25)', borderRadius: 8, padding: '8px 12px', marginBottom: 4 }}>
+          <p>Quỹ hiện có: <strong style={{ color: '#d8ae52' }}>{formatMoney(fundBalance)}</strong></p>
+          <p>Quỹ chi lần này: <strong style={{ color: '#e05252' }}>{formatMoney(fundAmount)}</strong></p>
+          <p>Thành viên phải bù: <strong style={{ color: personalAmount > 0 ? '#e0a052' : '#4caf7d' }}>{formatMoney(personalAmount > 0 ? personalAmount : 0)}</strong>{personalAmount <= 0 && ' (quỹ đủ trả hết)'}</p>
+        </div>
         <SelectPeople people={people} value={draft.buyer_id} onChange={(v) => update('buyer_id', v)} label="Người mua/đại diện" />
         <label>Loại mua
           <select value={draft.buy_type} onChange={(e) => update('buy_type', e.target.value)}>
@@ -250,9 +264,8 @@ function FundSplitModal({ people, periodId, onClose, onSubmit }) {
         <Input label="Số ống" type="number" value={draft.tube_count} onChange={(v) => update('tube_count', v)} />
         <Input label="Số cầu mỗi ống" type="number" value={draft.shuttle_per_tube} onChange={(v) => update('shuttle_per_tube', v)} />
         <Input label="Số cầu lẻ" type="number" value={draft.single_count} onChange={(v) => update('single_count', v)} />
-        <Input label="Tổng giá mua cầu" type="number" value={draft.total_price} onChange={(v) => update('total_price', v)} />
-        <Input label="Số tiền quỹ chi" type="number" value={draft.fund_amount} onChange={(v) => update('fund_amount', v)} />
-        <p className="empty">Thành viên tự bỏ: <strong>{formatMoney(personalAmount > 0 ? personalAmount : 0)}</strong></p>
+        <Input label="Tổng giá mua cầu" type="number" value={draft.total_price} onChange={updateTotalPrice} />
+        <Input label="Số tiền quỹ chi (tự điền, sửa được)" type="number" value={draft.fund_amount} onChange={(v) => update('fund_amount', v)} />
         <Input label="Ngày mua" type="date" value={draft.buy_date} onChange={(v) => update('buy_date', v)} />
         <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
         {error && <p className="error">{error}</p>}
