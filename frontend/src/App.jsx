@@ -8,6 +8,7 @@ import Onboarding from './pages/Onboarding'
 import PendingApproval from './pages/PendingApproval'
 import RejectedScreen from './pages/RejectedScreen'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
+import { GROUPS_ENABLED } from './config/features'
 import './App.css'
 
 const AdminPortal = lazy(() => import('./features/admin/AdminPortal'))
@@ -122,16 +123,20 @@ function App() {
     return <Onboarding needsProfile canCreate={false} onDone={refresh} />
   }
 
-  if (!person.active_group_id) {
-    return <Onboarding needsProfile={false} canCreate={false} onDone={refresh} />
-  }
-
-  if (person.status === 'pending') {
-    return <PendingApproval onRefresh={refresh} />
-  }
-
+  // Người đã nghỉ luôn bị chặn (dù bật hay tắt tính năng nhóm)
   if (person.status === 'inactive') {
     return <RejectedScreen />
+  }
+
+  // Các chốt chặn theo nhóm (chưa có nhóm / chờ duyệt) chỉ áp dụng khi BẬT nhóm.
+  // Khi tắt nhóm: ai có hồ sơ là vào thẳng, không cần duyệt.
+  if (GROUPS_ENABLED) {
+    if (!person.active_group_id) {
+      return <Onboarding needsProfile={false} canCreate={false} onDone={refresh} />
+    }
+    if (person.status === 'pending') {
+      return <PendingApproval onRefresh={refresh} />
+    }
   }
 
   return (
