@@ -12,6 +12,15 @@ export const paymentsController = {
     }
   },
 
+  async createForPerson(req, res) {
+    try {
+      const data = await paymentsService.createForPerson(req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async payosWebhook(req, res) {
     try {
       const body = req.body || {};

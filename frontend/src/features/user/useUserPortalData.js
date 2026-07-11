@@ -101,15 +101,15 @@ export function useUserPortalData(session, setActiveTab) {
   }, [loadSessions, selectedPeriodId])
 
   async function createPayment() {
-    if (!activePerson?.id || !selectedPeriodId) {
+    if (!activePerson?.id) {
       setToast('Tài khoản này chưa được liên kết với hồ sơ người chơi.')
       return null
     }
     setSubmitting(true)
     try {
-      const result = await api.payments.createForPersonPeriod({
+      // Trả TẤT CẢ nợ chưa trả của người này (mọi kỳ) trong 1 QR
+      const result = await api.payments.createForPerson({
         person_id: activePerson.id,
-        period_id: selectedPeriodId,
       })
       setCheckout(result)
       void loadPersonData(activePerson.id)

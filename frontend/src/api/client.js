@@ -125,6 +125,12 @@ export const api = {
         method: 'POST',
         data: payload,
       }),
+    createForPerson: (payload) =>
+      request({
+        url: '/api/payments/create-for-person',
+        method: 'POST',
+        data: payload,
+      }),
     cancel: (id) => request({ url: `/api/payments/${id}/cancel`, method: 'PUT' }),
   },
 

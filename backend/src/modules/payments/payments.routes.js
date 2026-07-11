@@ -11,6 +11,13 @@ router.post(
   paymentsController.createForPersonPeriod
 );
 
+router.post(
+  "/create-for-person",
+  requireAuth,
+  requireSelfPersonOrAdmin("body", "person_id"),
+  paymentsController.createForPerson
+);
+
 router.post("/payos-webhook", paymentsController.payosWebhook);
 router.put("/:id/cancel", requireAuth, requirePaymentOwnerOrAdmin, paymentsController.cancelPayment);
 

@@ -25,6 +25,15 @@ export const paymentsRepository = {
       .order("created_at", { ascending: true });
   },
 
+  async getUnpaidDebtsAllPeriods(personId) {
+    return await supabase
+      .from("debts")
+      .select("*")
+      .eq("person_id", personId)
+      .eq("status", "unpaid")
+      .order("created_at", { ascending: true });
+  },
+
   async getPerson(personId) {
     return await supabase
       .from("people")

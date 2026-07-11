@@ -16,27 +16,40 @@ export const paymentsService = {
     if (!person_id) throw new Error("Person ID khong duoc de trong");
     if (!period_id) throw new Error("Period ID khong duoc de trong");
 
-    const debtsResult = await paymentsRepository.getUnpaidDebts(
-      person_id,
-      period_id
-    );
-
+    const debtsResult = await paymentsRepository.getUnpaidDebts(person_id, period_id);
     if (debtsResult.error) throw new Error(debtsResult.error.message);
-
     const debts = debtsResult.data;
-
-    if (!debts.length) {
-      throw new Error("Nguoi nay khong co cong no unpaid trong ky nay");
-    }
-
-    const personResult = await paymentsRepository.getPerson(person_id);
-    if (personResult.error) throw new Error(personResult.error.message);
+    if (!debts.length) throw new Error("Nguoi nay khong co cong no unpaid trong ky nay");
 
     const periodResult = await paymentsRepository.getPeriod(period_id);
     if (periodResult.error) throw new Error(periodResult.error.message);
 
+    return this._buildPaymentForDebts(
+      person_id,
+      debts,
+      `Thanh toan cong no ${periodResult.data?.name || ""}`.trim()
+    );
+  },
+
+  // Gom TẤT CẢ nợ chưa trả của 1 người (mọi kỳ) vào 1 QR
+  async createForPerson(payload = {}) {
+    const { person_id } = payload;
+    if (!person_id) throw new Error("Person ID khong duoc de trong");
+
+    const debtsResult = await paymentsRepository.getUnpaidDebtsAllPeriods(person_id);
+    if (debtsResult.error) throw new Error(debtsResult.error.message);
+    const debts = debtsResult.data;
+    if (!debts.length) throw new Error("Nguoi nay khong con cong no unpaid nao");
+
+    return this._buildPaymentForDebts(person_id, debts, "Thanh toan tat ca cong no");
+  },
+
+  // Dựng payment PayOS từ 1 danh sách nợ (dùng chung cho theo-kỳ và tất-cả-kỳ)
+  async _buildPaymentForDebts(person_id, debts, paymentDescription) {
+    const personResult = await paymentsRepository.getPerson(person_id);
+    if (personResult.error) throw new Error(personResult.error.message);
+
     const person = personResult.data;
-    const period = periodResult.data;
 
     const totalAmount = debts.reduce(
       (sum, debt) => sum + Number(debt.amount),
@@ -119,7 +132,7 @@ export const paymentsService = {
       payos_order_code: orderCode,
       payos_checkout_url: paymentLink.checkoutUrl,
       payos_qr_code: paymentLink.qrCode || null,
-      description: `Thanh toan cong no ${period.name}`,
+      description: paymentDescription,
       return_url: process.env.PAYOS_RETURN_URL,
       cancel_url: process.env.PAYOS_CANCEL_URL,
       raw_payload: paymentLink
