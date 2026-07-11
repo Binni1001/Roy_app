@@ -75,7 +75,8 @@ export const shuttleExpensesService = {
     const totalAmount = Number(payload.total_amount || 0);
 
     validateBuyTypeAndCounts(buyType, tubeCount, shuttlePerTube, singleCount);
-    assertValid(validateAmount(totalAmount, "Tong tien mua cau"));
+    // Cho phép 0: khi quỹ trả hết, phần thành viên tự bỏ = 0
+    assertValid(validateAmount(totalAmount, "Tong tien mua cau", true));
 
     // Validate buy_date: không được ở tương lai
     assertValid(validateDateNotFuture(payload.buy_date, "Ngay mua cau"));
@@ -126,7 +127,7 @@ export const shuttleExpensesService = {
     }
 
     if (payload.total_amount !== undefined) {
-      if (Number(payload.total_amount) <= 0) throw new Error("Tong tien mua cau phai lon hon 0");
+      if (Number(payload.total_amount) < 0) throw new Error("Tong tien mua cau khong duoc am");
       updateData.total_amount = Number(payload.total_amount);
     }
 
