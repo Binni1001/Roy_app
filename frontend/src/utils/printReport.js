@@ -71,6 +71,15 @@ export function printPeriodReport({ period, debts = [], fund = [], shuttleExpens
   const balance = totalIncome - totalExpense
 
   const totalShuttle = shuttleExpenses.reduce((s,e) => s+Number(e.total_amount), 0)
+  // Thống kê số lượng cầu
+  const totalTubes   = shuttleExpenses.filter((e) => e.buy_type === 'tube')
+    .reduce((s,e) => s + Number(e.tube_count || 0), 0)
+  const totalSingles = shuttleExpenses.filter((e) => e.buy_type === 'single')
+    .reduce((s,e) => s + Number(e.single_count || 0), 0)
+  const totalShuttleQua = shuttleExpenses.reduce((s,e) =>
+    s + (e.buy_type === 'tube'
+      ? Number(e.tube_count || 0) * Number(e.shuttle_per_tube || 0)
+      : Number(e.single_count || 0)), 0)
 
   // Gom nhóm thu/chi
   const incomeGroups = {}
@@ -278,6 +287,10 @@ export function printPeriodReport({ period, debts = [], fund = [], shuttleExpens
   ${shuttleExpenses.length > 0 ? `
   <section>
     <h2>Chi phí mua cầu (${shuttleExpenses.length} lần — tổng ${fmt(totalShuttle)})</h2>
+    <p class="muted-note">
+      Tổng đã mua: <strong>${totalTubes} ống</strong>${totalSingles > 0 ? ` + <strong>${totalSingles} quả lẻ</strong>` : ''}
+      = <strong>${totalShuttleQua} quả cầu</strong> · Chi <strong>${fmt(totalShuttle)}</strong>
+    </p>
     <table>
       <thead><tr><th>Ngày</th><th>Người mua</th><th>Số lượng</th><th class="num">Tổng tiền</th><th>Ghi chú</th></tr></thead>
       <tbody>${shuttleRows}</tbody>
