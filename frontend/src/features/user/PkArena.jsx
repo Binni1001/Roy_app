@@ -244,7 +244,7 @@ export function PkArena({ activePerson, periodId }) {
             <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}. Hãy tạo kèo đầu tiên!</p>
           ) : (
             <>
-              <LeaderboardLegend total={activeLb.length} onShowGuide={() => setShowGuide(true)} />
+              <LeaderboardLegend onShowGuide={() => setShowGuide(true)} />
               {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
               <div className="table-wrap">
                 <table>
@@ -252,13 +252,13 @@ export function PkArena({ activePerson, periodId }) {
                     <tr>
                       <th>#</th><th>Người chơi</th>
                       <th>Thắng</th><th>Thua</th><th>Tổng</th>
-                      <th title="Điểm tích lũy: +3 mỗi trận thắng, -1 mỗi trận thua">Điểm</th>
-                      <th title="Điểm trung bình mỗi trận — chỉ số xếp hạng chính">Điểm TB/trận</th>
+                      <th title="Bậc kỹ năng theo rating">Bậc</th>
+                      <th title="Điểm rating Glicko — thắng người mạnh cộng nhiều">Rating</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeLb.map((row) => (
-                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} total={activeLb.filter((r) => r.qualified).length} />
+                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} />
                     ))}
                   </tbody>
                 </table>

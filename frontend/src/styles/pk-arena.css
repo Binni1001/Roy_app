@@ -1265,3 +1265,12 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-row-unqualified td { opacity: 0.55; }
 .lb-row-unqualified:hover td { opacity: 0.8; }
 .lb-avg { font-size: 0.95rem; white-space: nowrap; }
+
+/* ── Bậc kỹ năng (Glicko) trên bảng xếp hạng ── */
+.lb-tier-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.9rem; white-space: nowrap; }
+.lb-tier-name { font-size: 0.8rem; font-weight: 600; color: #cbb876; }
+.lb-rating strong { font-size: 1rem; color: #f0d486; }
+.lb-rating .lb-prov { font-size: 0.7rem; font-style: italic; }
+@media (max-width: 560px) {
+  .lb-tier-name { display: none; }
+}

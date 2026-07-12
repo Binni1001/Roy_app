@@ -1,40 +1,15 @@
 import { Modal } from '../../../components/common'
 import { initials } from '../../../utils/appUtils'
-import { MIN_MATCHES_FOR_RANK } from '../../../utils/leaderboardUtils'
 
-function getTierCls(rank, total) {
-  if (rank === 1) return 'lb-tier-gold'
-  if (rank === 2) return 'lb-tier-silver'
-  if (rank === 3) return 'lb-tier-bronze'
-  if (total >= 5 && rank >= total - 1) return 'lb-tier-bottom'
-  return ''
+// Bậc kỹ năng theo rating
+function TierBadge({ icon, label }) {
+  return <span className="lb-tier-badge" title={label}>{icon} <span className="lb-tier-name">{label}</span></span>
 }
 
-function RankBadge({ rank, total }) {
-  if (rank === 1) return <span className="lb-rank-badge lb-gold">🥇</span>
-  if (rank === 2) return <span className="lb-rank-badge lb-silver">🥈</span>
-  if (rank === 3) return <span className="lb-rank-badge lb-bronze">🥉</span>
-  if (total >= 5 && rank === total) return <span className="lb-rank-badge lb-last">💀</span>
-  if (total >= 5 && rank === total - 1) return <span className="lb-rank-badge lb-near-last">😅</span>
-  return <span className="lb-rank-num">{rank}</span>
-}
-
-// Điểm trung bình mỗi trận — chỉ số xếp hạng chính
-function AvgPointsCell({ value, qualified }) {
-  if (!qualified) {
-    return <small className="muted">Chưa đủ {MIN_MATCHES_FOR_RANK} trận</small>
-  }
-  const v = value || 0
-  const txt = (v >= 0 ? '+' : '') + v.toFixed(1)
-  const color = v > 0.5 ? '#5ee0a8' : v < 0 ? '#f08a8a' : '#f0d486'
-  return <strong className="lb-avg" style={{ color }}>{txt}<small className="muted"> đ/trận</small></strong>
-}
-
-export function LeaderboardRow({ row, isMe, total }) {
-  const tierCls = row.qualified ? getTierCls(row.rank, total) : 'lb-row-unqualified'
+export function LeaderboardRow({ row, isMe }) {
   return (
-    <tr className={`${isMe ? 'pk-row-me' : ''} ${tierCls}`}>
-      <td>{row.rank ? <RankBadge rank={row.rank} total={total} /> : <span className="lb-rank-num muted">–</span>}</td>
+    <tr className={`${isMe ? 'pk-row-me' : ''} ${row.provisional ? 'lb-row-unqualified' : ''}`}>
+      <td>{row.rank ? <span className="lb-rank-num">{row.rank}</span> : <span className="lb-rank-num muted">–</span>}</td>
       <td>
         <div className="pk-person-cell">
           {row.avatar_url
@@ -49,20 +24,24 @@ export function LeaderboardRow({ row, isMe, total }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td className="lb-points"><span className="lb-points-chip">{row.points ?? 0}</span></td>
-      <td><AvgPointsCell value={row.avg_points} qualified={row.qualified} /></td>
+      <td><TierBadge icon={row.tier_icon} label={row.tier_label} /></td>
+      <td className="lb-rating">
+        <strong>{row.rating}</strong>
+        {row.provisional && <small className="muted lb-prov"> tạm tính</small>}
+      </td>
     </tr>
   )
 }
 
-export function LeaderboardLegend({ total, onShowGuide }) {
+export function LeaderboardLegend({ onShowGuide }) {
   return (
     <div className="lb-legend">
-      <span className="lb-legend-item"><span className="lb-dot lb-dot-gold" />Top 3</span>
-      <span className="lb-legend-item"><span className="lb-dot lb-dot-mid" />Trung bình</span>
-      {total >= 5 && <span className="lb-legend-item"><span className="lb-dot lb-dot-bottom" />Cần cố gắng</span>}
+      <span className="lb-legend-item">💎 Bạch kim</span>
+      <span className="lb-legend-item">🥇 Vàng</span>
+      <span className="lb-legend-item">🥈 Bạc</span>
+      <span className="lb-legend-item">🥉 Đồng</span>
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Xếp theo <strong>điểm trung bình mỗi trận</strong> · cần ≥ {MIN_MATCHES_FOR_RANK} trận mới lên bảng</span>
+      <span className="lb-legend-hint">Rating <strong>Glicko</strong> — thắng người mạnh cộng nhiều; người mới hiện "tạm tính"</span>
       <button className="lb-guide-btn" onClick={onShowGuide}>❓ Cách xếp hạng</button>
     </div>
   )
@@ -70,54 +49,56 @@ export function LeaderboardLegend({ total, onShowGuide }) {
 
 export function RankingGuideModal({ onClose }) {
   return (
-    <Modal title="🏆 Cách tính xếp hạng" onClose={onClose}>
+    <Modal title="🏆 Cách tính xếp hạng (Rating Glicko)" onClose={onClose}>
       <div className="rg-root">
         <p className="rg-intro">
-          Xếp hạng theo <strong>điểm trung bình mỗi trận</strong> — công bằng dù người đánh nhiều,
-          người đánh ít. Không phải ai đánh nhiều trận hơn là hạng cao hơn.
+          Mỗi người có một <strong>điểm rating</strong> (bắt đầu 1000). Sau mỗi trận, điểm đổi
+          theo <strong>kết quả</strong> và <strong>trình độ đối thủ</strong> — không phải cứ đánh
+          nhiều trận là điểm cao.
         </p>
         <div className="rg-quote">
-          Điểm mỗi trận = <strong>+3 nếu thắng, −1 nếu thua</strong>. Điểm TB = tổng điểm ÷ số trận.
+          Thắng người <strong>mạnh hơn</strong> → cộng nhiều · Thua người <strong>yếu hơn</strong> → trừ nhiều.
         </div>
 
         <p className="rg-section-title">📌 Ví dụ</p>
         <div className="rg-example-grid">
           <div className="rg-example-card rg-card-win">
-            <div className="rg-card-name">Anh Lâm</div>
-            <div className="rg-card-record">8 thắng · 2 thua (10 trận)</div>
-            <div className="rg-card-score">Điểm TB: <strong>+2.2</strong></div>
-            <div className="rg-card-note">Tỷ lệ thắng cao → điểm TB cao → hạng trên</div>
+            <div className="rg-card-name">Bin (1000) thắng Lâm (1000)</div>
+            <div className="rg-card-record">Ngang cơ</div>
+            <div className="rg-card-score">Bin <strong>+16</strong>, Lâm −16</div>
+            <div className="rg-card-note">Cân sức → đổi điểm vừa phải</div>
           </div>
           <div className="rg-example-card rg-card-mid">
-            <div className="rg-card-name">Bin</div>
-            <div className="rg-card-record">3 thắng · 1 thua (4 trận)</div>
-            <div className="rg-card-score">Điểm TB: <strong>+2.0</strong></div>
-            <div className="rg-card-note">Đánh ít hơn nhưng vẫn được so công bằng theo TB</div>
+            <div className="rg-card-name">Bin (1200) thắng Khách (1000)</div>
+            <div className="rg-card-record">Bin mạnh hơn nhiều</div>
+            <div className="rg-card-score">Bin chỉ <strong>+8</strong></div>
+            <div className="rg-card-note">Thắng người yếu → lời ít</div>
           </div>
           <div className="rg-example-card rg-card-loss">
-            <div className="rg-card-name">Anh Khanh</div>
-            <div className="rg-card-record">2 thắng · 3 thua (5 trận)</div>
-            <div className="rg-card-score">Điểm TB: <strong>+0.6</strong></div>
-            <div className="rg-card-note">Thua nhiều hơn → điểm TB thấp</div>
+            <div className="rg-card-name">Bin (1200) thua Khách (1000)</div>
+            <div className="rg-card-record">Bất ngờ</div>
+            <div className="rg-card-score">Bin <strong>−24</strong></div>
+            <div className="rg-card-note">Thua người yếu → mất nhiều</div>
           </div>
           <div className="rg-example-card rg-card-mid">
-            <div className="rg-card-name">Khách mới</div>
-            <div className="rg-card-record">2 thắng · 0 thua (2 trận)</div>
-            <div className="rg-card-score"><strong>Chưa xếp hạng</strong></div>
-            <div className="rg-card-note">Chưa đủ {MIN_MATCHES_FOR_RANK} trận → xuống cuối bảng, chưa có hạng</div>
+            <div className="rg-card-name">Người mới</div>
+            <div className="rg-card-record">Mới đánh 1–2 trận</div>
+            <div className="rg-card-score"><strong>Tạm tính</strong></div>
+            <div className="rg-card-note">Đánh thêm vài trận là có hạng chính thức</div>
           </div>
         </div>
 
-        <p className="rg-section-title">💡 Quy tắc</p>
+        <p className="rg-section-title">🏅 Bậc theo rating</p>
         <div className="rg-rules">
-          <div className="rg-rule"><span className="rg-rule-icon">⚖️</span><span>Xếp theo <strong>điểm trung bình mỗi trận</strong> → đánh nhiều hay ít đều công bằng</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">🎯</span><span>Phải đánh <strong>đủ ≥ {MIN_MATCHES_FOR_RANK} trận</strong> mới được xếp hạng chính thức</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">🧳</span><span>Người <strong>vãng lai</strong> được gắn nhãn riêng để dễ phân biệt với thành viên cố định</span></div>
-          <div className="rg-rule"><span className="rg-rule-icon">🔄</span><span>Mỗi kỳ có bảng xếp hạng riêng — qua kỳ mới bắt đầu lại</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">💎</span><span><strong>Bạch kim</strong> — trên 1150</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🥇</span><span><strong>Vàng</strong> — 1050 đến 1150</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🥈</span><span><strong>Bạc</strong> — 950 đến 1050</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🥉</span><span><strong>Đồng</strong> — dưới 950</span></div>
         </div>
 
         <div className="rg-footer">
-          Cột "Điểm" là tổng điểm tích luỹ; cột "Điểm TB/trận" mới là chỉ số dùng để xếp hạng.
+          Không cần ai đánh đủ số trận bằng nhau — rating tự cân bằng theo trình độ. Người vãng lai
+          được gắn nhãn riêng. Mỗi kỳ bắt đầu lại từ 1000.
         </div>
       </div>
     </Modal>

@@ -135,20 +135,20 @@ export function PkPanel({ periodId }) {
             <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}.</p>
           ) : (
             <>
-              <AdminLeaderboardLegend total={activeLb.length} />
+              <AdminLeaderboardLegend />
               <div className="table-wrap">
                 <table>
                   <thead>
                     <tr>
                       <th>#</th><th>Người chơi</th>
                       <th>Thắng</th><th>Thua</th><th>Tổng</th>
-                      <th title="Điểm tích lũy: +3 thắng, -1 thua">Điểm</th>
-                      <th title="Điểm trung bình mỗi trận — chỉ số xếp hạng chính">Điểm TB/trận</th>
+                      <th title="Bậc kỹ năng theo rating">Bậc</th>
+                      <th title="Điểm rating Glicko">Rating</th>
                     </tr>
                   </thead>
                   <tbody>
                     {activeLb.map((row) => (
-                      <AdminLeaderboardRow key={row.id} row={row} total={activeLb.filter((r) => r.qualified).length} />
+                      <AdminLeaderboardRow key={row.id} row={row} />
                     ))}
                   </tbody>
                 </table>
