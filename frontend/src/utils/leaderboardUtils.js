@@ -12,6 +12,7 @@ export const BASE_RD = 350
 export const PROVISIONAL_RD = 110   // RD trên mức này coi là "tạm tính"
 const Q = Math.log(10) / 400
 const RD_FLOOR = 30
+const MAX_DELTA = 40   // giới hạn điểm đổi mỗi trận (tránh người mới nhảy loạn)
 
 function gRD(rd) {
   return 1 / Math.sqrt(1 + (3 * Q * Q * rd * rd) / (Math.PI * Math.PI))
@@ -28,7 +29,10 @@ function updateOne(r, rd, rOpp, rdOpp, score) {
   const varInv = Q * Q * g * g * E * (1 - E)
   const invD2 = varInv > 0 ? varInv : 0        // 1/d^2
   const denom = 1 / (rd * rd) + invD2
-  const newR = r + (Q / denom) * g * (score - E)
+  let delta = (Q / denom) * g * (score - E)
+  if (delta > MAX_DELTA) delta = MAX_DELTA
+  else if (delta < -MAX_DELTA) delta = -MAX_DELTA
+  const newR = r + delta
   const newRD = Math.max(RD_FLOOR, Math.sqrt(1 / denom))
   return { r: newR, rd: newRD }
 }

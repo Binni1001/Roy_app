@@ -63,28 +63,28 @@ export function RankingGuideModal({ onClose }) {
         <p className="rg-section-title">📌 Ví dụ</p>
         <div className="rg-example-grid">
           <div className="rg-example-card rg-card-win">
-            <div className="rg-card-name">Bin (1000) thắng Lâm (1000)</div>
-            <div className="rg-card-record">Ngang cơ</div>
-            <div className="rg-card-score">Bin <strong>+16</strong>, Lâm −16</div>
+            <div className="rg-card-name">Bin thắng Lâm (ngang cơ)</div>
+            <div className="rg-card-record">1000 vs 1000</div>
+            <div className="rg-card-score">Bin <strong>+10</strong>, Lâm −10</div>
             <div className="rg-card-note">Cân sức → đổi điểm vừa phải</div>
           </div>
           <div className="rg-example-card rg-card-mid">
-            <div className="rg-card-name">Bin (1200) thắng Khách (1000)</div>
-            <div className="rg-card-record">Bin mạnh hơn nhiều</div>
-            <div className="rg-card-score">Bin chỉ <strong>+8</strong></div>
+            <div className="rg-card-name">Bin (khá) thắng khách yếu</div>
+            <div className="rg-card-record">1150 vs 1000</div>
+            <div className="rg-card-score">Bin chỉ <strong>+6</strong></div>
             <div className="rg-card-note">Thắng người yếu → lời ít</div>
           </div>
           <div className="rg-example-card rg-card-loss">
-            <div className="rg-card-name">Bin (1200) thua Khách (1000)</div>
-            <div className="rg-card-record">Bất ngờ</div>
-            <div className="rg-card-score">Bin <strong>−24</strong></div>
+            <div className="rg-card-name">Bin (khá) thua khách yếu</div>
+            <div className="rg-card-record">1150 vs 1000</div>
+            <div className="rg-card-score">Bin <strong>−14</strong></div>
             <div className="rg-card-note">Thua người yếu → mất nhiều</div>
           </div>
           <div className="rg-example-card rg-card-mid">
             <div className="rg-card-name">Người mới</div>
             <div className="rg-card-record">Mới đánh 1–2 trận</div>
-            <div className="rg-card-score"><strong>Tạm tính</strong></div>
-            <div className="rg-card-note">Đánh thêm vài trận là có hạng chính thức</div>
+            <div className="rg-card-score">±40/trận · <strong>tạm tính</strong></div>
+            <div className="rg-card-note">Đổi nhanh để tìm đúng trình, vài trận là ổn định</div>
           </div>
         </div>
 
