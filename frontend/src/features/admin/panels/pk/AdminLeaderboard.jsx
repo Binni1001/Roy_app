@@ -34,6 +34,7 @@ export function AdminLeaderboardRow({ row }) {
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
       <td><TierBadge tierKey={row.tier_key} /></td>
+      <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
 }
@@ -47,7 +48,7 @@ export function AdminLeaderboardLegend() {
       <span className="lb-legend-item">🥈 Bạc</span>
       <span className="lb-legend-item">🥉 Đồng</span>
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Điểm mùa được ẩn; đánh đơn và đánh đôi được tính riêng.</span>
+      <span className="lb-legend-hint">Điểm Elo theo mùa; đánh đơn và đánh đôi được tính riêng.</span>
     </div>
   )
 }

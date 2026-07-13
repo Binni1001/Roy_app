@@ -37,6 +37,7 @@ export function LeaderboardRow({ row, isMe }) {
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
       <td><TierBadge tierKey={row.tier_key} /></td>
+      <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
 }
@@ -71,7 +72,7 @@ export function LeaderboardLegend({ onShowGuide }) {
       <span className="lb-legend-item">🥈 Bạc</span>
       <span className="lb-legend-item">🥉 Đồng</span>
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Điểm được tính ẩn theo sức mạnh đối thủ và đặt lại ở mỗi kỳ.</span>
+      <span className="lb-legend-hint">Điểm Elo thay đổi theo sức mạnh đối thủ và đặt lại ở mỗi kỳ.</span>
       <button className="lb-guide-btn" onClick={onShowGuide}>Cách xếp hạng</button>
     </div>
   )
@@ -82,8 +83,8 @@ export function RankingGuideModal({ onClose }) {
     <Modal title="Cách xếp hạng đấu trường" onClose={onClose}>
       <div className="rg-root">
         <p className="rg-intro">
-          Mỗi kỳ là một mùa độc lập. Hệ thống tính điểm ẩn theo thứ tự trận đã hoàn tất,
-          kết quả trận và sức mạnh đối thủ. Người chơi chỉ nhìn thấy thứ hạng, bậc và thành tích.
+          Mỗi kỳ là một mùa độc lập. Hệ thống tính điểm Elo theo thứ tự trận đã hoàn tất,
+          kết quả trận và sức mạnh đối thủ. Điểm hiển thị được làm tròn để dễ theo dõi.
         </p>
         <div className="rg-quote">
           Thắng đối thủ mạnh giúp tăng hạng nhiều hơn; thua đối thủ yếu ảnh hưởng nhiều hơn.

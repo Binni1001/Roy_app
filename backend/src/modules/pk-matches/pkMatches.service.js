@@ -289,10 +289,9 @@ export const pkMatchesService = {
       )
       .map((row, index) => {
         const { rating, opponent_strength: opponentStrength, qualified, ...publicRow } = row;
-        void rating;
         void opponentStrength;
         void qualified;
-        return { ...publicRow, rank: index + 1 };
+        return { ...publicRow, rank: index + 1, points: Math.round(rating) };
       });
 
     const qualifying = rows

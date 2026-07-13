@@ -245,7 +245,7 @@ export function PkArena({ activePerson, periodId }) {
             </button>
           </div>
 
-          {loading ? <SkeletonTable rows={5} cols={6} /> : (
+          {loading ? <SkeletonTable rows={5} cols={7} /> : (
             <>
               <LeaderboardLegend onShowGuide={() => setShowGuide(true)} />
               {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
@@ -257,7 +257,7 @@ export function PkArena({ activePerson, periodId }) {
                     <thead>
                       <tr>
                         <th>#</th><th>Người chơi</th>
-                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>Bậc</th>
+                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>Bậc</th><th>Điểm</th>
                       </tr>
                     </thead>
                     <tbody>

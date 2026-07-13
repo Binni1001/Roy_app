@@ -208,4 +208,5 @@ test("PK API finalizes matches separately and reserves voiding for owner", () =>
   assert.match(service, /MIN_MATCHES = 5/);
   assert.match(service, /MIN_OPPONENTS = 3/);
   assert.match(service, /const \{ rating, opponent_strength:/);
+  assert.match(service, /points: Math\.round\(rating\)/);
 });

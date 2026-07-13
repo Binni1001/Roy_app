@@ -1271,6 +1271,8 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-tier-name { font-size: 0.8rem; font-weight: 600; color: #cbb876; }
 .lb-rating strong { font-size: 1rem; color: #f0d486; }
 .lb-rating .lb-prov { font-size: 0.7rem; font-style: italic; }
+.lb-points strong { color: #f0d486; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
+.pk-admin-actions { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .lb-qualifying { margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.09); padding-top: 14px; }
 .lb-qualifying h3 { margin: 0 0 10px; font-size: 0.9rem; color: #d8ae52; }
 .lb-qualifying-list { display: grid; gap: 8px; }
@@ -1287,6 +1289,8 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-qualifying-row .muted { text-align: right; font-size: 0.78rem; }
 @media (max-width: 560px) {
   .lb-tier-name { display: none; }
+  .pk-admin-actions { width: 100%; }
+  .pk-admin-actions .pk-create-btn { flex: 1 1 140px; }
   .lb-qualifying-row { align-items: flex-start; flex-direction: column; }
   .lb-qualifying-row .muted { text-align: left; }
 }
