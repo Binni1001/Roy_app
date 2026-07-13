@@ -1,19 +1,16 @@
-import { Crown, Gem, Shield, ShieldCheck, Sparkles, Star } from 'lucide-react'
-
 const SEASON_TIERS = [
-  { key: 'champion', label: 'Thách đấu', Icon: Crown, range: 'Hạng 1' },
-  { key: 'diamond', label: 'Kim cương', Icon: Gem, range: 'Nhóm dẫn đầu' },
-  { key: 'platinum', label: 'Bạch kim', Icon: Sparkles, range: 'Nhóm xếp hạng cao' },
-  { key: 'gold', label: 'Vàng', Icon: Star, range: 'Nhóm giữa trên' },
-  { key: 'silver', label: 'Bạc', Icon: ShieldCheck, range: 'Nhóm giữa dưới' },
-  { key: 'bronze', label: 'Đồng', Icon: Shield, range: 'Nhóm còn lại' },
+  { key: 'champion', label: 'Thách đấu', image: '/images/ranks/champion.webp', range: 'Hạng 1' },
+  { key: 'diamond', label: 'Kim cương', image: '/images/ranks/diamond.webp', range: 'Nhóm dẫn đầu' },
+  { key: 'platinum', label: 'Bạch kim', image: '/images/ranks/platinum.webp', range: 'Nhóm xếp hạng cao' },
+  { key: 'gold', label: 'Vàng', image: '/images/ranks/gold.webp', range: 'Nhóm giữa trên' },
+  { key: 'silver', label: 'Bạc', image: '/images/ranks/silver.webp', range: 'Nhóm giữa dưới' },
+  { key: 'bronze', label: 'Đồng', image: '/images/ranks/bronze.webp', range: 'Nhóm còn lại' },
 ]
 
 const TIERS_BY_KEY = Object.fromEntries(SEASON_TIERS.map((tier) => [tier.key, tier]))
 
 export function SeasonTierBadge({ tierKey, showLabel = true }) {
   const tier = TIERS_BY_KEY[tierKey] || TIERS_BY_KEY.bronze
-  const { Icon } = tier
 
   return (
     <span
@@ -21,11 +18,7 @@ export function SeasonTierBadge({ tierKey, showLabel = true }) {
       title={tier.label}
       aria-label={showLabel ? undefined : tier.label}
     >
-      <span className="lb-tier-emblem" aria-hidden="true">
-        <span className="lb-tier-emblem-core">
-          <Icon size={18} strokeWidth={2.2} />
-        </span>
-      </span>
+      <img className="lb-tier-image" src={tier.image} alt="" aria-hidden="true" />
       {showLabel && <span className="lb-tier-name">{tier.label}</span>}
     </span>
   )

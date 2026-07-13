@@ -1205,77 +1205,32 @@
 
 /* ── Huy hiệu bậc theo mùa ── */
 .lb-tier-badge {
-  --tier-rgb: 154, 109, 71;
   --tier-color: #d9a77d;
-  --tier-core: #241b18;
   display: inline-flex;
   align-items: center;
-  gap: 9px;
-  min-height: 42px;
+  gap: 10px;
+  min-height: 52px;
   padding: 0;
   border: 0;
   background: transparent;
   color: var(--tier-color);
   white-space: nowrap;
 }
-.lb-tier-emblem {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 38px;
-  height: 42px;
-  background: rgb(var(--tier-rgb));
-  clip-path: polygon(50% 0, 91% 16%, 86% 70%, 50% 100%, 14% 70%, 9% 16%);
-  filter: drop-shadow(0 4px 5px rgba(0, 0, 0, 0.28));
-  flex: 0 0 38px;
-}
-.lb-tier-emblem::before {
-  content: '';
-  position: absolute;
-  inset: 2px;
-  background: var(--tier-core);
-  clip-path: inherit;
-}
-.lb-tier-emblem-core {
-  position: relative;
-  z-index: 1;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 27px;
-  height: 27px;
-  color: var(--tier-color);
-}
-.lb-tier-emblem-core::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -5px;
-  width: 13px;
-  height: 2px;
-  border-radius: 2px;
-  background: currentColor;
-  opacity: 0.42;
-  transform: translateX(-50%);
+.lb-tier-image {
+  display: block;
+  width: 52px;
+  height: 52px;
+  object-fit: contain;
+  filter: drop-shadow(0 5px 7px rgba(0, 0, 0, 0.34));
 }
 .lb-tier-name { font-size: 0.78rem; font-weight: 800; color: inherit; }
-.lb-tier-champion { --tier-rgb: 238, 183, 67; --tier-color: #ffe3a0; --tier-core: #2c2414; font-weight: 800; }
-.lb-tier-champion .lb-tier-emblem { width: 44px; flex-basis: 44px; clip-path: polygon(50% 0, 95% 18%, 88% 70%, 50% 100%, 12% 70%, 5% 18%); filter: drop-shadow(0 0 8px rgba(238, 183, 67, 0.34)); }
-.lb-tier-champion .lb-tier-emblem::after {
-  content: '';
-  position: absolute;
-  inset: 7px 4px 10px;
-  border: 1px solid rgba(255, 227, 160, 0.28);
-  clip-path: inherit;
-}
-.lb-tier-diamond { --tier-rgb: 75, 205, 218; --tier-color: #a4f5f7; --tier-core: #10272c; }
-.lb-tier-diamond .lb-tier-emblem { clip-path: polygon(50% 0, 94% 25%, 76% 86%, 50% 100%, 24% 86%, 6% 25%); }
-.lb-tier-platinum { --tier-rgb: 165, 177, 207; --tier-color: #e0e6f7; --tier-core: #202431; }
-.lb-tier-platinum .lb-tier-emblem { clip-path: polygon(50% 0, 90% 20%, 96% 65%, 50% 100%, 4% 65%, 10% 20%); }
-.lb-tier-gold { --tier-rgb: 221, 168, 61; --tier-color: #f7d681; --tier-core: #2a2112; }
-.lb-tier-silver { --tier-rgb: 138, 157, 180; --tier-color: #d3dfeb; --tier-core: #1e252e; }
-.lb-tier-bronze { --tier-rgb: 173, 101, 63; --tier-color: #e5aa85; --tier-core: #291a16; }
+.lb-tier-champion { --tier-color: #ffe3a0; font-weight: 800; }
+.lb-tier-champion .lb-tier-image { width: 56px; height: 56px; filter: drop-shadow(0 0 9px rgba(238, 183, 67, 0.28)); }
+.lb-tier-diamond { --tier-color: #a4f5f7; }
+.lb-tier-platinum { --tier-color: #e0e6f7; }
+.lb-tier-gold { --tier-color: #f7d681; }
+.lb-tier-silver { --tier-color: #d3dfeb; }
+.lb-tier-bronze { --tier-color: #e5aa85; }
 .rg-tier-rule { justify-content: space-between; gap: 18px; }
 .rg-tier-rule > span:last-child { color: #9ba5b1; text-align: right; font-size: 0.78rem; }
 .lb-rating strong { font-size: 1rem; color: #f0d486; }
@@ -1298,8 +1253,8 @@
 .lb-qualifying-row .muted { text-align: right; font-size: 0.78rem; }
 @media (max-width: 560px) {
   .lb-tier-badge { gap: 6px; }
-  .lb-tier-emblem { width: 34px; height: 38px; flex-basis: 34px; }
-  .lb-tier-champion .lb-tier-emblem { width: 38px; flex-basis: 38px; }
+  .lb-tier-image { width: 46px; height: 46px; }
+  .lb-tier-champion .lb-tier-image { width: 48px; height: 48px; }
   .lb-tier-name { font-size: 0.7rem; }
   .pk-admin-actions { width: 100%; }
   .pk-admin-actions .pk-create-btn { flex: 1 1 140px; }
