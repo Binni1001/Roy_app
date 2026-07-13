@@ -16,7 +16,7 @@ function FightTeam({ main, partner, role, side, isWinner }) {
   const isDoubles = !!partner
   return (
     <div className={`pk-fight-team pk-fight-team-${side}${isWinner ? ' pk-fight-winner' : ''}`}>
-      {isWinner && <span className="pk-fight-ribbon">🏆 WINNER</span>}
+      {isWinner && <span className="pk-fight-ribbon">🏆 THẮNG</span>}
       <div className="pk-fight-avatars">
         <FightAvatar person={main} size={isDoubles ? 'lg' : 'xl'} />
         {partner && <FightAvatar person={partner} size="sm" />}
@@ -43,7 +43,7 @@ function FightCenter({ m }) {
   return (
     <div className="pk-fight-center">
       <div className="pk-fight-net" aria-hidden="true" />
-      <div className="pk-fight-vs">VS</div>
+      <div className="pk-fight-vs">ĐẤU</div>
       {completed && (
         m.set_scores?.length
           ? <div className="pk-fight-score">{cWon}<span>–</span>{oWon}</div>
@@ -100,7 +100,7 @@ export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel,
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
   const winner = getWinnerSide(m)
-  const showActions = amParticipant && m.status !== 'cancelled'
+  const showActions = amParticipant && (m.status === 'pending' || m.status === 'active')
 
   return (
     <div className={`pk-fight-card pk-fight-${m.status}`}>
@@ -140,10 +140,7 @@ export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel,
               {(m.status === 'pending' || m.status === 'active') && !canRecord && reason && (
                 <small className="muted pk-lock-hint">{reason}</small>
               )}
-              {m.status === 'completed' && canRecord && (
-                <button onClick={() => onSetResult(m)}>Sửa kết quả</button>
-              )}
-              <button onClick={() => onEdit(m)}>Sửa kèo</button>
+              <button onClick={() => onEdit(m)}>Sửa trận</button>
               {m.status === 'pending' && (
                 <button className="danger" onClick={() => onCancel(m.id)}>Hủy kèo</button>
               )}
@@ -162,6 +159,7 @@ export function ResultModal({ match, onClose, onSubmit }) {
     Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
   )
   const [confirming, setConfirming] = useState(false)
+  const [error, setError] = useState('')
 
   function updateScore(i, side, val) {
     setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
@@ -171,7 +169,22 @@ export function ResultModal({ match, onClose, onSubmit }) {
 
   function handleSubmit(e) {
     e.preventDefault()
-    if (!winner) return
+    setError('')
+    if (!winner) { setError('Vui lòng chọn bên thắng.'); return }
+    const entered = scores.filter((score) => score.challenger !== '' || score.opponent !== '')
+    if (entered.length === 0) { setError('Vui lòng nhập tỷ số ít nhất một set.'); return }
+    if (entered.some((score) => score.challenger === '' || score.opponent === '')) {
+      setError('Vui lòng nhập đủ tỷ số của cả hai bên trong mỗi set.'); return
+    }
+    if (entered.some((score) => Number(score.challenger) === Number(score.opponent))) {
+      setError('Mỗi set phải có một bên thắng.'); return
+    }
+    const challengerSets = entered.filter((score) => Number(score.challenger) > Number(score.opponent)).length
+    const opponentSets = entered.length - challengerSets
+    if ((winner === 'challenger' && challengerSets <= opponentSets) ||
+        (winner === 'opponent' && opponentSets <= challengerSets)) {
+      setError('Bên thắng không khớp với tỷ số các set.'); return
+    }
     setConfirming(true)
   }
 
@@ -193,7 +206,7 @@ export function ResultModal({ match, onClose, onSubmit }) {
         <div className="rs-root">
           <div className="rs-confirm-box">
             <p className="rs-confirm-winner">🏆 <strong>{winnerName}</strong> thắng</p>
-            <p className="rs-confirm-warn">Sau khi xác nhận, kết quả sẽ bị khoá sau <strong>24 giờ</strong> và không thể chỉnh sửa.</p>
+            <p className="rs-confirm-warn">Sau khi xác nhận, người chơi và tỷ số sẽ bị <strong>khóa ngay lập tức</strong> và không thể chỉnh sửa.</p>
           </div>
           <footer className="modal-actions">
             <button type="button" onClick={() => setConfirming(false)}>Quay lại</button>
@@ -220,7 +233,7 @@ export function ResultModal({ match, onClose, onSubmit }) {
             <span className="rs-side-name">{cName}</span>
             <small className="rs-side-role">Bên thách đấu</small>
           </button>
-          <span className="rs-vs">VS</span>
+          <span className="rs-vs">ĐẤU</span>
           <button type="button"
             className={`rs-side-btn${winner === 'opponent' ? ' rs-side-active' : ''}`}
             onClick={() => setWinner('opponent')}>
@@ -256,8 +269,10 @@ export function ResultModal({ match, onClose, onSubmit }) {
               )}
             </div>
           ))}
-          <button type="button" className="rs-add-set" onClick={addSet}>+ Thêm set</button>
+          {scores.length < sets && <button type="button" className="rs-add-set" onClick={addSet}>+ Thêm set</button>}
         </div>
+
+        {error && <p className="form-error" role="alert">{error}</p>}
 
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>

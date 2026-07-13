@@ -1,19 +1,24 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../api/client'
 import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonPlayerGrid, SkeletonTable } from '../../components/common'
 import { initials } from '../../utils/appUtils'
-import { computeLeaderboard } from '../../utils/leaderboardUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
-import { LeaderboardLegend, LeaderboardRow, RankingGuideModal } from './pk/PkLeaderboard'
+import { LeaderboardLegend, LeaderboardRow, QualifyingPlayers, RankingGuideModal } from './pk/PkLeaderboard'
 import { MatchCard, ResultModal, UserEditModal } from './pk/PkMatch'
 import { CreateMatchModal } from './pk/CreateMatchModal'
 import { sortByDate, groupMatchesByDate, formatMatchDate } from './pk/pkUtils'
+
+const EMPTY_LEADERBOARD = { ranked: [], qualifying: [], requirements: { min_matches: 5, min_opponents: 3 } }
 
 export function PkArena({ activePerson, periodId }) {
   const [tab, setTab]             = useState('leaderboard')
   const [matchFilter, setMatchFilter] = useState('upcoming')
   const [matches, setMatches]     = useState([])
   const [people, setPeople]       = useState([])
+  const [leaderboards, setLeaderboards] = useState({
+    singles: EMPTY_LEADERBOARD,
+    doubles: EMPTY_LEADERBOARD,
+  })
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState('')
   const [toastType, setToastType] = useState('success')
@@ -45,7 +50,7 @@ export function PkArena({ activePerson, periodId }) {
   useEffect(() => { loadAll() }, [periodId])
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(''), 3000)
+    const t = setTimeout(() => setToast(''), 2000)
     return () => clearTimeout(t)
   }, [toast])
 
@@ -53,12 +58,15 @@ export function PkArena({ activePerson, periodId }) {
     if (!periodId) { setMatches([]); return }
     setLoading(true)
     try {
-      const [ms, pp] = await Promise.all([
+      const [ms, pp, singles, doubles] = await Promise.all([
         api.pk.matches(periodId).catch(() => []),
         api.pk.people().catch(() => []),
+        api.pk.leaderboard(periodId, 'singles').catch(() => EMPTY_LEADERBOARD),
+        api.pk.leaderboard(periodId, 'doubles').catch(() => EMPTY_LEADERBOARD),
       ])
       setMatches(ms)
       setPeople(pp)
+      setLeaderboards({ singles, doubles })
     } finally {
       setLoading(false)
     }
@@ -90,11 +98,7 @@ export function PkArena({ activePerson, periodId }) {
 
   async function handleSetWinner(matchId, winnerSide, setScores) {
     try {
-      await api.pk.update(matchId, {
-        winner_side: winnerSide,
-        status: 'completed',
-        set_scores: setScores?.length ? setScores : null,
-      })
+      await api.pk.finalize(matchId, winnerSide, setScores)
       setToastType('success'); setToast('Đã ghi nhận kết quả!')
       setShowResult(null)
       void loadAll()
@@ -186,15 +190,16 @@ export function PkArena({ activePerson, periodId }) {
     )
   }
 
-  const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
-  const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
-  const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
+  const lbSingles = leaderboards.singles.ranked
+  const lbDoubles = leaderboards.doubles.ranked
+  const activeLeaderboard = leaderboards[lbType]
+  const activeLb = activeLeaderboard.ranked
 
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
   const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
   const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
   const baseList  = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
-  const filteredMatches = useMemo(() => applyFilters(baseList), [baseList, myMatchesOnly, matchSearch, dateFilter, specificDate])
+  const filteredMatches = applyFilters(baseList)
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
 
   return (
@@ -227,7 +232,7 @@ export function PkArena({ activePerson, periodId }) {
               <span className="lb-strip-icon">🏆</span>
               <div>
                 <div className="lb-strip-title">Bảng vinh danh</div>
-                <div className="lb-strip-sub">Thống kê theo Wilson Score — càng nhiều kèo, điểm càng chính xác</div>
+                <div className="lb-strip-sub">Xếp hạng theo mùa, sức mạnh đối thủ và thứ tự hoàn tất trận</div>
               </div>
             </div>
           </div>
@@ -240,29 +245,30 @@ export function PkArena({ activePerson, periodId }) {
             </button>
           </div>
 
-          {loading ? <SkeletonTable rows={5} cols={7} /> : activeLb.length === 0 ? (
-            <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}. Hãy tạo kèo đầu tiên!</p>
-          ) : (
+          {loading ? <SkeletonTable rows={5} cols={6} /> : (
             <>
               <LeaderboardLegend onShowGuide={() => setShowGuide(true)} />
               {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th><th>Người chơi</th>
-                      <th>Thắng</th><th>Thua</th><th>Tổng</th>
-                      <th title="Bậc kỹ năng theo rating">Bậc</th>
-                      <th title="Điểm rating Glicko — thắng người mạnh cộng nhiều">Rating</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeLb.map((row) => (
-                      <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {activeLb.length === 0 ? (
+                <p className="muted">Chưa có người chơi đủ điều kiện xếp hạng {lbType === 'singles' ? 'đơn' : 'đôi'}.</p>
+              ) : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th><th>Người chơi</th>
+                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>Bậc</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeLb.map((row) => (
+                        <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} />
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <QualifyingPlayers rows={activeLeaderboard.qualifying} activePersonId={activePerson?.id} />
             </>
           )}
         </Panel>
@@ -345,11 +351,11 @@ export function PkArena({ activePerson, periodId }) {
                     <span className="pk-day-count">{dayMatches.length} trận</span>
                   </div>
                   <div className="pk-match-list">
-                    {dayMatches.map((m, idx) => (
+                    {dayMatches.map((m) => (
                       <MatchCard
                         key={m.id}
                         m={m}
-                        matchNumber={idx + 1}
+                        matchNumber={m.match_number}
                         activePerson={activePerson}
                         onSetResult={setShowResult}
                         onCancel={(id) => setCancelId(id)}

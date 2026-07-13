@@ -54,7 +54,7 @@ export function CreateMatchModal({ form, updateForm, onSubmit, onClose, activePe
               )}
             </div>
 
-            <div className="ck-vs-badge">VS</div>
+            <div className="ck-vs-badge">ĐẤU</div>
 
             <div className="ck-team">
               <div className="ck-team-label ck-label-red">🎯 Đối thủ</div>

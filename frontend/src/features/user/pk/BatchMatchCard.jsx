@@ -18,7 +18,7 @@ export function BatchMatchCard({ match, index, onRemove }) {
           ))}
         </div>
         <div className="rm-mcard-vs">
-          <span className="rm-mcard-vs-text">VS</span>
+          <span className="rm-mcard-vs-text">ĐẤU</span>
           <span className="rm-mcard-type">{isDoubles ? 'Đôi' : 'Đơn'}</span>
         </div>
         <div className="rm-mcard-team rm-mcard-team-right">

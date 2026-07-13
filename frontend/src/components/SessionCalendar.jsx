@@ -56,14 +56,6 @@ function SessionCard({ session, onEdit, onDelete, onViewGuests }) {
 
 /* ── Main Calendar ── */
 export function SessionCalendar({ sessions = [], onEdit, onDelete, onViewGuests }) {
-  if (sessions.length === 0) {
-    return (
-      <div className="empty-state">
-        <img src="/images/cat-shuttle.jpg" alt="" className="empty-state-img" />
-        <p className="empty">Chưa có buổi đánh nào trong kỳ này</p>
-      </div>
-    )
-  }
   // Default to the month of the latest session, or current month
   const defaultDate = useMemo(() => {
     if (sessions.length > 0) {
@@ -92,6 +84,15 @@ export function SessionCalendar({ sessions = [], onEdit, onDelete, onViewGuests 
     })
     return map
   }, [sessions])
+
+  if (sessions.length === 0) {
+    return (
+      <div className="empty-state">
+        <img src="/images/cat-shuttle.jpg" alt="" className="empty-state-img" />
+        <p className="empty">Chưa có buổi đánh nào trong kỳ này</p>
+      </div>
+    )
+  }
 
   function prev() {
     if (month === 0) { setYear(y => y - 1); setMonth(11) }

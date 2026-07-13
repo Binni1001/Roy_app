@@ -1,10 +1,10 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useState } from 'react'
 import { api } from '../../../api/client'
-import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonTable } from '../../../components/common'
-import { computeLeaderboard } from '../../../utils/leaderboardUtils'
+import { ConfirmModal, Modal, Panel, SkeletonMatchCards, SkeletonTable } from '../../../components/common'
 import { RandomMatchmaker } from '../../user/RandomMatchmaker'
+import { ResultModal } from '../../user/pk/PkMatch'
 import { STATUS_LABEL } from './pk/pkConstants'
-import { AdminLeaderboardRow, AdminLeaderboardLegend } from './pk/AdminLeaderboard'
+import { AdminLeaderboardRow, AdminLeaderboardLegend, AdminQualifyingPlayers } from './pk/AdminLeaderboard'
 import { AdminMatchCard } from './pk/AdminMatchCard'
 import { AdminCreateMatchModal } from './pk/AdminCreateMatchModal'
 import { PkEditModal } from './pk/PkEditModal'
@@ -13,14 +13,40 @@ function sortByDate(arr) {
   return [...arr].sort((a, b) => new Date(b.played_at || b.created_at) - new Date(a.played_at || a.created_at))
 }
 
-export function PkPanel({ periodId }) {
+const EMPTY_LEADERBOARD = { ranked: [], qualifying: [] }
+
+function VoidResultModal({ match, onClose, onConfirm }) {
+  const [reason, setReason] = useState('')
+  return (
+    <Modal title="Hủy kết quả trận" onClose={onClose}>
+      <form className="form" onSubmit={(event) => {
+        event.preventDefault()
+        if (reason.trim().length >= 5) onConfirm(reason.trim())
+      }}>
+        <p>Kết quả trận {match.match_number ? `số ${match.match_number}` : ''} sẽ bị loại khỏi mùa và toàn bộ điểm của các trận sau sẽ được tính lại.</p>
+        <label>Lý do hủy kết quả
+          <textarea value={reason} onChange={(event) => setReason(event.target.value)} minLength={5} required />
+        </label>
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose}>Đóng</button>
+          <button type="submit" className="danger" disabled={reason.trim().length < 5}>Xác nhận hủy</button>
+        </footer>
+      </form>
+    </Modal>
+  )
+}
+
+export function PkPanel({ periodId, role }) {
   const [matches, setMatches]     = useState([])
   const [people, setPeople]       = useState([])
+  const [leaderboards, setLeaderboards] = useState({ singles: EMPTY_LEADERBOARD, doubles: EMPTY_LEADERBOARD })
   const [filter, setFilter]       = useState('all')
   const [loading, setLoading]     = useState(false)
   const [toast, setToast]         = useState('')
   const [editing, setEditing]     = useState(null)
   const [deleting, setDeleting]   = useState(null)
+  const [finalizing, setFinalizing] = useState(null)
+  const [voiding, setVoiding] = useState(null)
   const [showRandom, setShowRandom]     = useState(false)
   const [lbType, setLbType]             = useState('singles')
   const [showCreate, setShowCreate]     = useState(false)
@@ -32,7 +58,7 @@ export function PkPanel({ periodId }) {
   useEffect(() => { loadAll() }, [periodId])
   useEffect(() => {
     if (!toast) return
-    const t = setTimeout(() => setToast(''), 3000)
+    const t = setTimeout(() => setToast(''), 2000)
     return () => clearTimeout(t)
   }, [toast])
 
@@ -40,12 +66,15 @@ export function PkPanel({ periodId }) {
     if (!periodId) { setMatches([]); return }
     setLoading(true)
     try {
-      const [ms, pp] = await Promise.all([
+      const [ms, pp, singles, doubles] = await Promise.all([
         api.pk.matches(periodId).catch(() => []),
         api.pk.people().catch(() => []),
+        api.pk.leaderboard(periodId, 'singles').catch(() => EMPTY_LEADERBOARD),
+        api.pk.leaderboard(periodId, 'doubles').catch(() => EMPTY_LEADERBOARD),
       ])
       setMatches(ms)
       setPeople(pp)
+      setLeaderboards({ singles, doubles })
     } finally {
       setLoading(false)
     }
@@ -65,6 +94,24 @@ export function PkPanel({ periodId }) {
       await api.pk.remove(id)
       setToast('Đã xóa kèo.')
       setDeleting(null)
+      void loadAll()
+    } catch (err) { setToast(err.message) }
+  }
+
+  async function handleFinalize(id, winnerSide, setScores) {
+    try {
+      await api.pk.finalize(id, winnerSide, setScores)
+      setToast('Đã hoàn tất và khóa kết quả trận.')
+      setFinalizing(null)
+      void loadAll()
+    } catch (err) { setToast(err.message) }
+  }
+
+  async function handleVoid(id, reason) {
+    try {
+      await api.pk.voidResult(id, reason)
+      setToast('Đã hủy kết quả và tính lại bảng xếp hạng.')
+      setVoiding(null)
       void loadAll()
     } catch (err) { setToast(err.message) }
   }
@@ -107,14 +154,15 @@ export function PkPanel({ periodId }) {
     return names.some((n) => n.includes(q))
   }
 
-  const lbSingles = useMemo(() => computeLeaderboard(matches, 'singles', people), [matches, people])
-  const lbDoubles = useMemo(() => computeLeaderboard(matches, 'doubles', people), [matches, people])
-  const activeLb  = lbType === 'singles' ? lbSingles : lbDoubles
+  const lbSingles = leaderboards.singles.ranked
+  const lbDoubles = leaderboards.doubles.ranked
+  const activeLeaderboard = leaderboards[lbType]
+  const activeLb = activeLeaderboard.ranked
 
-  const filtered = useMemo(() => sortByDate(
+  const filtered = sortByDate(
     (filter === 'all' ? matches : matches.filter((m) => m.status === filter))
       .filter((m) => matchInDateRange(m) && matchNameSearch(m))
-  ), [matches, filter, matchSearch, dateFilter])
+  )
 
   return (
     <>
@@ -131,28 +179,25 @@ export function PkPanel({ periodId }) {
               🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
             </button>
           </div>
-          {loading ? <SkeletonTable rows={5} cols={7} /> : activeLb.length === 0 ? (
-            <p className="muted">Chưa có dữ liệu {lbType === 'singles' ? 'đấu đơn' : 'đấu đôi'}.</p>
-          ) : (
+          {loading ? <SkeletonTable rows={5} cols={6} /> : (
             <>
               <AdminLeaderboardLegend />
-              <div className="table-wrap">
-                <table>
-                  <thead>
-                    <tr>
-                      <th>#</th><th>Người chơi</th>
-                      <th>Thắng</th><th>Thua</th><th>Tổng</th>
-                      <th title="Bậc kỹ năng theo rating">Bậc</th>
-                      <th title="Điểm rating Glicko">Rating</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {activeLb.map((row) => (
-                      <AdminLeaderboardRow key={row.id} row={row} />
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              {activeLb.length === 0 ? <p className="muted">Chưa có người chơi đủ điều kiện xếp hạng.</p> : (
+                <div className="table-wrap">
+                  <table>
+                    <thead>
+                      <tr>
+                        <th>#</th><th>Người chơi</th>
+                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>Bậc</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {activeLb.map((row) => <AdminLeaderboardRow key={row.id} row={row} />)}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+              <AdminQualifyingPlayers rows={activeLeaderboard.qualifying} />
             </>
           )}
         </Panel>
@@ -213,6 +258,9 @@ export function PkPanel({ periodId }) {
                   m={m}
                   onEdit={setEditing}
                   onDelete={setDeleting}
+                  onFinalize={setFinalizing}
+                  onVoid={setVoiding}
+                  canVoid={role === 'owner'}
                 />
               ))}
             </div>
@@ -248,6 +296,22 @@ export function PkPanel({ periodId }) {
           people={people}
           onClose={() => setEditing(null)}
           onSubmit={(payload) => handleUpdate(editing.id, payload)}
+        />
+      )}
+
+      {finalizing && (
+        <ResultModal
+          match={finalizing}
+          onClose={() => setFinalizing(null)}
+          onSubmit={(winnerSide, setScores) => handleFinalize(finalizing.id, winnerSide, setScores)}
+        />
+      )}
+
+      {voiding && (
+        <VoidResultModal
+          match={voiding}
+          onClose={() => setVoiding(null)}
+          onConfirm={(reason) => handleVoid(voiding.id, reason)}
         />
       )}
 

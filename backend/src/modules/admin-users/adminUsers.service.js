@@ -3,7 +3,7 @@ import { requireEmail, validateFullName, assertValid } from "../../utils/validat
 
 const adminRoles = new Set(["owner", "admin"]);
 
-// FIX N+1: dùng filter trực tiếp thay vì paginate toàn bộ rồi filter client-side
+// Avoid loading every auth page before filtering by role.
 async function listAllUsers() {
   const users = [];
   let page = 1;
@@ -81,10 +81,10 @@ export const adminUsersService = {
   },
 
   async inviteAdmin({ email, full_name: fullName = "" }) {
-    // Validate email đúng chuẩn
+    // Validate the email format.
     assertValid(requireEmail(email));
 
-    // Validate tên nếu có
+    // Validate the optional name.
     if (fullName) {
       assertValid(validateFullName(fullName));
     }
@@ -95,7 +95,7 @@ export const adminUsersService = {
     if (existingUser) {
       const currentRole = existingUser.app_metadata?.role || existingUser.user_metadata?.role;
 
-      // Không cho downgrade owner thành admin
+      // Never downgrade the owner account.
       if (currentRole === "owner") {
         const err = new Error("Khong the thay doi role cua owner");
         err.statusCode = 403;

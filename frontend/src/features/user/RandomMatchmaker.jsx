@@ -229,7 +229,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                       <PlayerSlot person={null} spinning spinPool={spinPool} />
                       {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
                     </div>
-                    <div className="rm-vs-divider"><span className="rm-vs-anim">VS</span></div>
+                    <div className="rm-vs-divider"><span className="rm-vs-anim">ĐẤU</span></div>
                     <div className="rm-team-slots">
                       <PlayerSlot person={null} spinning spinPool={spinPool} />
                       {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
@@ -301,7 +301,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                   {mode === 'doubles' && <PlayerSlot person={null} spinning spinPool={spinPool} />}
                 </div>
                 <div className="rm-vs-divider">
-                  <span className="rm-vs-anim">VS</span>
+                  <span className="rm-vs-anim">ĐẤU</span>
                 </div>
                 <div className="rm-team-slots">
                   <span className="rm-team-tag">Đội B</span>
@@ -326,7 +326,7 @@ export function RandomMatchmaker({ people, leaderboard, onClose, onCreate, onCre
                   )}
                 </div>
                 <div className="rm-result-vs">
-                  <span className="rm-vs-big">VS</span>
+                  <span className="rm-vs-big">ĐẤU</span>
                   <span className="rm-match-type-tag">{result.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
                 </div>
                 <div className="rm-result-team">

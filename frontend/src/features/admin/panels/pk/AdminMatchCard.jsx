@@ -44,15 +44,17 @@ function SetScores({ scores }) {
   )
 }
 
-export function AdminMatchCard({ m, onEdit, onDelete }) {
+export function AdminMatchCard({ m, onEdit, onDelete, onFinalize, onVoid, canVoid }) {
   const challengerWon = m.winner_side === 'challenger'
   const opponentWon   = m.winner_side === 'opponent'
 
   return (
     <div className={`pk-match-card pk-match-card-v2 pk-status-${m.status}`}>
       <div className="pk-card-header">
+        {m.match_number && <span className="pk-fight-no">Trận {m.match_number}</span>}
         <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
-        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '⚔ Đơn' : '🤝 Đôi'}</span>
+        {m.voided_at && <span className="pk-badge pk-badge-cancelled">Kết quả đã hủy</span>}
+        <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? 'Đơn' : 'Đôi'}</span>
         {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
         {m.played_at && <span className="pk-card-date">📅 {formatDate(m.played_at)}</span>}
       </div>
@@ -65,7 +67,7 @@ export function AdminMatchCard({ m, onEdit, onDelete }) {
           isWinner={m.status === 'completed' && challengerWon}
         />
         <div className="pk-vs-center">
-          <span className="pk-vs-text">VS</span>
+          <span className="pk-vs-text">ĐẤU</span>
           {m.status === 'completed' && (
             m.set_scores?.length
               ? <SetScores scores={m.set_scores} />
@@ -85,8 +87,18 @@ export function AdminMatchCard({ m, onEdit, onDelete }) {
         {m.note      && <span className="pk-note muted">{m.note}</span>}
         <div className="pk-match-actions">
           <ActionGroup>
-            <button onClick={() => onEdit(m)}>Sửa</button>
-            <button className="danger" onClick={() => onDelete(m)}>Xóa</button>
+            {(m.status === 'pending' || m.status === 'active') && (
+              <button onClick={() => onFinalize(m)}>Ghi kết quả</button>
+            )}
+            {m.status !== 'completed' && (
+              <button onClick={() => onEdit(m)}>Sửa</button>
+            )}
+            {m.status !== 'completed' && (
+              <button className="danger" onClick={() => onDelete(m)}>Xóa</button>
+            )}
+            {m.status === 'completed' && !m.voided_at && canVoid && (
+              <button className="danger" onClick={() => onVoid(m)}>Hủy kết quả</button>
+            )}
           </ActionGroup>
         </div>
       </div>

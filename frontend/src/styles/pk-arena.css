@@ -1271,6 +1271,22 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-tier-name { font-size: 0.8rem; font-weight: 600; color: #cbb876; }
 .lb-rating strong { font-size: 1rem; color: #f0d486; }
 .lb-rating .lb-prov { font-size: 0.7rem; font-style: italic; }
+.lb-qualifying { margin-top: 18px; border-top: 1px solid rgba(255,255,255,0.09); padding-top: 14px; }
+.lb-qualifying h3 { margin: 0 0 10px; font-size: 0.9rem; color: #d8ae52; }
+.lb-qualifying-list { display: grid; gap: 8px; }
+.lb-qualifying-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-height: 44px;
+  padding: 6px 0;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+}
+.lb-qualifying-row.pk-row-me { color: #f0d486; }
+.lb-qualifying-row .muted { text-align: right; font-size: 0.78rem; }
 @media (max-width: 560px) {
   .lb-tier-name { display: none; }
+  .lb-qualifying-row { align-items: flex-start; flex-direction: column; }
+  .lb-qualifying-row .muted { text-align: left; }
 }

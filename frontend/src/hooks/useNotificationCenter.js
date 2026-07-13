@@ -22,7 +22,7 @@ export function useNotificationCenter(activePerson) {
   useEffect(() => { loadAll() }, [loadAll])
 
   /* ── Save a new notification to DB + local state ── */
-  async function push(notif) {
+  const push = useCallback(async (notif) => {
     if (!personId) return
     try {
       const saved = await api.notifications.create(notif)
@@ -36,7 +36,7 @@ export function useNotificationCenter(activePerson) {
         ...notif,
       }, ...prev])
     }
-  }
+  }, [personId])
 
   /* ── Supabase Realtime: pk_matches + payments + debts ── */
   useEffect(() => {
@@ -80,7 +80,7 @@ export function useNotificationCenter(activePerson) {
 
     channelRef.current = ch
     return () => { supabase.removeChannel(ch); channelRef.current = null }
-  }, [personId])
+  }, [personId, push])
 
   /* ── Actions ── */
   async function markRead(id) {

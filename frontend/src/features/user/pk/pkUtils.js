@@ -27,9 +27,8 @@ export function getResultLock(m) {
   if (!m.played_at) return { canRecord: false, reason: 'Kèo chưa có ngày đấu' }
   const matchDay = startOfDay(new Date(m.played_at))
   if (matchDay > today) return { canRecord: false, reason: `Chưa đến ngày đấu (${formatDate(m.played_at)})` }
-  if (m.status === 'completed' && m.updated_at) {
-    const diffHours = (now - new Date(m.updated_at)) / (1000 * 60 * 60)
-    if (diffHours > 24) return { canRecord: false, reason: 'Kết quả đã khoá sau 24 giờ' }
+  if (m.status === 'completed' || m.rating_locked_at) {
+    return { canRecord: false, reason: 'Kết quả đã được khóa ngay khi hoàn tất' }
   }
   return { canRecord: true, reason: null }
 }
@@ -41,7 +40,7 @@ export function isParticipant(m, activePerson) {
     .includes(activePerson.id)
 }
 
-/* ── Gom trận theo ngày + đánh số "Trận N" theo từng ngày ── */
+/* Gom trận theo ngày để hiển thị; số trận lấy từ match_number của database. */
 
 // Khoá ngày dạng YYYY-MM-DD theo giờ địa phương
 export function getDateKey(dateStr) {

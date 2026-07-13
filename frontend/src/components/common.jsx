@@ -227,7 +227,6 @@ const BADGE_MAP = {
   adjustment: { label: 'Điều chỉnh', cls: 'badge-gray'  },
   // Match status
   pending:   { label: 'Chờ',       cls: 'badge-yellow' },
-  active:    { label: 'Đang đấu',  cls: 'badge-green'  },
   completed: { label: 'Hoàn thành', cls: 'badge-blue'  },
 }
 

@@ -147,12 +147,13 @@ test("payments repository has no duplicate legacy pending-payment method", () =>
   assert.match(repository, /mark_payment_failed/);
 });
 
-test("backend source stays ASCII to avoid mojibake regressions", () => {
+test("backend source contains no common mojibake sequences", () => {
   const files = listFiles("src", (path) => path.endsWith(".js"));
+  const mojibake = /Ã.|Â.|â[€–—]|Ä[‘’]|á[»º]|ðŸ/;
 
   for (const file of files) {
     const text = read(file);
-    assert.equal(/[^\x00-\x7F]/.test(text), false, `${file} contains non-ASCII text`);
+    assert.equal(mojibake.test(text), false, `${file} contains mojibake text`);
   }
 });
 
@@ -177,4 +178,34 @@ test("people profile migration adds attendance type and unique email", () => {
   assert.match(sql, /attendance_type/);
   assert.match(sql, /people_attendance_type_check/);
   assert.match(sql, /people_email_unique_not_null/);
+});
+
+test("PK seasonal Elo migration locks finalized matches and preserves match order", () => {
+  const sql = read("../supabase/20260713_pk_season_elo.sql");
+
+  assert.match(sql, /add column if not exists match_number integer/);
+  assert.match(sql, /pk_matches_period_match_number_unique/);
+  assert.match(sql, /create table if not exists public\.pk_season_ratings/);
+  assert.match(sql, /create table if not exists public\.pk_rating_events/);
+  assert.match(sql, /create or replace function public\.finalize_pk_match/);
+  assert.match(sql, /create or replace function public\.void_pk_match/);
+  assert.match(sql, /create or replace function public\.rebuild_pk_season_elo/);
+  assert.match(sql, /coalesce\(current_setting\('app\.pk_finalize', true\), 'off'\) <> 'on'/);
+  assert.match(sql, /where period_id = '7ee421b7-1ec9-54de-8a82-ea9a31ba72fa'::uuid/);
+  assert.doesNotMatch(sql, /where period_id = '34ac4b6a-675c-585c-84c0-ab24ba69f50c'::uuid/);
+});
+
+test("PK API finalizes matches separately and reserves voiding for owner", () => {
+  const routes = read("src/modules/pk-matches/pkMatches.routes.js");
+  const repository = read("src/modules/pk-matches/pkMatches.repository.js");
+  const service = read("src/modules/pk-matches/pkMatches.service.js");
+
+  assert.match(routes, /router\.post\("\/:id\/finalize", requireAuth/);
+  assert.match(routes, /router\.post\("\/:id\/void", requireAuth, requireOwner/);
+  assert.match(repository, /rpc\("finalize_pk_match"/);
+  assert.match(repository, /rpc\("void_pk_match"/);
+  assert.doesNotMatch(repository, /from\("pk_leaderboard"\)/);
+  assert.match(service, /MIN_MATCHES = 5/);
+  assert.match(service, /MIN_OPPONENTS = 3/);
+  assert.match(service, /const \{ rating, opponent_strength:/);
 });

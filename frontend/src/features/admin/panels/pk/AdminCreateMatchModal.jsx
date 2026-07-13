@@ -1,6 +1,6 @@
 import { useState } from 'react'
 
-/* Modal admin tạo kèo — chọn cả 2 bên, có thể ghi luôn kết quả */
+/* Admin creates the fixture first; the result is finalized in a separate step. */
 export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
   const today = new Date().toISOString().slice(0, 10)
   const [form, setForm] = useState({
@@ -13,8 +13,7 @@ export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
     bet_items: '',
     played_at: today,
     note: '',
-    status: 'completed',
-    winner_side: '',
+    status: 'pending',
   })
 
   function upd(k, v) { setForm((f) => ({ ...f, [k]: v })) }
@@ -35,7 +34,6 @@ export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
       played_at:   form.played_at   || null,
       note:        form.note        || null,
       status:      form.status,
-      winner_side: form.status === 'completed' ? (form.winner_side || null) : null,
     }
     onSubmit(payload)
   }
@@ -47,7 +45,7 @@ export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
     <div className="modal-backdrop" role="presentation" onMouseDown={onClose}>
       <section className="modal ck-modal" role="dialog" onMouseDown={(e) => e.stopPropagation()}>
         <header className="modal-header">
-          <h2>⚔️ Tạo kèo (Admin)</h2>
+          <h2>⚔️ Tạo trận (Quản trị)</h2>
           <button className="icon-button" onClick={onClose}>×</button>
         </header>
         <form onSubmit={handleSubmit}>
@@ -100,7 +98,7 @@ export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
               )}
             </div>
 
-            <div className="ck-vs-badge">VS</div>
+            <div className="ck-vs-badge">ĐẤU</div>
 
             <div className="ck-team">
               <div className="ck-team-label ck-label-red">🎯 Bên đối thủ</div>
@@ -132,28 +130,11 @@ export function AdminCreateMatchModal({ people, onClose, onSubmit, prefill }) {
               <label className="ck-field">
                 <span className="ck-field-label">📋 Trạng thái</span>
                 <select className="ck-select" value={form.status} onChange={(e) => upd('status', e.target.value)}>
-                  <option value="completed">Đã hoàn thành</option>
                   <option value="pending">Chờ đấu</option>
                   <option value="active">Đang diễn ra</option>
-                  <option value="cancelled">Đã hủy</option>
                 </select>
               </label>
             </div>
-
-            {form.status === 'completed' && (
-              <label className="ck-field">
-                <span className="ck-field-label">🏆 Kết quả — Bên thắng</span>
-                <select className="ck-select" value={form.winner_side} onChange={(e) => upd('winner_side', e.target.value)}>
-                  <option value="">Chưa xác định</option>
-                  <option value="challenger">
-                    Bên thách đấu thắng{form.challenger_id ? ` (${allPeople.find((p) => p.id === form.challenger_id)?.full_name || ''})` : ''}
-                  </option>
-                  <option value="opponent">
-                    Bên đối thủ thắng{form.opponent_id ? ` (${allPeople.find((p) => p.id === form.opponent_id)?.full_name || ''})` : ''}
-                  </option>
-                </select>
-              </label>
-            )}
 
             <label className="ck-field">
               <span className="ck-field-label">🎁 Vật phẩm cược</span>

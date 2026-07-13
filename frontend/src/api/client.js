@@ -31,7 +31,7 @@ async function request(config) {
       error.response?.data?.message ||
       error.response?.data?.error ||
       error.message ||
-      'Request failed'
+      'Không thể gửi yêu cầu'
     throw new Error(message, { cause: error })
   }
 }
@@ -192,8 +192,21 @@ export const api = {
     create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
     createBulk: (matches, periodId) => request({ url: '/api/pk-matches/bulk', method: 'POST', data: { matches, period_id: periodId } }),
     update: (id, payload) => request({ url: `/api/pk-matches/${id}`, method: 'PUT', data: payload }),
+    finalize: (id, winnerSide, setScores) => request({
+      url: `/api/pk-matches/${id}/finalize`,
+      method: 'POST',
+      data: { winner_side: winnerSide, set_scores: setScores },
+    }),
+    voidResult: (id, reason) => request({
+      url: `/api/pk-matches/${id}/void`,
+      method: 'POST',
+      data: { reason },
+    }),
     remove: (id) => request({ url: `/api/pk-matches/${id}`, method: 'DELETE' }),
-    leaderboard: () => request({ url: '/api/pk-matches/leaderboard' }),
+    leaderboard: (periodId, matchType) => request({
+      url: '/api/pk-matches/leaderboard',
+      params: { period_id: periodId, match_type: matchType },
+    }),
     people: () => request({ url: '/api/pk-matches/people' }),
   },
 
