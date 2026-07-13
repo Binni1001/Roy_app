@@ -13,7 +13,6 @@ import { RandomMatchmaker } from '../../user/RandomMatchmaker'
 import { ResultModal } from '../../user/pk/PkMatch'
 import { formatMatchDate, groupMatchesByDate } from '../../user/pk/pkUtils'
 import {
-  AdminLeaderboardLegend,
   AdminLeaderboardRow,
   AdminQualifyingPlayers,
 } from './pk/AdminLeaderboard'
@@ -270,7 +269,6 @@ export function PkPanel({ periodId, role }) {
 
           {loading ? <SkeletonTable rows={5} cols={7} /> : (
             <>
-              <AdminLeaderboardLegend />
               {activeLb.length === 0 ? (
                 <div className="pk-empty-state">
                   <span className="pk-empty-icon">🏆</span>

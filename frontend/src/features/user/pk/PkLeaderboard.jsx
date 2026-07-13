@@ -1,5 +1,5 @@
 import { Modal } from '../../../components/common'
-import { SeasonTierBadge, SeasonTierGuide, SeasonTierLegend } from '../../../components/SeasonTierBadge'
+import { SeasonTierBadge, SeasonTierGuide } from '../../../components/SeasonTierBadge'
 import { initials } from '../../../utils/appUtils'
 
 function PersonIdentity({ row }) {
@@ -26,7 +26,7 @@ export function LeaderboardRow({ row, isMe }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td><SeasonTierBadge tierKey={row.tier_key} /></td>
+      <td><SeasonTierBadge tierKey={row.tier_key} showLabel={false} /></td>
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -49,17 +49,6 @@ export function QualifyingPlayers({ rows, activePersonId }) {
           </div>
         ))}
       </div>
-    </div>
-  )
-}
-
-export function LeaderboardLegend({ onShowGuide }) {
-  return (
-    <div className="lb-legend">
-      <SeasonTierLegend />
-      <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Bậc thay đổi theo vị trí trong mùa; Elo vẫn quyết định thứ hạng.</span>
-      <button className="lb-guide-btn" onClick={onShowGuide}>Cách xếp hạng</button>
     </div>
   )
 }
@@ -87,7 +76,7 @@ export function RankingGuideModal({ onClose }) {
         <SeasonTierGuide />
 
         <div className="rg-quote">
-          Hạng 1 là Nhà vô địch. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
+          Hạng 1 đạt bậc Thách đấu. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
         </div>
 
         <div className="rg-footer">

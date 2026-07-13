@@ -122,11 +122,28 @@
   margin-top: 2px;
 }
 
+.lb-strip-guide {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-left: auto;
+  padding: 6px 10px;
+  border: 1px solid rgba(216,174,82,0.3);
+  border-radius: 6px;
+  background: rgba(8,12,18,0.62);
+  color: #e4c778;
+  font-size: 0.74rem;
+  cursor: pointer;
+}
+.lb-strip-guide:hover { border-color: rgba(216,174,82,0.58); background: rgba(8,12,18,0.82); }
+
 @media (max-width: 480px) {
   .lb-strip-sub { display: none; }
   .lb-image-strip { height: 56px; }
   .lb-strip-content { gap: 10px; padding: 0 14px; }
   .lb-strip-icon { font-size: 1.4rem; }
+  .lb-strip-guide { padding: 6px; }
+  .lb-strip-guide span { display: none; }
 
   /* PK hero: áº©n deco emoji, giáº£m kÃ­ch thÆ°á»›c */
   .pk-arena-hero-deco { display: none; }
@@ -331,43 +348,6 @@
 
 .lb-rank-num   { font-size: 0.9rem; color: #8a94a0; font-weight: 600; }
 .lb-total  { color: #8a94a0; font-size: 0.88rem; }
-
-/* Legend */
-.lb-legend {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px;
-  margin-bottom: 12px;
-  font-size: 0.75rem;
-  color: #8a94a0;
-}
-.lb-legend-item { display: flex; align-items: center; gap: 5px; }
-.lb-tier-legend-list { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
-.lb-dot {
-  width: 8px; height: 8px;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-}
-.lb-dot-gold   { background: #ffc832; }
-.lb-dot-mid    { background: #5a6472; }
-.lb-dot-bottom { background: rgba(180,60,60,0.7); }
-.lb-legend-sep { color: rgba(239,231,210,0.15); }
-.lb-legend-hint { font-style: italic; }
-.lb-guide-btn {
-  margin-left: auto;
-  background: rgba(216,174,82,0.12);
-  border: 1px solid rgba(216,174,82,0.25);
-  color: #d8ae52;
-  border-radius: 6px;
-  padding: 3px 10px;
-  font-size: 0.72rem;
-  cursor: pointer;
-  white-space: nowrap;
-  transition: background 0.2s;
-}
-.lb-guide-btn:hover { background: rgba(216,174,82,0.22); }
 
 /* â”€â”€ Ranking Guide Modal â”€â”€ */
 .rg-root { display: flex; flex-direction: column; gap: 14px; font-size: 0.85rem; }
@@ -1321,8 +1301,6 @@
   .lb-tier-emblem { width: 34px; height: 38px; flex-basis: 34px; }
   .lb-tier-champion .lb-tier-emblem { width: 38px; flex-basis: 38px; }
   .lb-tier-name { font-size: 0.7rem; }
-  .lb-tier-legend-list { gap: 4px; }
-  .lb-tier-legend-list .lb-tier-name { display: none; }
   .pk-admin-actions { width: 100%; }
   .pk-admin-actions .pk-create-btn { flex: 1 1 140px; }
   .lb-qualifying-row { align-items: flex-start; flex-direction: column; }

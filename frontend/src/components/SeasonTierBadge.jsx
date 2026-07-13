@@ -1,7 +1,7 @@
 import { Crown, Gem, Shield, ShieldCheck, Sparkles, Star } from 'lucide-react'
 
 const SEASON_TIERS = [
-  { key: 'champion', label: 'Nhà vô địch', Icon: Crown, range: 'Hạng 1' },
+  { key: 'champion', label: 'Thách đấu', Icon: Crown, range: 'Hạng 1' },
   { key: 'diamond', label: 'Kim cương', Icon: Gem, range: 'Nhóm dẫn đầu' },
   { key: 'platinum', label: 'Bạch kim', Icon: Sparkles, range: 'Nhóm xếp hạng cao' },
   { key: 'gold', label: 'Vàng', Icon: Star, range: 'Nhóm giữa trên' },
@@ -16,7 +16,11 @@ export function SeasonTierBadge({ tierKey, showLabel = true }) {
   const { Icon } = tier
 
   return (
-    <span className={`lb-tier-badge lb-tier-${tier.key}`} title={tier.label}>
+    <span
+      className={`lb-tier-badge lb-tier-${tier.key}`}
+      title={tier.label}
+      aria-label={showLabel ? undefined : tier.label}
+    >
       <span className="lb-tier-emblem" aria-hidden="true">
         <span className="lb-tier-emblem-core">
           <Icon size={18} strokeWidth={2.2} />
@@ -27,22 +31,12 @@ export function SeasonTierBadge({ tierKey, showLabel = true }) {
   )
 }
 
-export function SeasonTierLegend() {
-  return (
-    <div className="lb-tier-legend-list">
-      {SEASON_TIERS.map((tier) => (
-        <SeasonTierBadge key={tier.key} tierKey={tier.key} />
-      ))}
-    </div>
-  )
-}
-
 export function SeasonTierGuide() {
   return (
     <div className="rg-rules">
       {SEASON_TIERS.map((tier) => (
         <div className="rg-rule rg-tier-rule" key={tier.key}>
-          <SeasonTierBadge tierKey={tier.key} />
+          <SeasonTierBadge tierKey={tier.key} showLabel />
           <span>{tier.range}</span>
         </div>
       ))}

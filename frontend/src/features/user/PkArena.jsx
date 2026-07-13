@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
+import { CircleHelp } from 'lucide-react'
 import { api } from '../../api/client'
 import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonPlayerGrid, SkeletonTable } from '../../components/common'
 import { initials } from '../../utils/appUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
-import { LeaderboardLegend, LeaderboardRow, QualifyingPlayers, RankingGuideModal } from './pk/PkLeaderboard'
+import { LeaderboardRow, QualifyingPlayers, RankingGuideModal } from './pk/PkLeaderboard'
 import { MatchCard, ResultModal, UserEditModal } from './pk/PkMatch'
 import { CreateMatchModal } from './pk/CreateMatchModal'
 import { sortByDate, groupMatchesByDate, formatMatchDate } from './pk/pkUtils'
@@ -234,8 +235,13 @@ export function PkArena({ activePerson, periodId }) {
                 <div className="lb-strip-title">Bảng vinh danh</div>
                 <div className="lb-strip-sub">Xếp hạng theo mùa, sức mạnh đối thủ và thứ tự hoàn tất trận</div>
               </div>
+              <button className="lb-strip-guide" onClick={() => setShowGuide(true)} title="Cách xếp hạng">
+                <CircleHelp size={16} aria-hidden="true" />
+                <span>Cách xếp hạng</span>
+              </button>
             </div>
           </div>
+          {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
           <div className="lb-type-toggle">
             <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
               ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
@@ -247,8 +253,6 @@ export function PkArena({ activePerson, periodId }) {
 
           {loading ? <SkeletonTable rows={5} cols={7} /> : (
             <>
-              <LeaderboardLegend onShowGuide={() => setShowGuide(true)} />
-              {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
               {activeLb.length === 0 ? (
                 <p className="muted">Chưa có người chơi đủ điều kiện xếp hạng {lbType === 'singles' ? 'đơn' : 'đôi'}.</p>
               ) : (
