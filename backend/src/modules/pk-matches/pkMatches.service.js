@@ -41,11 +41,15 @@ function formatDate(isoString) {
   return `${String(value.getDate()).padStart(2, "0")}/${String(value.getMonth() + 1).padStart(2, "0")}/${value.getFullYear()}`;
 }
 
-function getTierKey(rating) {
-  if (rating >= 1250) return "diamond";
-  if (rating >= 1150) return "platinum";
-  if (rating >= 1050) return "gold";
-  if (rating >= 950) return "silver";
+function getSeasonTierKey(index, totalPlayers) {
+  if (index === 0) return "champion";
+  if (totalPlayers <= 1) return "champion";
+
+  const percentile = (index / totalPlayers) * 100;
+  if (percentile <= 15) return "diamond";
+  if (percentile <= 35) return "platinum";
+  if (percentile <= 60) return "gold";
+  if (percentile <= 85) return "silver";
   return "bronze";
 }
 
@@ -273,7 +277,6 @@ export const pkMatchesService = {
         win_rate: row.matches ? Math.round((row.wins / row.matches) * 100) : 0,
         rating: Number(row.rating),
         opponent_strength: opponentStrength,
-        tier_key: getTierKey(Number(row.rating)),
         qualified: row.matches >= MIN_MATCHES && opponents.length >= MIN_OPPONENTS,
       };
     });
@@ -287,11 +290,16 @@ export const pkMatchesService = {
         left.total_matches - right.total_matches ||
         left.full_name.localeCompare(right.full_name, "vi")
       )
-      .map((row, index) => {
+      .map((row, index, rankedRows) => {
         const { rating, opponent_strength: opponentStrength, qualified, ...publicRow } = row;
         void opponentStrength;
         void qualified;
-        return { ...publicRow, rank: index + 1, points: Math.round(rating) };
+        return {
+          ...publicRow,
+          rank: index + 1,
+          points: Math.round(rating),
+          tier_key: getSeasonTierKey(index, rankedRows.length),
+        };
       });
 
     const qualifying = rows

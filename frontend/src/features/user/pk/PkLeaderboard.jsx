@@ -1,18 +1,6 @@
 import { Modal } from '../../../components/common'
+import { SeasonTierBadge, SeasonTierGuide, SeasonTierLegend } from '../../../components/SeasonTierBadge'
 import { initials } from '../../../utils/appUtils'
-
-const TIERS = {
-  diamond: { icon: '💠', label: 'Kim cương' },
-  platinum: { icon: '💎', label: 'Bạch kim' },
-  gold: { icon: '🥇', label: 'Vàng' },
-  silver: { icon: '🥈', label: 'Bạc' },
-  bronze: { icon: '🥉', label: 'Đồng' },
-}
-
-function TierBadge({ tierKey }) {
-  const tier = TIERS[tierKey] || TIERS.bronze
-  return <span className="lb-tier-badge" title={tier.label}>{tier.icon} <span className="lb-tier-name">{tier.label}</span></span>
-}
 
 function PersonIdentity({ row }) {
   return (
@@ -29,14 +17,16 @@ function PersonIdentity({ row }) {
 }
 
 export function LeaderboardRow({ row, isMe }) {
+  const rowClasses = [isMe && 'pk-row-me', row.tier_key === 'champion' && 'lb-row-champion'].filter(Boolean).join(' ')
+
   return (
-    <tr className={isMe ? 'pk-row-me' : ''}>
+    <tr className={rowClasses}>
       <td><span className="lb-rank-num">{row.rank}</span></td>
       <td><PersonIdentity row={row} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td><TierBadge tierKey={row.tier_key} /></td>
+      <td><SeasonTierBadge tierKey={row.tier_key} /></td>
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -66,13 +56,9 @@ export function QualifyingPlayers({ rows, activePersonId }) {
 export function LeaderboardLegend({ onShowGuide }) {
   return (
     <div className="lb-legend">
-      <span className="lb-legend-item">💠 Kim cương</span>
-      <span className="lb-legend-item">💎 Bạch kim</span>
-      <span className="lb-legend-item">🥇 Vàng</span>
-      <span className="lb-legend-item">🥈 Bạc</span>
-      <span className="lb-legend-item">🥉 Đồng</span>
+      <SeasonTierLegend />
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Điểm Elo thay đổi theo sức mạnh đối thủ và đặt lại ở mỗi kỳ.</span>
+      <span className="lb-legend-hint">Bậc thay đổi theo vị trí trong mùa; Elo vẫn quyết định thứ hạng.</span>
       <button className="lb-guide-btn" onClick={onShowGuide}>Cách xếp hạng</button>
     </div>
   )
@@ -97,13 +83,11 @@ export function RankingGuideModal({ onClose }) {
           <div className="rg-rule"><span className="rg-rule-icon">③</span><span>Đánh đơn và đánh đôi có bảng xếp hạng riêng.</span></div>
         </div>
 
-        <p className="rg-section-title">Các bậc thi đấu</p>
-        <div className="rg-rules">
-          {Object.values(TIERS).map((tier) => (
-            <div className="rg-rule" key={tier.label}>
-              <span className="rg-rule-icon">{tier.icon}</span><span><strong>{tier.label}</strong></span>
-            </div>
-          ))}
+        <p className="rg-section-title">Các bậc theo vị trí trong mùa</p>
+        <SeasonTierGuide />
+
+        <div className="rg-quote">
+          Bậc được tính trong nhóm người đã đủ điều kiện xếp hạng, vì vậy có thể thay đổi khi bảng xếp hạng thay đổi.
         </div>
 
         <div className="rg-footer">

@@ -1,17 +1,5 @@
+import { SeasonTierBadge, SeasonTierLegend } from '../../../../components/SeasonTierBadge'
 import { initials } from '../../../../utils/appUtils'
-
-const TIERS = {
-  diamond: ['💠', 'Kim cương'],
-  platinum: ['💎', 'Bạch kim'],
-  gold: ['🥇', 'Vàng'],
-  silver: ['🥈', 'Bạc'],
-  bronze: ['🥉', 'Đồng'],
-}
-
-function TierBadge({ tierKey }) {
-  const [icon, label] = TIERS[tierKey] || TIERS.bronze
-  return <span className="lb-tier-badge" title={label}>{icon} <span className="lb-tier-name">{label}</span></span>
-}
 
 export function PersonCell({ p }) {
   if (!p) return <span className="muted">–</span>
@@ -27,13 +15,13 @@ export function PersonCell({ p }) {
 
 export function AdminLeaderboardRow({ row }) {
   return (
-    <tr>
+    <tr className={row.tier_key === 'champion' ? 'lb-row-champion' : ''}>
       <td><span className="lb-rank-num">{row.rank}</span></td>
       <td><PersonCell p={row} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td><TierBadge tierKey={row.tier_key} /></td>
+      <td><SeasonTierBadge tierKey={row.tier_key} /></td>
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -42,13 +30,9 @@ export function AdminLeaderboardRow({ row }) {
 export function AdminLeaderboardLegend() {
   return (
     <div className="lb-legend">
-      <span className="lb-legend-item">💠 Kim cương</span>
-      <span className="lb-legend-item">💎 Bạch kim</span>
-      <span className="lb-legend-item">🥇 Vàng</span>
-      <span className="lb-legend-item">🥈 Bạc</span>
-      <span className="lb-legend-item">🥉 Đồng</span>
+      <SeasonTierLegend />
       <span className="lb-legend-sep">|</span>
-      <span className="lb-legend-hint">Điểm Elo theo mùa; đánh đơn và đánh đôi được tính riêng.</span>
+      <span className="lb-legend-hint">Bậc theo vị trí mùa; đánh đơn và đánh đôi được tính riêng.</span>
     </div>
   )
 }

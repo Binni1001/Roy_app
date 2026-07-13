@@ -207,6 +207,9 @@ test("PK API finalizes matches separately and reserves voiding for owner", () =>
   assert.doesNotMatch(repository, /from\("pk_leaderboard"\)/);
   assert.match(service, /MIN_MATCHES = 5/);
   assert.match(service, /MIN_OPPONENTS = 3/);
+  assert.match(service, /function getSeasonTierKey\(index, totalPlayers\)/);
+  assert.match(service, /if \(index === 0\) return "champion"/);
+  assert.match(service, /tier_key: getSeasonTierKey\(index, rankedRows\.length\)/);
   assert.match(service, /const \{ rating, opponent_strength:/);
   assert.match(service, /points: Math\.round\(rating\)/);
 });

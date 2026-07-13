@@ -326,55 +326,11 @@
 /* Leaderboard */
 .pk-rank-top { color: #d8ae52; font-size: 16px; }
 .pk-row-me td { background: rgba(216, 174, 82, 0.07); }
+.lb-row-champion td { background: rgba(237, 178, 54, 0.08); }
+.lb-row-champion td:first-child { border-left: 3px solid #edb236; }
 
-/* â”€â”€ Leaderboard tiers â”€â”€ */
-tr.lb-tier-gold  td { background: rgba(255, 200, 50, 0.08);  }
-tr.lb-tier-silver td { background: rgba(192, 210, 230, 0.07); }
-tr.lb-tier-bronze td { background: rgba(205, 127, 50, 0.07); }
-tr.lb-tier-bottom td { background: rgba(180, 60, 60, 0.05);  }
-
-tr.lb-tier-gold td:first-child  { border-left: 3px solid #ffc832; }
-tr.lb-tier-silver td:first-child { border-left: 3px solid #9eb8cc; }
-tr.lb-tier-bronze td:first-child { border-left: 3px solid #cd7f32; }
-tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
-
-.lb-rank-badge { font-size: 1.15rem; }
 .lb-rank-num   { font-size: 0.9rem; color: #8a94a0; font-weight: 600; }
-.lb-gold   { filter: drop-shadow(0 0 6px rgba(255,200,50,0.5)); }
-.lb-silver { filter: drop-shadow(0 0 4px rgba(192,210,230,0.4)); }
-.lb-bronze { filter: drop-shadow(0 0 4px rgba(205,127,50,0.4)); }
-.lb-last     { font-size: 1rem; }
-.lb-near-last { font-size: 1rem; }
-
 .lb-total  { color: #8a94a0; font-size: 0.88rem; }
-
-.lb-points-chip {
-  display: inline-block;
-  padding: 2px 9px;
-  border-radius: 12px;
-  background: rgba(216,174,82,0.13);
-  color: #d8ae52;
-  font-weight: 700;
-  font-size: 0.85rem;
-}
-
-/* Wilson bar */
-.lb-bar-wrap {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  min-width: 90px;
-}
-.lb-bar-fill {
-  height: 6px;
-  border-radius: 3px;
-  flex-shrink: 0;
-  transition: width 0.4s ease;
-}
-.lb-bar-high { background: #4caf7d; }
-.lb-bar-mid  { background: #d8ae52; }
-.lb-bar-low  { background: rgba(180,60,60,0.7); }
-.lb-bar-label { font-size: 0.78rem; color: #8a94a0; white-space: nowrap; }
 
 /* Legend */
 .lb-legend {
@@ -387,6 +343,7 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
   color: #8a94a0;
 }
 .lb-legend-item { display: flex; align-items: center; gap: 5px; }
+.lb-tier-legend-list { display: flex; align-items: center; flex-wrap: wrap; gap: 6px; }
 .lb-dot {
   width: 8px; height: 8px;
   border-radius: 50%;
@@ -1266,9 +1223,42 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-row-unqualified:hover td { opacity: 0.8; }
 .lb-avg { font-size: 0.95rem; white-space: nowrap; }
 
-/* ── Bậc kỹ năng (Glicko) trên bảng xếp hạng ── */
-.lb-tier-badge { display: inline-flex; align-items: center; gap: 4px; font-size: 0.9rem; white-space: nowrap; }
-.lb-tier-name { font-size: 0.8rem; font-weight: 600; color: #cbb876; }
+/* ── Huy hiệu bậc theo mùa ── */
+.lb-tier-badge {
+  --tier-rgb: 154, 109, 71;
+  --tier-color: #d9a77d;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-height: 28px;
+  padding: 3px 8px 3px 4px;
+  border: 1px solid rgba(var(--tier-rgb), 0.35);
+  border-radius: 6px;
+  background: rgba(var(--tier-rgb), 0.09);
+  color: var(--tier-color);
+  white-space: nowrap;
+}
+.lb-tier-emblem {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 5px 5px 8px 8px;
+  background: rgba(var(--tier-rgb), 0.18);
+  color: var(--tier-color);
+  flex: 0 0 22px;
+}
+.lb-tier-name { font-size: 0.76rem; font-weight: 750; color: inherit; }
+.lb-tier-champion { --tier-rgb: 237, 178, 54; --tier-color: #ffe09a; font-weight: 800; }
+.lb-tier-champion .lb-tier-emblem { box-shadow: 0 0 12px rgba(237, 178, 54, 0.3); }
+.lb-tier-diamond { --tier-rgb: 73, 206, 214; --tier-color: #91f2f5; }
+.lb-tier-platinum { --tier-rgb: 174, 184, 211; --tier-color: #dce2f3; }
+.lb-tier-gold { --tier-rgb: 223, 171, 62; --tier-color: #f4cd75; }
+.lb-tier-silver { --tier-rgb: 145, 160, 178; --tier-color: #c7d1dc; }
+.lb-tier-bronze { --tier-rgb: 174, 105, 67; --tier-color: #dfa47f; }
+.rg-tier-rule { justify-content: space-between; gap: 18px; }
+.rg-tier-rule > span:last-child { color: #9ba5b1; text-align: right; font-size: 0.78rem; }
 .lb-rating strong { font-size: 1rem; color: #f0d486; }
 .lb-rating .lb-prov { font-size: 0.7rem; font-style: italic; }
 .lb-points strong { color: #f0d486; font-size: 0.95rem; font-variant-numeric: tabular-nums; }
@@ -1288,7 +1278,11 @@ tr.lb-tier-bottom td:first-child { border-left: 3px solid rgba(180,60,60,0.5); }
 .lb-qualifying-row.pk-row-me { color: #f0d486; }
 .lb-qualifying-row .muted { text-align: right; font-size: 0.78rem; }
 @media (max-width: 560px) {
-  .lb-tier-name { display: none; }
+  .lb-tier-badge { padding-right: 5px; }
+  .lb-tier-name { font-size: 0.7rem; }
+  .lb-tier-legend-list { gap: 4px; }
+  .lb-tier-legend-list .lb-tier-badge { padding-right: 4px; }
+  .lb-tier-legend-list .lb-tier-name { display: none; }
   .pk-admin-actions { width: 100%; }
   .pk-admin-actions .pk-create-btn { flex: 1 1 140px; }
   .lb-qualifying-row { align-items: flex-start; flex-direction: column; }
