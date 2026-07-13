@@ -69,11 +69,11 @@ export function RankingGuideModal({ onClose }) {
     <Modal title="Cách xếp hạng đấu trường" onClose={onClose}>
       <div className="rg-root">
         <p className="rg-intro">
-          Mỗi kỳ là một mùa độc lập. Hệ thống tính điểm Elo theo thứ tự trận đã hoàn tất,
-          kết quả trận và sức mạnh đối thủ. Điểm hiển thị được làm tròn để dễ theo dõi.
+          Mỗi kỳ là một mùa độc lập. Thắng trận giúp tăng điểm, thua trận làm giảm điểm.
+          Điểm càng cao thì thứ hạng càng cao.
         </p>
         <div className="rg-quote">
-          Thắng đối thủ mạnh giúp tăng hạng nhiều hơn; thua đối thủ yếu ảnh hưởng nhiều hơn.
+          Thắng đối thủ mạnh được cộng nhiều điểm hơn; thua đối thủ yếu bị trừ nhiều điểm hơn.
         </div>
 
         <p className="rg-section-title">Điều kiện xuất hiện trên bảng</p>
@@ -87,7 +87,7 @@ export function RankingGuideModal({ onClose }) {
         <SeasonTierGuide />
 
         <div className="rg-quote">
-          Bậc được tính trong nhóm người đã đủ điều kiện xếp hạng, vì vậy có thể thay đổi khi bảng xếp hạng thay đổi.
+          Hạng 1 là Nhà vô địch. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
         </div>
 
         <div className="rg-footer">
