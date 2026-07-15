@@ -51,7 +51,7 @@ function FightCenter({ match, showResult }) {
   )
 }
 
-export function AdminMatchCard({ m, onEdit, onDelete, onFinalize, onVoid, canVoid }) {
+export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize, onVoid, canVoid }) {
   const isVoided = Boolean(m.voided_at)
   const showResult = m.status === 'completed' && !isVoided
   const visualStatus = isVoided ? 'cancelled' : m.status
@@ -60,7 +60,7 @@ export function AdminMatchCard({ m, onEdit, onDelete, onFinalize, onVoid, canVoi
     <div className={`pk-fight-card pk-fight-${visualStatus}`}>
       <div className="pk-fight-head">
         <div className="pk-fight-head-left">
-          {m.match_number && <span className="pk-fight-no">Trận {m.match_number}</span>}
+          {displayNumber != null && <span className="pk-fight-no">Trận {displayNumber}</span>}
           <span className={`pk-badge pk-badge-${visualStatus}`}>
             {isVoided ? 'Kết quả đã hủy' : STATUS_LABEL[m.status]}
           </span>

@@ -355,11 +355,11 @@ export function PkArena({ activePerson, periodId }) {
                     <span className="pk-day-count">{dayMatches.length} trận</span>
                   </div>
                   <div className="pk-match-list">
-                    {dayMatches.map((m) => (
+                    {dayMatches.map((m, dayIndex) => (
                       <MatchCard
                         key={m.id}
                         m={m}
-                        matchNumber={m.match_number}
+                        matchNumber={dayIndex + 1}
                         activePerson={activePerson}
                         onSetResult={setShowResult}
                         onCancel={(id) => setCancelId(id)}

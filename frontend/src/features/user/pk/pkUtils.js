@@ -40,7 +40,7 @@ export function isParticipant(m, activePerson) {
     .includes(activePerson.id)
 }
 
-/* Gom trận theo ngày để hiển thị; số trận lấy từ match_number của database. */
+/* Gom trận theo ngày; giao diện tự đánh số lại từ 1 trong từng ngày. */
 
 // Khoá ngày dạng YYYY-MM-DD theo giờ địa phương
 export function getDateKey(dateStr) {
@@ -65,7 +65,7 @@ export function getWinnerSide(m) {
   return m.winner_side || null
 }
 
-// Trả về [{ key, matches }] — ngày mới nhất trước; trong ngày: trận cũ trước (Trận 1 = sớm nhất)
+// Trả về [{ key, matches }] — ngày mới nhất trước; trong ngày giữ thứ tự gốc của database.
 export function groupMatchesByDate(matches) {
   const byDay = new Map()
   for (const m of matches) {
@@ -76,6 +76,10 @@ export function groupMatchesByDate(matches) {
   const groups = []
   for (const [key, list] of byDay) {
     const sorted = [...list].sort((a, b) => {
+      const matchNumberA = Number(a.match_number) || Number.MAX_SAFE_INTEGER
+      const matchNumberB = Number(b.match_number) || Number.MAX_SAFE_INTEGER
+      if (matchNumberA !== matchNumberB) return matchNumberA - matchNumberB
+
       const ca = new Date(a.created_at || a.played_at)
       const cb = new Date(b.created_at || b.played_at)
       return ca - cb

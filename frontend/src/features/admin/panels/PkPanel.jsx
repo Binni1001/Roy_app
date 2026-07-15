@@ -22,7 +22,7 @@ import { PkEditModal } from './pk/PkEditModal'
 
 const EMPTY_LEADERBOARD = { ranked: [], qualifying: [] }
 
-function VoidResultModal({ match, onClose, onConfirm }) {
+function VoidResultModal({ onClose, onConfirm }) {
   const [reason, setReason] = useState('')
   return (
     <Modal title="Hủy kết quả trận" onClose={onClose}>
@@ -31,7 +31,7 @@ function VoidResultModal({ match, onClose, onConfirm }) {
         if (reason.trim().length >= 5) onConfirm(reason.trim())
       }}>
         <p>
-          Kết quả trận {match.match_number ? `số ${match.match_number}` : ''} sẽ bị loại khỏi mùa.
+          Kết quả trận đấu sẽ bị loại khỏi mùa.
           Điểm của toàn bộ trận phía sau sẽ được tính lại tự động.
         </p>
         <label>Lý do hủy kết quả
@@ -365,10 +365,11 @@ export function PkPanel({ periodId, role }) {
                     <span className="pk-day-count">{dayMatches.length} trận</span>
                   </div>
                   <div className="pk-match-list">
-                    {dayMatches.map((match) => (
+                    {dayMatches.map((match, dayIndex) => (
                       <AdminMatchCard
                         key={match.id}
                         m={match}
+                        displayNumber={dayIndex + 1}
                         onEdit={setEditing}
                         onDelete={setDeleting}
                         onFinalize={setFinalizing}
@@ -463,7 +464,6 @@ export function PkPanel({ periodId, role }) {
 
       {voiding && (
         <VoidResultModal
-          match={voiding}
           onClose={() => setVoiding(null)}
           onConfirm={(reason) => handleVoid(voiding.id, reason)}
         />
