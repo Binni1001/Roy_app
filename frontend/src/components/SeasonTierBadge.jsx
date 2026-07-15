@@ -1,10 +1,10 @@
 const SEASON_TIERS = [
-  { key: 'champion', label: 'Thách đấu', image: '/images/ranks/champion.webp', range: 'Hạng 1' },
-  { key: 'diamond', label: 'Kim cương', image: '/images/ranks/diamond.webp', range: 'Nhóm dẫn đầu' },
-  { key: 'platinum', label: 'Bạch kim', image: '/images/ranks/platinum.webp', range: 'Nhóm xếp hạng cao' },
-  { key: 'gold', label: 'Vàng', image: '/images/ranks/gold.webp', range: 'Nhóm giữa trên' },
-  { key: 'silver', label: 'Bạc', image: '/images/ranks/silver.webp', range: 'Nhóm giữa dưới' },
-  { key: 'bronze', label: 'Đồng', image: '/images/ranks/bronze.webp', range: 'Nhóm còn lại' },
+  { key: 'champion', label: 'Cao thủ', image: '/images/ranks/champion.webp?v=2', range: 'Hạng 1' },
+  { key: 'diamond', label: 'Kim cương', image: '/images/ranks/diamond.webp?v=2', range: 'Nhóm dẫn đầu' },
+  { key: 'platinum', label: 'Bạch kim', image: '/images/ranks/platinum.webp?v=2', range: 'Nhóm xếp hạng cao' },
+  { key: 'gold', label: 'Vàng', image: '/images/ranks/gold.webp?v=2', range: 'Nhóm giữa trên' },
+  { key: 'silver', label: 'Bạc', image: '/images/ranks/silver.webp?v=2', range: 'Nhóm giữa dưới' },
+  { key: 'bronze', label: 'Đồng', image: '/images/ranks/bronze.webp?v=2', range: 'Nhóm còn lại' },
 ]
 
 const TIERS_BY_KEY = Object.fromEntries(SEASON_TIERS.map((tier) => [tier.key, tier]))

@@ -76,7 +76,7 @@ export function RankingGuideModal({ onClose }) {
         <SeasonTierGuide />
 
         <div className="rg-quote">
-          Hạng 1 đạt bậc Thách đấu. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
+          Hạng 1 đạt bậc Cao thủ. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
         </div>
 
         <div className="rg-footer">
