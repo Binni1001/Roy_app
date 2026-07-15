@@ -1177,13 +1177,250 @@
 .pk-empty-msg { color: #9CA3AF; font-size: 0.86rem; margin: 0; max-width: 320px; }
 .pk-empty-state .pk-create-btn { margin-top: 8px; }
 
-/* Mobile: 2 phe xếp dọc */
+/* Responsive arena layout */
+@media (max-width: 860px) {
+  .pk-arena-hero { margin-bottom: 12px; }
+
+  .pk-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .pk-tabs button {
+    min-width: 0;
+    min-height: 40px;
+    padding: 8px 6px;
+    border-radius: 8px;
+    white-space: nowrap;
+  }
+
+  .tab-scene .panel-header {
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .pk-filter-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    margin-bottom: 12px;
+  }
+
+  .pk-filter-tabs button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 0;
+    min-height: 36px;
+    padding: 6px 4px;
+  }
+
+  .pk-match-filters {
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .pk-search-input {
+    min-height: 40px;
+    font-size: 16px;
+  }
+
+  .pk-filter-row {
+    flex-wrap: nowrap;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 0 0 4px;
+    scrollbar-width: none;
+    overscroll-behavior-inline: contain;
+  }
+
+  .pk-filter-row::-webkit-scrollbar { display: none; }
+
+  .pk-chip,
+  .pk-date-wrap {
+    flex: 0 0 auto;
+  }
+
+  .pk-chip,
+  .pk-date-input {
+    min-height: 34px;
+    padding: 6px 11px;
+  }
+
+  .pk-day-groups { gap: 20px; }
+  .pk-day-group { gap: 10px; }
+  .pk-match-list { gap: 10px; margin-top: 0; }
+}
+
 @media (max-width: 560px) {
-  .pk-fight-body { grid-template-columns: 1fr; gap: 12px; padding: 18px 14px; }
-  .pk-fight-net { display: none; }
-  .pk-fight-center { flex-direction: row; gap: 14px; }
-  .pk-fight-ava-xl { width: 60px; height: 60px; }
-  .pk-fight-head, .pk-fight-foot { padding-left: 14px; padding-right: 14px; }
+  .tab-scene {
+    margin: -10px;
+    padding: 10px;
+  }
+
+  .tab-scene .panel { padding: 10px; }
+
+  .pk-arena-hero {
+    height: 84px;
+    border-radius: 8px;
+  }
+
+  .pk-arena-hero-content { padding: 0 14px; }
+  .pk-arena-hero-title { font-size: 18px; }
+  .pk-arena-hero-sub { font-size: 10px; }
+  .pk-arena-hero-deco { display: none; }
+
+  .pk-tabs button { font-size: 11px; }
+
+  .tab-scene .panel-header {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .tab-scene .panel-header-action {
+    width: 100%;
+  }
+
+  .tab-scene .panel-header-action > div,
+  .pk-admin-actions {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    width: 100%;
+  }
+
+  .tab-scene .panel-header-action button,
+  .tab-scene .panel-header-action .pk-create-btn,
+  .pk-admin-actions .pk-create-btn {
+    width: 100%;
+    min-height: 40px;
+    margin: 0;
+    padding: 7px 6px;
+    font-size: 11px;
+  }
+
+  .pk-day-date { font-size: 0.82rem; }
+  .pk-day-count { padding: 3px 8px; font-size: 0.66rem; }
+
+  .pk-fight-card { border-radius: 12px; }
+
+  .pk-fight-head {
+    flex-wrap: nowrap;
+    gap: 6px;
+    min-height: 40px;
+    padding: 8px 10px;
+  }
+
+  .pk-fight-head-left {
+    min-width: 0;
+    flex-wrap: nowrap;
+    gap: 5px;
+  }
+
+  .pk-fight-no { font-size: 0.78rem; white-space: nowrap; }
+  .pk-fight-head .pk-badge { padding: 3px 7px; font-size: 9px; white-space: nowrap; }
+  .pk-fight-date { display: none; }
+
+  .pk-fight-body {
+    grid-template-columns: minmax(0, 1fr) 46px minmax(0, 1fr);
+    gap: 4px;
+    padding: 18px 8px 14px;
+  }
+
+  .pk-fight-team {
+    min-width: 0;
+    gap: 6px;
+    padding: 4px 2px;
+  }
+
+  .pk-fight-ava-xl { width: 54px; height: 54px; font-size: 1rem; }
+  .pk-fight-ava-lg { width: 50px; height: 50px; font-size: 0.9rem; }
+  .pk-fight-ava-sm { width: 32px; height: 32px; margin-left: -11px; font-size: 0.65rem; }
+
+  .pk-fight-names { width: 100%; }
+  .pk-fight-name { font-size: 0.75rem; }
+  .pk-fight-partner { font-size: 0.66rem; line-height: 1.25; }
+  .pk-fight-role { font-size: 0.54rem; letter-spacing: 0.06em; }
+
+  .pk-fight-ribbon {
+    top: -5px;
+    padding: 2px 7px;
+    font-size: 0.5rem;
+  }
+
+  .pk-fight-center {
+    min-width: 0;
+    padding: 0;
+    gap: 6px;
+  }
+
+  .pk-fight-net {
+    display: block;
+    top: -10px;
+    bottom: -10px;
+  }
+
+  .pk-fight-vs {
+    width: 36px;
+    height: 36px;
+    font-size: 0.72rem;
+  }
+
+  .pk-fight-score {
+    gap: 3px;
+    padding: 2px 6px;
+    font-size: 0.82rem;
+  }
+
+  .pk-fight-foot {
+    gap: 8px;
+    padding: 8px 10px;
+  }
+
+  .pk-fight-foot-info { gap: 8px; }
+  .pk-fight-bet, .pk-fight-note { font-size: 0.7rem; }
+
+  .pk-fight-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(88px, 1fr));
+    width: 100%;
+  }
+
+  .pk-fight-actions button {
+    min-height: 36px;
+    padding: 7px 5px;
+    font-size: 0.72rem;
+  }
+
+  .pk-player-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 10px;
+  }
+
+  .pk-player-card { padding: 14px 8px; }
+}
+
+@media (max-width: 380px) {
+  .pk-tabs { gap: 4px; }
+  .pk-tabs button { padding-inline: 3px; font-size: 10px; }
+  .pk-filter-tabs { gap: 4px; }
+  .pk-filter-tabs button { font-size: 10px; }
+
+  .pk-fight-body {
+    grid-template-columns: minmax(0, 1fr) 40px minmax(0, 1fr);
+    padding: 16px 4px 12px;
+  }
+
+  .pk-fight-ava-xl { width: 48px; height: 48px; }
+  .pk-fight-ava-lg { width: 44px; height: 44px; }
+  .pk-fight-ava-sm { width: 28px; height: 28px; margin-left: -9px; }
+  .pk-fight-vs { width: 32px; height: 32px; font-size: 0.65rem; }
+  .pk-fight-score { padding-inline: 4px; font-size: 0.74rem; }
+  .pk-fight-name { font-size: 0.7rem; }
+  .pk-fight-partner { font-size: 0.62rem; }
+
+  .pk-player-grid { grid-template-columns: 1fr; }
 }
 
 /* ── Nhãn vãng lai + hàng chưa đủ trận trên bảng xếp hạng ── */
