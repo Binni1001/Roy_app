@@ -19,6 +19,32 @@ export const debtsService = {
     return data;
   },
 
+  async getDebtLedgerByPeriod(periodId) {
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
+
+    const periodResult = await debtsRepository.getPeriodById(periodId);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    if (!periodResult.data) throw new Error("Period khong ton tai");
+
+    const [periodDebtsResult, outstandingDebtsResult] = await Promise.all([
+      debtsRepository.getByPeriodId(periodId),
+      debtsRepository.getUnpaidByGroupId(periodResult.data.group_id)
+    ]);
+
+    if (periodDebtsResult.error) throw new Error(periodDebtsResult.error.message);
+    if (outstandingDebtsResult.error) throw new Error(outstandingDebtsResult.error.message);
+
+    const debtsById = new Map();
+    for (const debt of periodDebtsResult.data || []) debtsById.set(debt.id, debt);
+    for (const debt of outstandingDebtsResult.data || []) debtsById.set(debt.id, debt);
+
+    return [...debtsById.values()].sort((left, right) => {
+      if (left.status === "unpaid" && right.status !== "unpaid") return -1;
+      if (left.status !== "unpaid" && right.status === "unpaid") return 1;
+      return new Date(right.created_at || 0) - new Date(left.created_at || 0);
+    });
+  },
+
   async getDebtsByPerson(personId) {
     if (!personId) throw new Error("Person ID khong duoc de trong");
 

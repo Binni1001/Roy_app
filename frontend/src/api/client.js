@@ -99,6 +99,7 @@ export const api = {
   debts: {
     list: () => request({ url: '/api/debts' }),
     byPeriod: (periodId) => request({ url: `/api/debts/period/${periodId}` }),
+    ledgerByPeriod: (periodId) => request({ url: `/api/debts/period/${periodId}/ledger` }),
     byPerson: (personId) => request({ url: `/api/debts/person/${personId}` }),
     create: (payload) => request({ url: '/api/debts', method: 'POST', data: payload }),
     updateStatus: (id, status) =>

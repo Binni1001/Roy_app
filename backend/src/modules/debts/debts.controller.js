@@ -19,6 +19,15 @@ export const debtsController = {
     }
   },
 
+  async getLedgerByPeriod(req, res) {
+    try {
+      const data = await debtsService.getDebtLedgerByPeriod(req.params.periodId);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
+  },
+
   async getByPerson(req, res) {
     try {
       const data = await debtsService.getDebtsByPerson(req.params.personId);

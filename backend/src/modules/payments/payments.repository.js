@@ -25,13 +25,22 @@ export const paymentsRepository = {
       .order("created_at", { ascending: true });
   },
 
-  async getUnpaidDebtsAllPeriods(personId) {
-    return await supabase
+  async getUnpaidDebtsByGroup(personId, groupId) {
+    let query = supabase
       .from("debts")
-      .select("*")
+      .select(`
+        *,
+        period:periods!inner(id, group_id)
+      `)
       .eq("person_id", personId)
       .eq("status", "unpaid")
       .order("created_at", { ascending: true });
+
+    query = groupId
+      ? query.eq("period.group_id", groupId)
+      : query.is("period.group_id", null);
+
+    return await query;
   },
 
   async getPerson(personId) {
@@ -50,14 +59,19 @@ export const paymentsRepository = {
       .single();
   },
 
-  async getOpenPeriod() {
-    return await supabase
+  async getOpenPeriod(groupId) {
+    let query = supabase
       .from("periods")
-      .select("id, status")
+      .select("id, status, group_id")
       .eq("status", "open")
       .order("start_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
+      .limit(1);
+
+    query = groupId
+      ? query.eq("group_id", groupId)
+      : query.is("group_id", null);
+
+    return await query.maybeSingle();
   },
 
   async createPayment(payload) {

@@ -24,6 +24,24 @@ export const debtsRepository = {
       .order("created_at", { ascending: false });
   },
 
+  async getUnpaidByGroupId(groupId) {
+    let query = supabase
+      .from("debts")
+      .select(`
+        *,
+        person:people(id, full_name, nickname, phone),
+        period:periods!inner(id, name, start_date, end_date, group_id)
+      `)
+      .eq("status", "unpaid")
+      .order("created_at", { ascending: false });
+
+    query = groupId
+      ? query.eq("period.group_id", groupId)
+      : query.is("period.group_id", null);
+
+    return await query;
+  },
+
   async getByPersonId(personId) {
     return await supabase
       .from("debts")
@@ -60,7 +78,7 @@ export const debtsRepository = {
   async getPeriodById(periodId) {
     return await supabase
       .from("periods")
-      .select("id, name, status")
+      .select("id, name, status, group_id")
       .eq("id", periodId)
       .maybeSingle();
   },

@@ -5,6 +5,7 @@ import { debtsController } from "./debts.controller.js";
 const router = express.Router();
 
 router.get("/", requireAuth, requireAdmin, debtsController.getAll);
+router.get("/period/:periodId/ledger", requireAuth, requireAdmin, debtsController.getLedgerByPeriod);
 router.get("/period/:periodId", requireAuth, requireAdmin, debtsController.getByPeriod);
 router.get("/person/:personId", requireAuth, requireSelfPersonOrAdmin(), debtsController.getByPerson);
 router.post("/", requireAuth, requireAdmin, debtsController.create);

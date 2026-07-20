@@ -24,7 +24,7 @@ export const periodsService = {
     return data;
   },
 
-  async createPeriod(payload) {
+  async createPeriod(payload, authUser) {
     if (!payload.name || !payload.name.trim()) {
       throw new Error("Ten ky khong duoc de trong");
     }
@@ -51,6 +51,12 @@ export const periodsService = {
       throw new Error(`Trang thai ky khong hop le. Chi duoc dung: ${allowedStatuses.join(", ")}`);
     }
 
+    const groupResult = await periodsRepository.getActiveGroupByEmail(authUser?.email || "");
+    if (groupResult.error) throw new Error(groupResult.error.message);
+
+    const groupId = groupResult.data?.active_group_id || groupResult.data?.group_id || null;
+    if (!groupId) throw new Error("Tai khoan chua co nhom dang hoat dong");
+
     const { data, error } = await periodsRepository.create({
       name: payload.name.trim(),
       start_date: payload.start_date,
@@ -58,7 +64,8 @@ export const periodsService = {
       fixed_member_fee: Number(payload.fixed_member_fee || 0),
       guest_fee_per_session: Number(payload.guest_fee_per_session || 0),
       status,
-      note: payload.note || null
+      note: payload.note || null,
+      group_id: groupId
     });
 
     if (error) {

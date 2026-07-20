@@ -1516,6 +1516,32 @@ button.danger:hover {
   gap: 4px;
 }
 
+.debt-payment-summary,
+.debt-ledger-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px 18px;
+  margin-bottom: 14px;
+  color: #aeb7c8;
+  font-size: 13px;
+}
+
+.debt-payment-summary {
+  padding-left: 12px;
+  border-left: 3px solid #d8ae52;
+}
+
+.debt-payment-summary strong,
+.debt-ledger-summary strong {
+  color: #efe7d2;
+}
+
+.debt-ledger-summary {
+  padding-bottom: 12px;
+  border-bottom: 1px solid rgba(216, 174, 82, .18);
+}
+
 /* ── Remind debt button ── */
 .btn-remind {
   background: rgba(216,174,82,.12);
@@ -1530,4 +1556,3 @@ button.danger:hover {
 }
 .btn-remind:hover:not(:disabled) { background: rgba(216,174,82,.22); }
 .btn-remind:disabled { opacity: .4; cursor: not-allowed; }
-

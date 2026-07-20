@@ -46,6 +46,21 @@ export function DebtsPanel({
     return rows
   }, [debts, query, statusFilter])
 
+  const selectedPersonDebts = useMemo(
+    () => debts.filter((debt) => debt.person_id === selectedPersonId && debt.status === 'unpaid'),
+    [debts, selectedPersonId],
+  )
+  const selectedPersonTotal = selectedPersonDebts.reduce(
+    (sum, debt) => sum + Number(debt.amount || 0),
+    0,
+  )
+  const totalOutstanding = debts
+    .filter((debt) => debt.status === 'unpaid')
+    .reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
+  const previousDebtTotal = debts
+    .filter((debt) => debt.period_id !== selectedPeriodId && debt.status === 'unpaid')
+    .reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
+
   return (
     <section className="grid one">
       <Panel
@@ -53,7 +68,12 @@ export function DebtsPanel({
         action={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
             <SelectPeople people={people} value={selectedPersonId} onChange={setSelectedPersonId} />
-            <button onClick={() => createPayment(selectedPersonId)}>Tạo thanh toán PayOS</button>
+            <button
+              onClick={() => createPayment(selectedPersonId)}
+              disabled={!selectedPersonId || selectedPersonDebts.length === 0}
+            >
+              Thanh toán tất cả · {formatMoney(selectedPersonTotal)}
+            </button>
             <button
               className="btn-remind"
               onClick={handleRemindDebt}
@@ -65,6 +85,12 @@ export function DebtsPanel({
           </div>
         }
       >
+        <div className="debt-payment-summary">
+          <strong>Một QR cho toàn bộ công nợ</strong>
+          <span>
+            Người đang chọn có {selectedPersonDebts.length} khoản chưa trả, tổng cộng {formatMoney(selectedPersonTotal)}.
+          </span>
+        </div>
         <StatusLine text={remindToast} type={remindToastType} />
         <CheckoutBox checkout={checkout} submit={submit} />
       </Panel>
@@ -72,6 +98,10 @@ export function DebtsPanel({
         title="Công nợ"
         action={<button onClick={() => setShowCustomDebt(true)}>+ Tạo khoản thu thủ công</button>}
       >
+        <div className="debt-ledger-summary">
+          <span>Tổng chưa thu: <strong>{formatMoney(totalOutstanding)}</strong></span>
+          <span>Nợ từ kỳ trước: <strong>{formatMoney(previousDebtTotal)}</strong></span>
+        </div>
         <div className="search-filter-row">
           <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, mô tả..." />
           <div className="filter-tabs">
@@ -89,7 +119,7 @@ export function DebtsPanel({
             ))}
           </div>
         </div>
-        <DebtTable debts={filtered} admin submit={submit} />
+        <DebtTable debts={filtered} admin showPeriod submit={submit} />
       </Panel>
 
       {showCustomDebt && (

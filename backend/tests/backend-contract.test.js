@@ -149,6 +149,24 @@ test("payments repository has no duplicate legacy pending-payment method", () =>
   assert.match(repository, /mark_payment_failed/);
 });
 
+test("debt payments are grouped by club and keep their original period", () => {
+  const debtRoutes = read("src/modules/debts/debts.routes.js");
+  const debtRepository = read("src/modules/debts/debts.repository.js");
+  const paymentRepository = read("src/modules/payments/payments.repository.js");
+  const migration = read("../supabase/20260721_grouped_debt_payment.sql");
+  const periodsService = read("src/modules/periods/periods.service.js");
+
+  assert.match(debtRoutes, /period\/:periodId\/ledger/);
+  assert.match(debtRepository, /getUnpaidByGroupId/);
+  assert.match(debtRepository, /period\.group_id/);
+  assert.match(paymentRepository, /getUnpaidDebtsByGroup/);
+  assert.doesNotMatch(paymentRepository, /getUnpaidDebtsAllPeriods/);
+  assert.match(periodsService, /group_id: groupId/);
+  assert.match(migration, /update public\.periods p/);
+  assert.match(migration, /group_id is not distinct from v_group_id/);
+  assert.match(migration, /and debt_id = v_debt\.id/);
+});
+
 test("backend source contains no common mojibake sequences", () => {
   const files = listFiles("src", (path) => path.endsWith(".js"));
   const mojibake = /Ã.|Â.|â[€–—]|Ä[‘’]|á[»º]|ðŸ/;

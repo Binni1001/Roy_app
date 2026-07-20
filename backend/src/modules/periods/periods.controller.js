@@ -21,7 +21,7 @@ export const periodsController = {
 
   async create(req, res) {
     try {
-      const data = await periodsService.createPeriod(req.body);
+      const data = await periodsService.createPeriod(req.body, req.authUser);
       res.status(201).json(data);
     } catch (error) {
       res.status(400).json({ message: error.message });

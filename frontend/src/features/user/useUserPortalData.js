@@ -113,6 +113,7 @@ export function useUserPortalData(session, setActiveTab) {
       // Trả TẤT CẢ nợ chưa trả của người này (mọi kỳ) trong 1 QR
       const result = await api.payments.createForPerson({
         person_id: activePerson.id,
+        period_id: selectedPeriodId,
       })
       setCheckout(result)
       void loadPersonData(activePerson.id)

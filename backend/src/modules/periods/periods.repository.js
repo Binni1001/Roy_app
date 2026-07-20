@@ -16,6 +16,14 @@ export const periodsRepository = {
       .single();
   },
 
+  async getActiveGroupByEmail(email) {
+    return await supabase
+      .from("people")
+      .select("active_group_id, group_id")
+      .ilike("email", email)
+      .maybeSingle();
+  },
+
   async create(payload) {
     return await supabase
       .from("periods")

@@ -31,12 +31,19 @@ export const paymentsService = {
     );
   },
 
-  // Gom TẤT CẢ nợ chưa trả của 1 người (mọi kỳ) vào 1 QR
+  // Gom tất cả nợ chưa trả của một người trong cùng nhóm vào một QR.
   async createForPerson(payload = {}) {
-    const { person_id } = payload;
+    const { person_id, period_id } = payload;
     if (!person_id) throw new Error("Person ID khong duoc de trong");
+    if (!period_id) throw new Error("Period ID khong duoc de trong");
 
-    const debtsResult = await paymentsRepository.getUnpaidDebtsAllPeriods(person_id);
+    const periodResult = await paymentsRepository.getPeriod(period_id);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    const debtsResult = await paymentsRepository.getUnpaidDebtsByGroup(
+      person_id,
+      periodResult.data?.group_id || null
+    );
+
     if (debtsResult.error) throw new Error(debtsResult.error.message);
     const debts = debtsResult.data;
     if (!debts.length) throw new Error("Nguoi nay khong con cong no unpaid nao");
@@ -259,9 +266,7 @@ export const paymentsService = {
     const updatedDebts = [];
     const fundTransactions = [];
 
-    // Kỳ đang mở (để ghi tiền trả nợ cũ vào đúng kỳ hiện tại nếu kỳ gốc đã chốt)
-    const openPeriodResult = await paymentsRepository.getOpenPeriod();
-    const openPeriodId = openPeriodResult?.data?.id || null;
+    const openPeriodByGroup = new Map();
 
     for (const item of paymentDebts) {
       const debt = item.debt;
@@ -301,6 +306,16 @@ export const paymentsService = {
       // Kỳ gốc còn mở -> ghi kỳ gốc; đã chốt -> ghi vào kỳ đang mở
       const periodResult = await paymentsRepository.getPeriod(debt.period_id);
       const debtPeriodStatus = periodResult?.data?.status;
+      const groupId = periodResult?.data?.group_id || null;
+      const groupKey = groupId || "legacy";
+
+      if (!openPeriodByGroup.has(groupKey)) {
+        const openPeriodResult = await paymentsRepository.getOpenPeriod(groupId);
+        if (openPeriodResult.error) throw new Error(openPeriodResult.error.message);
+        openPeriodByGroup.set(groupKey, openPeriodResult.data?.id || null);
+      }
+
+      const openPeriodId = openPeriodByGroup.get(groupKey);
       const targetPeriodId =
         debtPeriodStatus === "open" || !openPeriodId ? debt.period_id : openPeriodId;
 

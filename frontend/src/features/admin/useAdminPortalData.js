@@ -22,12 +22,13 @@ export function useAdminPortalData(role) {
   const activePeriod = periods.find((period) => period.id === selectedPeriodId)
   const summary = useMemo(() => {
     const dashboard = data.dashboard || {}
+    const totalOutstandingDebt = data.debts
+      .filter((debt) => debt.status === 'unpaid')
+      .reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
     return [
       {
-        label: 'Nợ chưa thu',
-        value: formatMoney(
-          readTotal(dashboard, ['total_unpaid_debt', 'unpaid_debt', 'total_debt']),
-        ),
+        label: 'Tổng nợ chưa thu',
+        value: formatMoney(totalOutstandingDebt),
       },
       {
         label: 'Quỹ hiện tại',
@@ -36,7 +37,7 @@ export function useAdminPortalData(role) {
       { label: 'Thành viên kỳ', value: data.members.length || people.length },
       { label: 'Buổi đã ghi', value: data.sessions.length },
     ]
-  }, [data.dashboard, data.members.length, data.sessions.length, people.length])
+  }, [data.dashboard, data.debts, data.members.length, data.sessions.length, people.length])
 
   useAutoDismissToast(toast, setToast)
 
@@ -55,7 +56,7 @@ export function useAdminPortalData(role) {
         api.dashboard.byPeriod(periodId).catch(() => null),
         api.periodMembers.byPeriod(periodId).catch(() => []),
         api.sessions.byPeriod(periodId).catch(() => []),
-        api.debts.byPeriod(periodId).catch(() => []),
+        api.debts.ledgerByPeriod(periodId).catch(() => []),
         api.balances.list().catch(() => []),
         api.fund.byPeriod(periodId).catch(() => []),
         api.shuttleExpenses.byPeriod(periodId).catch(() => []),
@@ -157,8 +158,8 @@ export function useAdminPortalData(role) {
       return null
     }
     const result = await submit(
-      () => api.payments.createForPersonPeriod({ person_id: personId, period_id: selectedPeriodId }),
-      'Đã tạo lệnh thanh toán.',
+      () => api.payments.createForPerson({ person_id: personId, period_id: selectedPeriodId }),
+      'Đã tạo một lệnh thanh toán cho toàn bộ công nợ.',
     )
     if (result) setCheckout(result)
     return result
