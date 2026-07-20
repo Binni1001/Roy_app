@@ -26,7 +26,7 @@ export function PkArena({ activePerson, periodId }) {
   const [showCreate, setShowCreate] = useState(false)
   const [showRandom, setShowRandom] = useState(false)
   const [showGuide, setShowGuide]   = useState(false)
-  const [lbType, setLbType]         = useState('singles')
+  const [lbType, setLbType]         = useState('doubles')
   const [myMatchesOnly, setMyMatchesOnly] = useState(false)
   const [matchSearch, setMatchSearch]     = useState('')
   const [dateFilter, setDateFilter]       = useState('all')
@@ -243,11 +243,11 @@ export function PkArena({ activePerson, periodId }) {
           </div>
           {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
           <div className="lb-type-toggle">
-            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
-              ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
-            </button>
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
+            </button>
+            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
+              ⚔️ Đơn <span className="pk-count">{lbSingles.length}</span>
             </button>
           </div>
 

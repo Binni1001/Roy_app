@@ -70,7 +70,7 @@ export function PkPanel({ periodId, role }) {
   const [finalizing, setFinalizing] = useState(null)
   const [voiding, setVoiding] = useState(null)
   const [showRandom, setShowRandom] = useState(false)
-  const [lbType, setLbType] = useState('singles')
+  const [lbType, setLbType] = useState('doubles')
   const [showCreate, setShowCreate] = useState(false)
   const [matchSearch, setMatchSearch] = useState('')
   const [memberSearch, setMemberSearch] = useState('')
@@ -259,11 +259,11 @@ export function PkPanel({ periodId, role }) {
             </div>
           </div>
           <div className="lb-type-toggle">
-            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
-              Đơn <span className="pk-count">{lbSingles.length}</span>
-            </button>
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               Đôi <span className="pk-count">{lbDoubles.length}</span>
+            </button>
+            <button className={lbType === 'singles' ? 'active' : ''} onClick={() => setLbType('singles')}>
+              Đơn <span className="pk-count">{lbSingles.length}</span>
             </button>
           </div>
 
