@@ -32,7 +32,7 @@ function FightTeam({ main, partner, role, side, isWinner }) {
 
 /* Khu vực giữa: badge VS + tỉ số set nếu đã kết thúc */
 function FightCenter({ m }) {
-  const completed = m.status === 'completed'
+  const completed = m.status === 'completed' && !m.voided_at
   let cWon = 0, oWon = 0
   if (m.set_scores?.length) {
     for (const s of m.set_scores) {
@@ -97,17 +97,21 @@ export function UserEditModal({ match, onClose, onSubmit }) {
 }
 
 export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel, onStart, onEdit }) {
+  const isVoided = Boolean(m.voided_at)
+  const visualStatus = isVoided ? 'cancelled' : m.status
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
-  const winner = getWinnerSide(m)
+  const winner = isVoided ? null : getWinnerSide(m)
   const showActions = amParticipant && (m.status === 'pending' || m.status === 'active')
 
   return (
-    <div className={`pk-fight-card pk-fight-${m.status}`}>
+    <div className={`pk-fight-card pk-fight-${visualStatus}`}>
       <div className="pk-fight-head">
         <div className="pk-fight-head-left">
           {matchNumber != null && <span className="pk-fight-no">Trận {matchNumber}</span>}
-          <span className={`pk-badge pk-badge-${m.status}`}>{STATUS_LABEL[m.status]}</span>
+          <span className={`pk-badge pk-badge-${visualStatus}`}>
+            {isVoided ? 'Kết quả đã hủy' : STATUS_LABEL[m.status]}
+          </span>
           <span className="pk-badge pk-badge-type">{m.match_type === 'singles' ? '🏸 Đơn' : '👥 Đôi'}</span>
           {m.sets && m.sets > 1 && <span className="pk-badge pk-badge-sets">Bo{m.sets}</span>}
         </div>
@@ -120,11 +124,12 @@ export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel,
         <FightTeam main={m.opponent} partner={m.opponent_partner} role="Đối thủ" side="b" isWinner={winner === 'opponent'} />
       </div>
 
-      {(m.bet_items || m.note || showActions) && (
+      {(m.bet_items || m.note || (isVoided && m.void_reason) || showActions) && (
         <div className="pk-fight-foot">
           <div className="pk-fight-foot-info">
             {m.bet_items && <span className="pk-fight-bet">🎁 {m.bet_items}</span>}
             {m.note && <span className="pk-fight-note muted">{m.note}</span>}
+            {isVoided && m.void_reason && <span className="pk-fight-note muted">Lý do: {m.void_reason}</span>}
           </div>
 
           {showActions && (

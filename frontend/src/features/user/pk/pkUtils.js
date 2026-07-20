@@ -61,7 +61,7 @@ export function formatMatchDate(dateStr) {
 
 // 'challenger' | 'opponent' | null
 export function getWinnerSide(m) {
-  if (m.status !== 'completed') return null
+  if (m.status !== 'completed' || m.voided_at) return null
   return m.winner_side || null
 }
 

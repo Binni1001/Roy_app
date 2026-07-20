@@ -197,8 +197,8 @@ export function PkArena({ activePerson, periodId }) {
   const activeLb = activeLeaderboard.ranked
 
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
-  const completed = sortByDate(matches.filter((m) => m.status === 'completed'))
-  const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled'))
+  const completed = sortByDate(matches.filter((m) => m.status === 'completed' && !m.voided_at))
+  const cancelled = sortByDate(matches.filter((m) => m.status === 'cancelled' || m.voided_at))
   const baseList  = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
   const filteredMatches = applyFilters(baseList)
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
