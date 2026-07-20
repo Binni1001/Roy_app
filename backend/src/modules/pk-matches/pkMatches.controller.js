@@ -8,7 +8,10 @@ function sendError(res, error, fallbackStatus = 400) {
 export const pkMatchesController = {
   async getAll(req, res) {
     try {
-      res.json(await pkMatchesService.getAll(req.query.period_id || null));
+      res.json(await pkMatchesService.getAll(
+        req.query.period_id || null,
+        req.query.include_achievements === "true"
+      ));
     } catch (error) {
       sendError(res, error, 500);
     }

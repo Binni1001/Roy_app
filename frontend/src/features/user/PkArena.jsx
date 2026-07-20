@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { api } from '../../api/client'
 import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonPlayerGrid, SkeletonTable } from '../../components/common'
+import { SeasonAchievements } from '../../components/SeasonAchievements'
+import { EMPTY_SEASON_ACHIEVEMENTS } from '../../constants/seasonAchievements'
 import { initials } from '../../utils/appUtils'
 import { RandomMatchmaker } from './RandomMatchmaker'
 import { LeaderboardRow, QualifyingPlayers, RankingGuideModal } from './pk/PkLeaderboard'
@@ -15,6 +17,7 @@ export function PkArena({ activePerson, periodId }) {
   const [tab, setTab]             = useState('leaderboard')
   const [matchFilter, setMatchFilter] = useState('upcoming')
   const [matches, setMatches]     = useState([])
+  const [achievements, setAchievements] = useState(EMPTY_SEASON_ACHIEVEMENTS)
   const [people, setPeople]       = useState([])
   const [leaderboards, setLeaderboards] = useState({
     singles: EMPTY_LEADERBOARD,
@@ -56,16 +59,21 @@ export function PkArena({ activePerson, periodId }) {
   }, [toast])
 
   async function loadAll() {
-    if (!periodId) { setMatches([]); return }
+    if (!periodId) {
+      setMatches([])
+      setAchievements(EMPTY_SEASON_ACHIEVEMENTS)
+      return
+    }
     setLoading(true)
     try {
-      const [ms, pp, singles, doubles] = await Promise.all([
-        api.pk.matches(periodId).catch(() => []),
+      const [arena, pp, singles, doubles] = await Promise.all([
+        api.pk.arena(periodId).catch(() => ({ matches: [], achievements: EMPTY_SEASON_ACHIEVEMENTS })),
         api.pk.people().catch(() => []),
         api.pk.leaderboard(periodId, 'singles').catch(() => EMPTY_LEADERBOARD),
         api.pk.leaderboard(periodId, 'doubles').catch(() => EMPTY_LEADERBOARD),
       ])
-      setMatches(ms)
+      setMatches(arena.matches || [])
+      setAchievements(arena.achievements || EMPTY_SEASON_ACHIEVEMENTS)
       setPeople(pp)
       setLeaderboards({ singles, doubles })
     } finally {
@@ -242,6 +250,7 @@ export function PkArena({ activePerson, periodId }) {
             </div>
           </div>
           {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
+          <SeasonAchievements achievements={achievements} loading={loading} />
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
@@ -266,7 +275,12 @@ export function PkArena({ activePerson, periodId }) {
                     </thead>
                     <tbody>
                       {activeLb.map((row) => (
-                        <LeaderboardRow key={row.id} row={row} isMe={row.id === activePerson?.id} />
+                        <LeaderboardRow
+                          key={row.id}
+                          row={row}
+                          isMe={row.id === activePerson?.id}
+                          achievements={achievements}
+                        />
                       ))}
                     </tbody>
                   </table>

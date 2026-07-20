@@ -1,28 +1,30 @@
 import { Modal } from '../../../components/common'
 import { SeasonTierBadge, SeasonTierGuide } from '../../../components/SeasonTierBadge'
+import { SeasonAchievementMarks } from '../../../components/SeasonAchievements'
 import { initials } from '../../../utils/appUtils'
 
-function PersonIdentity({ row }) {
+function PersonIdentity({ row, achievements }) {
   return (
     <div className="pk-person-cell">
       {row.avatar_url
         ? <img src={row.avatar_url} className="avatar avatar-img pk-avatar" alt={row.full_name} />
         : <span className="avatar pk-avatar">{initials(row.full_name)}</span>}
       <span>
-        {row.full_name}
+        <span className="pk-person-name">{row.full_name}</span>
         {row.attendance_type === 'guest' && <small className="lb-guest-tag">Vãng lai</small>}
+        <SeasonAchievementMarks personId={row.id} achievements={achievements} />
       </span>
     </div>
   )
 }
 
-export function LeaderboardRow({ row, isMe }) {
+export function LeaderboardRow({ row, isMe, achievements }) {
   const rowClasses = [isMe && 'pk-row-me', row.tier_key === 'champion' && 'lb-row-champion'].filter(Boolean).join(' ')
 
   return (
     <tr className={rowClasses}>
       <td><span className="lb-rank-num">{row.rank}</span></td>
-      <td><PersonIdentity row={row} /></td>
+      <td><PersonIdentity row={row} achievements={achievements} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
@@ -77,6 +79,13 @@ export function RankingGuideModal({ onClose }) {
 
         <div className="rg-quote">
           Hạng 1 đạt bậc Cao thủ. Bậc của những người còn lại phụ thuộc vào vị trí trong mùa và có thể thay đổi khi xuất hiện kết quả mới.
+        </div>
+
+        <p className="rg-section-title">Vinh danh mùa</p>
+        <div className="rg-rules">
+          <div className="rg-rule"><span className="rg-rule-icon">⚡</span><span><strong>Năng nổ:</strong> hoàn tất 8 trận trong ít nhất 3 ngày khác nhau.</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🔥</span><span><strong>Chuỗi thắng:</strong> đang thắng liên tiếp từ 3 trận.</span></div>
+          <div className="rg-rule"><span className="rg-rule-icon">🏆</span><span><strong>Chơi nhiều nhất:</strong> có tổng số trận cao nhất mùa; bằng nhau sẽ cùng được vinh danh.</span></div>
         </div>
 
         <div className="rg-footer">

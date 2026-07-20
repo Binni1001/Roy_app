@@ -137,6 +137,135 @@
 }
 .lb-strip-guide:hover { border-color: rgba(216,174,82,0.58); background: rgba(8,12,18,0.82); }
 
+/* Seasonal achievements */
+.season-honors {
+  margin: 0 0 14px;
+  padding: 12px;
+  border: 1px solid rgba(216, 174, 82, 0.14);
+  border-radius: 8px;
+  background: rgba(5, 10, 16, 0.42);
+}
+
+.season-honors-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.season-honors-heading > span {
+  color: #f0d486;
+  font-size: 0.82rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+
+.season-honors-heading small { color: #6f7a88; font-size: 0.7rem; }
+
+.season-honors-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.season-honor-item {
+  --honor-color: #d8ae52;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 64px;
+  padding: 9px 10px;
+  border: 1px solid color-mix(in srgb, var(--honor-color) 28%, transparent);
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--honor-color) 7%, rgba(10, 15, 23, 0.9));
+}
+
+.season-honor-active { --honor-color: #68d8b4; }
+.season-honor-streak { --honor-color: #f08a5d; }
+.season-honor-played { --honor-color: #e2bb55; }
+
+.season-honor-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  border-radius: 7px;
+  background: color-mix(in srgb, var(--honor-color) 14%, transparent);
+  color: var(--honor-color);
+}
+
+.season-honor-copy {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  min-width: 0;
+  line-height: 1.25;
+}
+
+.season-honor-copy strong { color: #eee8db; font-size: 0.78rem; }
+.season-honor-copy > span {
+  overflow: hidden;
+  margin-top: 2px;
+  color: #adb6c2;
+  font-size: 0.72rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.season-honor-copy small { margin-top: 3px; color: var(--honor-color); font-size: 0.66rem; }
+
+.season-honor-avatars {
+  display: flex;
+  align-items: center;
+  flex: 0 0 auto;
+  padding-left: 8px;
+}
+
+.season-honor-avatars img,
+.season-honor-avatars > span {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: -8px;
+  border: 2px solid #111823;
+  border-radius: 50%;
+  background: #303947;
+  color: #f2e2b5;
+  font-size: 0.58rem;
+  font-weight: 800;
+  object-fit: cover;
+}
+
+.season-honor-avatars small { margin-left: 4px; color: #8d98a6; font-size: 0.64rem; }
+.season-honor-item.is-loading { opacity: 0.62; }
+
+.season-achievement-marks {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  margin-left: 7px;
+  vertical-align: middle;
+}
+
+.season-achievement-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border: 1px solid currentColor;
+  border-radius: 50%;
+}
+
+.season-achievement-mark.mark-active { color: #68d8b4; background: rgba(104, 216, 180, 0.1); }
+.season-achievement-mark.mark-streak { color: #f08a5d; background: rgba(240, 138, 93, 0.1); }
+.season-achievement-mark.mark-played { color: #e2bb55; background: rgba(226, 187, 85, 0.1); }
+
 @media (max-width: 480px) {
   .lb-strip-sub { display: none; }
   .lb-image-strip { height: 56px; }
@@ -144,6 +273,12 @@
   .lb-strip-icon { font-size: 1.4rem; }
   .lb-strip-guide { padding: 6px; }
   .lb-strip-guide span { display: none; }
+
+  .season-honors { padding: 9px; }
+  .season-honors-heading small { display: none; }
+  .season-honors-grid { grid-template-columns: 1fr; gap: 6px; }
+  .season-honor-item { min-height: 54px; padding: 7px 9px; }
+  .season-honor-copy > span { white-space: normal; }
 
   /* PK hero: áº©n deco emoji, giáº£m kÃ­ch thÆ°á»›c */
   .pk-arena-hero-deco { display: none; }

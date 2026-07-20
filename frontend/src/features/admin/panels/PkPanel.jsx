@@ -9,6 +9,8 @@ import {
   SkeletonTable,
 } from '../../../components/common'
 import { initials } from '../../../utils/appUtils'
+import { SeasonAchievements } from '../../../components/SeasonAchievements'
+import { EMPTY_SEASON_ACHIEVEMENTS } from '../../../constants/seasonAchievements'
 import { RandomMatchmaker } from '../../user/RandomMatchmaker'
 import { ResultModal } from '../../user/pk/PkMatch'
 import { formatMatchDate, groupMatchesByDate } from '../../user/pk/pkUtils'
@@ -56,6 +58,7 @@ function VoidResultModal({ onClose, onConfirm }) {
 export function PkPanel({ periodId, role }) {
   const [tab, setTab] = useState('leaderboard')
   const [matches, setMatches] = useState([])
+  const [achievements, setAchievements] = useState(EMPTY_SEASON_ACHIEVEMENTS)
   const [people, setPeople] = useState([])
   const [leaderboards, setLeaderboards] = useState({
     singles: EMPTY_LEADERBOARD,
@@ -93,6 +96,7 @@ export function PkPanel({ periodId, role }) {
   async function loadAll() {
     if (!periodId) {
       setMatches([])
+      setAchievements(EMPTY_SEASON_ACHIEVEMENTS)
       setPeople([])
       setLeaderboards({ singles: EMPTY_LEADERBOARD, doubles: EMPTY_LEADERBOARD })
       return
@@ -100,13 +104,14 @@ export function PkPanel({ periodId, role }) {
 
     setLoading(true)
     try {
-      const [loadedMatches, loadedPeople, singles, doubles] = await Promise.all([
-        api.pk.matches(periodId),
+      const [arena, loadedPeople, singles, doubles] = await Promise.all([
+        api.pk.arena(periodId),
         api.pk.people(),
         api.pk.leaderboard(periodId, 'singles'),
         api.pk.leaderboard(periodId, 'doubles'),
       ])
-      setMatches(loadedMatches || [])
+      setMatches(arena.matches || [])
+      setAchievements(arena.achievements || EMPTY_SEASON_ACHIEVEMENTS)
       setPeople(loadedPeople || [])
       setLeaderboards({ singles, doubles })
     } catch (error) {
@@ -258,6 +263,7 @@ export function PkPanel({ periodId, role }) {
               </div>
             </div>
           </div>
+          <SeasonAchievements achievements={achievements} loading={loading} />
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               Đôi <span className="pk-count">{lbDoubles.length}</span>
@@ -285,7 +291,9 @@ export function PkPanel({ periodId, role }) {
                       </tr>
                     </thead>
                     <tbody>
-                      {activeLb.map((row) => <AdminLeaderboardRow key={row.id} row={row} />)}
+                      {activeLb.map((row) => (
+                        <AdminLeaderboardRow key={row.id} row={row} achievements={achievements} />
+                      ))}
                     </tbody>
                   </table>
                 </div>

@@ -1,23 +1,28 @@
 import { SeasonTierBadge } from '../../../../components/SeasonTierBadge'
+import { SeasonAchievementMarks } from '../../../../components/SeasonAchievements'
 import { initials } from '../../../../utils/appUtils'
 
-export function PersonCell({ p }) {
+export function PersonCell({ p, achievements }) {
   if (!p) return <span className="muted">–</span>
   return (
     <div className="pk-person-cell">
       {p.avatar_url
         ? <img src={p.avatar_url} className="avatar avatar-img pk-avatar" alt={p.full_name} />
         : <span className="avatar pk-avatar">{initials(p.full_name)}</span>}
-      <span>{p.full_name}{p.attendance_type === 'guest' && <small className="lb-guest-tag">Vãng lai</small>}</span>
+      <span>
+        <span className="pk-person-name">{p.full_name}</span>
+        {p.attendance_type === 'guest' && <small className="lb-guest-tag">Vãng lai</small>}
+        <SeasonAchievementMarks personId={p.id} achievements={achievements} />
+      </span>
     </div>
   )
 }
 
-export function AdminLeaderboardRow({ row }) {
+export function AdminLeaderboardRow({ row, achievements }) {
   return (
     <tr className={row.tier_key === 'champion' ? 'lb-row-champion' : ''}>
       <td><span className="lb-rank-num">{row.rank}</span></td>
-      <td><PersonCell p={row} /></td>
+      <td><PersonCell p={row} achievements={achievements} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>

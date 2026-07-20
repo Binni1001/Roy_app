@@ -1,5 +1,6 @@
 import { pkMatchesRepository } from "./pkMatches.repository.js";
 import { assertPeopleActive } from "../../utils/peopleGuard.js";
+import { buildSeasonAchievements } from "./pkAchievements.js";
 
 const MATCH_TYPES = new Set(["singles", "doubles"]);
 const OPEN_STATUSES = new Set(["pending", "active"]);
@@ -121,10 +122,14 @@ function buildInsert(payload, isAdmin) {
 }
 
 export const pkMatchesService = {
-  async getAll(periodId) {
+  async getAll(periodId, includeAchievements = false) {
     const { data, error } = await pkMatchesRepository.getAll(periodId);
     if (error) throw databaseError(error);
-    return data;
+    if (!includeAchievements) return data;
+    return {
+      matches: data,
+      achievements: buildSeasonAchievements(data),
+    };
   },
 
   async getMyMatches(user, periodId) {

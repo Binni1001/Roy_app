@@ -192,6 +192,10 @@ export const api = {
 
   pk: {
     matches: (periodId) => request({ url: '/api/pk-matches', params: periodId ? { period_id: periodId } : undefined }),
+    arena: (periodId) => request({
+      url: '/api/pk-matches',
+      params: { period_id: periodId, include_achievements: 'true' },
+    }),
     myMatches: (periodId) => request({ url: '/api/pk-matches/me', params: periodId ? { period_id: periodId } : undefined }),
     byPerson: (personId, periodId) => request({ url: `/api/pk-matches/person/${personId}`, params: periodId ? { period_id: periodId } : undefined }),
     create: (payload) => request({ url: '/api/pk-matches', method: 'POST', data: payload }),
