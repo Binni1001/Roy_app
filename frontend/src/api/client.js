@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
+import { mutationCoordinator } from './mutationGuard'
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
@@ -22,7 +23,7 @@ http.interceptors.request.use(async (config) => {
   return config
 })
 
-async function request(config) {
+async function executeRequest(config) {
   try {
     const { data } = await http.request(config)
     return data
@@ -34,6 +35,10 @@ async function request(config) {
       'Không thể gửi yêu cầu'
     throw new Error(message, { cause: error })
   }
+}
+
+function request(config) {
+  return mutationCoordinator.run(config, executeRequest)
 }
 
 export const api = {

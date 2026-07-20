@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import { emptyPeriod, emptyPerson } from '../../constants/appConstants'
 import { useAutoDismissToast } from '../../hooks/useAutoDismissToast'
@@ -17,6 +17,7 @@ export function useAdminPortalData(role) {
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [checkout, setCheckout] = useState(null)
+  const submitLockRef = useRef(false)
 
   const activePeriod = periods.find((period) => period.id === selectedPeriodId)
   const summary = useMemo(() => {
@@ -128,6 +129,8 @@ export function useAdminPortalData(role) {
   // scope: 'period' (mặc định) chỉ reload dữ liệu kỳ hiện tại
   //        'global' reload cả people + periods (dùng khi tạo/xóa người, kỳ)
   async function submit(action, successMessage, scope = 'period') {
+    if (submitLockRef.current) return null
+    submitLockRef.current = true
     setSubmitting(true)
     try {
       const result = await action()
@@ -143,6 +146,7 @@ export function useAdminPortalData(role) {
       setToastType('error'); setToast(errorText(error))
       return null
     } finally {
+      submitLockRef.current = false
       setSubmitting(false)
     }
   }

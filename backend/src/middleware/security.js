@@ -33,8 +33,9 @@ export function corsOptions() {
 
       callback(new Error("Origin is not allowed by CORS"));
     },
-    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization"],
+    methods: ["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization", "Idempotency-Key"],
+    exposedHeaders: ["Idempotency-Replayed"],
     maxAge: 86400
   };
 }
@@ -122,7 +123,7 @@ export const writeApiLimiter = createRateLimiter({
   windowMs: 60_000,
   max: Number(process.env.RATE_LIMIT_WRITE_PER_MINUTE || 80),
   scope: "write",
-  methods: ["POST", "PUT", "DELETE"],
+  methods: ["POST", "PUT", "PATCH", "DELETE"],
   message: "Too many write requests. Please slow down."
 });
 

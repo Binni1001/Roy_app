@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import { supabase } from '../../lib/supabase'
 import { useAutoDismissToast } from '../../hooks/useAutoDismissToast'
@@ -20,6 +20,7 @@ export function useUserPortalData(session, setActiveTab) {
   const [toastType, setToastType] = useState('success')
   const [loading, setLoading] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const submissionLockRef = useRef(false)
 
   const unpaidDebts = data.debts.filter((debt) => debt.status === 'unpaid')
   const totalDebt = unpaidDebts.reduce((sum, debt) => sum + Number(debt.amount || 0), 0)
@@ -105,6 +106,8 @@ export function useUserPortalData(session, setActiveTab) {
       setToast('Tài khoản này chưa được liên kết với hồ sơ người chơi.')
       return null
     }
+    if (submissionLockRef.current) return null
+    submissionLockRef.current = true
     setSubmitting(true)
     try {
       // Trả TẤT CẢ nợ chưa trả của người này (mọi kỳ) trong 1 QR
@@ -125,6 +128,7 @@ export function useUserPortalData(session, setActiveTab) {
       setToastType('error'); setToast(errorText(error))
       return null
     } finally {
+      submissionLockRef.current = false
       setSubmitting(false)
     }
   }
@@ -136,6 +140,8 @@ export function useUserPortalData(session, setActiveTab) {
       return
     }
 
+    if (submissionLockRef.current) return
+    submissionLockRef.current = true
     setSubmitting(true)
     try {
       await api.people.createMe({
@@ -152,11 +158,14 @@ export function useUserPortalData(session, setActiveTab) {
     } catch (error) {
       setToastType('error'); setToast(errorText(error))
     } finally {
+      submissionLockRef.current = false
       setSubmitting(false)
     }
   }
 
   async function updateProfile(formData, avatarFile) {
+    if (submissionLockRef.current) return null
+    submissionLockRef.current = true
     setSubmitting(true)
     try {
       let avatar_url = activePerson?.avatar_url || null
@@ -189,13 +198,16 @@ export function useUserPortalData(session, setActiveTab) {
     } catch (error) {
       setToastType('error'); setToast(errorText(error))
     } finally {
+      submissionLockRef.current = false
       setSubmitting(false)
     }
   }
 
   async function updateAttendanceType(nextType) {
     if (!activePerson || nextType === attendanceType) return
+    if (submissionLockRef.current) return
 
+    submissionLockRef.current = true
     setAttendanceType(nextType)
     setSubmitting(true)
     try {
@@ -206,6 +218,7 @@ export function useUserPortalData(session, setActiveTab) {
       setAttendanceType(activePerson.attendance_type || 'fixed')
       setToastType('error'); setToast(errorText(error))
     } finally {
+      submissionLockRef.current = false
       setSubmitting(false)
     }
   }

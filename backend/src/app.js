@@ -8,6 +8,7 @@ import {
   webhookLimiter,
   writeApiLimiter
 } from "./middleware/security.js";
+import { idempotencyMiddleware } from "./middleware/idempotency.js";
 
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
@@ -54,6 +55,7 @@ app.use("/api", writeApiLimiter);
 app.use("/api/payments/create-for-person-period", paymentLimiter);
 app.use("/api/payments/:id/cancel", paymentLimiter);
 app.use("/api/payments/payos-webhook", webhookLimiter);
+app.use("/api", idempotencyMiddleware);
 
 app.use("/api/people", peopleRoutes);
 app.use("/api/periods", periodsRoutes);

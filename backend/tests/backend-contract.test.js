@@ -117,6 +117,7 @@ test("app applies security and rate limit middleware", () => {
   assert.match(app, /writeApiLimiter/);
   assert.match(app, /paymentLimiter/);
   assert.match(app, /webhookLimiter/);
+  assert.match(app, /idempotencyMiddleware/);
 });
 
 test("security middleware stays dependency-free and configurable", () => {
@@ -128,6 +129,7 @@ test("security middleware stays dependency-free and configurable", () => {
   assert.match(middleware, /RATE_LIMIT_WEBHOOK_PER_MINUTE/);
   assert.match(middleware, /CORS_ORIGINS/);
   assert.match(middleware, /FRONTEND_URL/);
+  assert.match(middleware, /Idempotency-Key/);
 });
 
 test("payments controller has a single PayOS webhook handler", () => {

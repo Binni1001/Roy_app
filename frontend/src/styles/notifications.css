@@ -118,3 +118,56 @@
   vertical-align: middle;
 }
 
+/* Lightweight feedback for write requests; never blocks the page. */
+.mutation-indicator {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top));
+  right: 14px;
+  z-index: 1000;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+  padding: 7px 12px;
+  border: 1px solid rgba(216, 174, 82, 0.34);
+  border-radius: 8px;
+  background: rgba(13, 18, 26, 0.94);
+  color: #f0d486;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+  pointer-events: none;
+  font-size: 12px;
+  font-weight: 700;
+  animation: mutation-indicator-reveal 0s 160ms both;
+}
+
+.mutation-indicator-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(216, 174, 82, 0.25);
+  border-top-color: #d8ae52;
+  border-radius: 50%;
+  animation: mutation-indicator-spin 0.7s linear infinite;
+}
+
+@keyframes mutation-indicator-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes mutation-indicator-reveal {
+  from { opacity: 0; visibility: hidden; }
+  to { opacity: 1; visibility: visible; }
+}
+
+@media (max-width: 560px) {
+  .mutation-indicator {
+    top: max(10px, env(safe-area-inset-top));
+    right: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mutation-indicator { animation-delay: 160ms; }
+  .mutation-indicator-spinner { animation: none; }
+}
+
