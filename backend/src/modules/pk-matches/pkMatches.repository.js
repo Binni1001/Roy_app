@@ -86,6 +86,22 @@ export const pkMatchesRepository = {
     });
   },
 
+  async correctCompleted(id, payload, actorEmail) {
+    return supabase.rpc("correct_completed_pk_match", {
+      p_match_id: id,
+      p_match_type: payload.match_type,
+      p_challenger_id: payload.challenger_id,
+      p_opponent_id: payload.opponent_id,
+      p_challenger_partner_id: payload.challenger_partner_id || null,
+      p_opponent_partner_id: payload.opponent_partner_id || null,
+      p_sets: payload.sets,
+      p_played_at: payload.played_at || null,
+      p_bet_items: payload.bet_items || null,
+      p_note: payload.note || null,
+      p_actor_email: actorEmail || null,
+    });
+  },
+
   async getSeasonRatings(periodId, matchType) {
     return supabase
       .from("pk_season_ratings")

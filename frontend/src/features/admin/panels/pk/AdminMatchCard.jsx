@@ -98,7 +98,7 @@ export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize,
           {(m.status === 'pending' || m.status === 'active') && (
             <button onClick={() => onFinalize(m)}>Ghi kết quả</button>
           )}
-          {m.status !== 'completed' && <button onClick={() => onEdit(m)}>Sửa trận</button>}
+          {!isVoided && <button onClick={() => onEdit(m)}>Sửa trận</button>}
           {m.status !== 'completed' && (
             <button className="danger" onClick={() => onDelete(m)}>Xóa trận</button>
           )}

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Modal } from '../../../../components/common'
 import { STATUS_LABEL } from './pkConstants'
 
-/* Modal admin sửa kèo — chỉnh mọi trường + điểm từng set */
+/* Admin có thể sửa người của trận đã chốt; backend sẽ dựng lại Elo toàn kỳ. */
 export function PkEditModal({ match, people = [], onClose, onSubmit }) {
   const [draft, setDraft] = useState({
     match_type:             match.match_type             || 'singles',
@@ -36,10 +36,17 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
   }
 
   const isDoubles = draft.match_type === 'doubles'
+  const isCompleted = match.status === 'completed'
 
   return (
     <Modal title="✏️ Sửa trận đấu (Quản trị)" onClose={onClose}>
       <form className="form" onSubmit={handleSubmit}>
+
+        {isCompleted && (
+          <p className="pk-edit-warning">
+            Trận đã hoàn tất. Khi lưu, kết quả và tỷ số được giữ nguyên; điểm Elo của toàn kỳ sẽ được tính lại.
+          </p>
+        )}
 
         {/* Loại kèo */}
         <div className="ck-type-toggle" style={{ marginBottom: 12 }}>
@@ -69,13 +76,13 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
         <div className="ck-vs-row" style={{ marginBottom: 12 }}>
           <div className="ck-team">
             <div className="ck-team-label ck-label-blue">🧑 Thách đấu</div>
-            <select className="ck-select" value={draft.challenger_id} onChange={(e) => update('challenger_id', e.target.value)}>
+            <select className="ck-select" value={draft.challenger_id} onChange={(e) => update('challenger_id', e.target.value)} required>
               <option value="">Chọn người</option>
               {people.filter((p) => p.id !== draft.opponent_id && p.id !== draft.opponent_partner_id)
                 .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
             </select>
             {isDoubles && (
-              <select className="ck-select" value={draft.challenger_partner_id} onChange={(e) => update('challenger_partner_id', e.target.value)}>
+              <select className="ck-select" value={draft.challenger_partner_id} onChange={(e) => update('challenger_partner_id', e.target.value)} required>
                 <option value="">+ Đồng đội</option>
                 {people.filter((p) => p.id !== draft.challenger_id && p.id !== draft.opponent_id && p.id !== draft.opponent_partner_id)
                   .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
@@ -85,13 +92,13 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
           <div className="ck-vs-badge">ĐẤU</div>
           <div className="ck-team">
             <div className="ck-team-label ck-label-red">🎯 Đối thủ</div>
-            <select className="ck-select" value={draft.opponent_id} onChange={(e) => update('opponent_id', e.target.value)}>
+            <select className="ck-select" value={draft.opponent_id} onChange={(e) => update('opponent_id', e.target.value)} required>
               <option value="">Chọn người</option>
               {people.filter((p) => p.id !== draft.challenger_id && p.id !== draft.challenger_partner_id)
                 .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
             </select>
             {isDoubles && (
-              <select className="ck-select" value={draft.opponent_partner_id} onChange={(e) => update('opponent_partner_id', e.target.value)}>
+              <select className="ck-select" value={draft.opponent_partner_id} onChange={(e) => update('opponent_partner_id', e.target.value)} required>
                 <option value="">+ Đồng đội</option>
                 {people.filter((p) => p.id !== draft.opponent_id && p.id !== draft.challenger_id && p.id !== draft.challenger_partner_id)
                   .map((p) => <option key={p.id} value={p.id}>{p.full_name}{p.nickname ? ` (${p.nickname})` : ''}</option>)}
@@ -102,15 +109,22 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
 
         {/* Trạng thái & ngày */}
         <div className="ck-row-2" style={{ marginBottom: 12 }}>
-          <label className="ck-field">
-            <span className="ck-field-label">📋 Trạng thái</span>
-            <select className="ck-select" value={draft.status} onChange={(e) => update('status', e.target.value)}>
-              {['pending', 'active', 'cancelled'].map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
-            </select>
-          </label>
+          {isCompleted ? (
+            <label className="ck-field">
+              <span className="ck-field-label">📋 Trạng thái</span>
+              <span className="pk-edit-locked-status">Đã hoàn tất và khóa kết quả</span>
+            </label>
+          ) : (
+            <label className="ck-field">
+              <span className="ck-field-label">📋 Trạng thái</span>
+              <select className="ck-select" value={draft.status} onChange={(e) => update('status', e.target.value)}>
+                {['pending', 'active', 'cancelled'].map((s) => <option key={s} value={s}>{STATUS_LABEL[s]}</option>)}
+              </select>
+            </label>
+          )}
           <label className="ck-field">
             <span className="ck-field-label">📅 Ngày đấu</span>
-            <input className="ck-input" type="date" value={draft.played_at} onChange={(e) => update('played_at', e.target.value)} />
+            <input className="ck-input" type="date" value={draft.played_at} onChange={(e) => update('played_at', e.target.value)} required />
           </label>
         </div>
 
@@ -126,7 +140,9 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
 
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit" className="ck-btn-submit">Lưu thay đổi</button>
+          <button type="submit" className="ck-btn-submit">
+            {isCompleted ? 'Lưu và tính lại Elo' : 'Lưu thay đổi'}
+          </button>
         </footer>
       </form>
     </Modal>

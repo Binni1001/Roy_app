@@ -803,6 +803,27 @@
 }
 .ck-select:focus { border-color: rgba(216,174,82,0.4); }
 
+.pk-edit-warning {
+  margin: 0 0 14px;
+  padding: 10px 12px;
+  border: 1px solid rgba(216, 174, 82, 0.35);
+  border-radius: 6px;
+  background: rgba(216, 174, 82, 0.08);
+  color: #f0d891;
+  line-height: 1.45;
+}
+
+.pk-edit-locked-status {
+  display: flex;
+  min-height: 42px;
+  align-items: center;
+  padding: 0 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 6px;
+  color: var(--muted);
+  background: rgba(255, 255, 255, 0.025);
+}
+
 /* Details */
 .ck-details { padding: 14px 20px; display: flex; flex-direction: column; gap: 12px; }
 .ck-field { display: flex; flex-direction: column; gap: 5px; }

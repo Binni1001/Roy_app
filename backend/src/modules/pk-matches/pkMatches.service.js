@@ -24,6 +24,13 @@ const DATABASE_ERROR_MESSAGES = [
   [/void reason of at least 5 characters/i, "L\u00fd do h\u1ee7y k\u1ebft qu\u1ea3 ph\u1ea3i c\u00f3 \u00edt nh\u1ea5t 5 k\u00fd t\u1ef1."],
   [/Only a completed PK match can be voided/i, "Ch\u1ec9 c\u00f3 th\u1ec3 h\u1ee7y k\u1ebft qu\u1ea3 c\u1ee7a tr\u1eadn \u0111\u00e3 ho\u00e0n t\u1ea5t."],
   [/has already been voided/i, "K\u1ebft qu\u1ea3 tr\u1eadn n\u00e0y \u0111\u00e3 \u0111\u01b0\u1ee3c h\u1ee7y."],
+  [/Only a completed PK match can be corrected/i, "Ch\u1ec9 c\u00f3 th\u1ec3 s\u1eeda sai ng\u01b0\u1eddi ch\u01a1i cho tr\u1eadn \u0111\u00e3 ho\u00e0n t\u1ea5t."],
+  [/A voided PK match cannot be corrected/i, "Kh\u00f4ng th\u1ec3 s\u1eeda tr\u1eadn \u0111\u00e3 b\u1ecb h\u1ee7y k\u1ebft qu\u1ea3."],
+  [/Match type is invalid/i, "Lo\u1ea1i tr\u1eadn kh\u00f4ng h\u1ee3p l\u1ec7."],
+  [/Both match sides are required/i, "Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 hai b\u00ean thi \u0111\u1ea5u."],
+  [/Configured match sets are invalid/i, "S\u1ed1 v\u00e1n ph\u1ea3i l\u00e0 1, 3 ho\u1eb7c 5."],
+  [/A player cannot appear twice/i, "M\u1ed9t ng\u01b0\u1eddi kh\u00f4ng th\u1ec3 xu\u1ea5t hi\u1ec7n hai l\u1ea7n trong c\u00f9ng tr\u1eadn."],
+  [/Every player must be active/i, "T\u1ea5t c\u1ea3 ng\u01b0\u1eddi ch\u01a1i ph\u1ea3i \u0111ang ho\u1ea1t \u0111\u1ed9ng."],
 ];
 
 function databaseError(error) {
@@ -61,6 +68,29 @@ function participantIds(match) {
     match.opponent_id,
     match.opponent_partner_id,
   ].filter(Boolean);
+}
+
+function validateEditableMatch(match) {
+  if (!MATCH_TYPES.has(match.match_type)) {
+    throw new Error("Lo\u1ea1i tr\u1eadn kh\u00f4ng h\u1ee3p l\u1ec7.");
+  }
+  if (!match.challenger_id || !match.opponent_id) {
+    throw new Error("Vui l\u00f2ng ch\u1ecdn \u0111\u1ee7 hai b\u00ean thi \u0111\u1ea5u.");
+  }
+  if (![1, 3, 5].includes(Number(match.sets))) {
+    throw new Error("S\u1ed1 v\u00e1n ph\u1ea3i l\u00e0 1, 3 ho\u1eb7c 5.");
+  }
+  if (!match.played_at) {
+    throw new Error("Vui l\u00f2ng ch\u1ecdn ng\u00e0y thi \u0111\u1ea5u.");
+  }
+
+  const ids = participantIds(match);
+  if (match.match_type === "doubles" && ids.length !== 4) {
+    throw new Error("Tr\u1eadn \u0111\u00f4i ph\u1ea3i c\u00f3 \u0111\u1ee7 b\u1ed1n ng\u01b0\u1eddi ch\u01a1i.");
+  }
+  if (new Set(ids).size !== ids.length) {
+    throw new Error("M\u1ed9t ng\u01b0\u1eddi kh\u00f4ng th\u1ec3 xu\u1ea5t hi\u1ec7n hai l\u1ea7n trong c\u00f9ng tr\u1eadn.");
+  }
 }
 
 async function assertParticipant(match, user, isAdmin) {
@@ -152,6 +182,7 @@ export const pkMatchesService = {
 
   async create(payload, isAdmin = false) {
     const insert = buildInsert(payload, isAdmin);
+    validateEditableMatch(insert);
     await assertPeopleActive(participantIds(insert));
     const { data, error } = await pkMatchesRepository.create(insert);
     if (error) throw databaseError(error);
@@ -168,6 +199,7 @@ export const pkMatchesService = {
       ...match,
       period_id: match.period_id || periodId,
     }, isAdmin));
+    inserts.forEach(validateEditableMatch);
     await assertPeopleActive([...new Set(inserts.flatMap(participantIds))]);
 
     const { data, error } = await pkMatchesRepository.createMany(inserts);
@@ -199,11 +231,38 @@ export const pkMatchesService = {
     const existing = await this.getById(id);
     await assertParticipant(existing, authUser, isAdmin);
 
-    if (payload.winner_side || payload.status === "completed") {
+    if (!existing.rating_locked_at && (payload.winner_side || payload.status === "completed")) {
       return this.finalize(id, payload, isAdmin, authUser);
     }
 
     if (existing.rating_locked_at || existing.status === "completed") {
+      if (isAdmin && !existing.voided_at) {
+        const corrected = {
+          match_type: payload.match_type ?? existing.match_type,
+          challenger_id: payload.challenger_id ?? existing.challenger_id,
+          opponent_id: payload.opponent_id ?? existing.opponent_id,
+          challenger_partner_id: payload.challenger_partner_id ?? existing.challenger_partner_id,
+          opponent_partner_id: payload.opponent_partner_id ?? existing.opponent_partner_id,
+          sets: Number(payload.sets ?? existing.sets) || 1,
+          played_at: payload.played_at ?? existing.played_at,
+          bet_items: payload.bet_items ?? existing.bet_items,
+          note: payload.note ?? existing.note,
+        };
+        if (corrected.match_type === "singles") {
+          corrected.challenger_partner_id = null;
+          corrected.opponent_partner_id = null;
+        }
+        validateEditableMatch(corrected);
+        await assertPeopleActive(participantIds(corrected));
+        const { data, error } = await pkMatchesRepository.correctCompleted(
+          id,
+          corrected,
+          authUser?.email
+        );
+        if (error) throw databaseError(error);
+        return data?.match || data;
+      }
+
       const allowedKeys = new Set(["note", "bet_items"]);
       if (Object.keys(payload).some((key) => !allowedKeys.has(key))) {
         throw new Error("Tr\u1eadn \u0111\u00e3 ho\u00e0n t\u1ea5t v\u00e0 b\u1ecb kh\u00f3a k\u1ebft qu\u1ea3.");
@@ -234,6 +293,13 @@ export const pkMatchesService = {
         if (payload[key] !== undefined) allowed[key] = payload[key] || null;
       }
       const merged = { ...existing, ...allowed };
+      if (merged.match_type === "singles") {
+        merged.challenger_partner_id = null;
+        merged.opponent_partner_id = null;
+        allowed.challenger_partner_id = null;
+        allowed.opponent_partner_id = null;
+      }
+      validateEditableMatch(merged);
       await assertPeopleActive(participantIds(merged));
     }
 
