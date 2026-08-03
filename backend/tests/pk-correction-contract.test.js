@@ -15,6 +15,7 @@ test("completed PK corrections are audited and rebuild seasonal Elo", () => {
   assert.match(migration, /public\.rebuild_pk_season_elo\(v_match\.period_id\)/);
   assert.match(migration, /grant execute on function public\.correct_completed_pk_match/);
   assert.match(migration, /to service_role/);
+  assert.match(migration, /notify pgrst, 'reload schema'/);
 });
 
 test("only admin roles can reach completed correction through the update service", () => {
@@ -25,5 +26,6 @@ test("only admin roles can reach completed correction through the update service
   assert.match(controller, /req\.authRole === "admin" \|\| req\.authRole === "owner"/);
   assert.match(service, /if \(isAdmin && !existing\.voided_at\)/);
   assert.match(service, /pkMatchesRepository\.correctCompleted/);
+  assert.match(service, /20260803_correct_completed_pk_match\.sql/);
   assert.match(repository, /rpc\("correct_completed_pk_match"/);
 });

@@ -182,3 +182,9 @@ revoke execute on function public.correct_completed_pk_match(
 grant execute on function public.correct_completed_pk_match(
   uuid, text, uuid, uuid, uuid, uuid, integer, timestamptz, text, text, text
 ) to service_role;
+
+-- Bao cho PostgREST/Supabase nap lai danh sach RPC ngay sau khi migration xong.
+notify pgrst, 'reload schema';
+
+-- Bao cho PostgREST/Supabase nap lai danh sach RPC ngay sau khi migration xong.
+notify pgrst, 'reload schema';

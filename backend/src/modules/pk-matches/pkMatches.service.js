@@ -8,6 +8,7 @@ const MIN_MATCHES = 5;
 const MIN_OPPONENTS = 3;
 
 const DATABASE_ERROR_MESSAGES = [
+  [/Could not find the function public\.correct_completed_pk_match|PGRST202/i, "C\u01a1 s\u1edf d\u1eef li\u1ec7u ch\u01b0a \u00e1p d\u1ee5ng b\u1ea3n c\u1eadp nh\u1eadt s\u1eeda k\u00e8o. Vui l\u00f2ng ch\u1ea1y migration 20260803_correct_completed_pk_match.sql trong Supabase."],
   [/must belong to a period|Period ID is required/i, "Tr\u1eadn ph\u1ea3i thu\u1ed9c m\u1ed9t k\u1ef3 thi \u0111\u1ea5u."],
   [/Create the match first, then finalize it/i, "H\u00e3y t\u1ea1o tr\u1eadn tr\u01b0\u1edbc khi ghi k\u1ebft qu\u1ea3."],
   [/does not exist/i, "Kh\u00f4ng t\u00ecm th\u1ea5y tr\u1eadn \u0111\u1ea5u."],
