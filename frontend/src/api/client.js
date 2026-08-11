@@ -68,6 +68,8 @@ export const api = {
     byPeriod: (periodId) => request({ url: `/api/period-members/period/${periodId}` }),
     create: (payload) =>
       request({ url: '/api/period-members', method: 'POST', data: payload }),
+    createBulk: (payload) =>
+      request({ url: '/api/period-members/bulk', method: 'POST', data: payload }),
     update: (id, payload) =>
       request({ url: `/api/period-members/${id}`, method: 'PUT', data: payload }),
     remove: (id) => request({ url: `/api/period-members/${id}`, method: 'DELETE' }),

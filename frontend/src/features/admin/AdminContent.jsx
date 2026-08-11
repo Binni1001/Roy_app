@@ -34,6 +34,7 @@ export function AdminContent(props) {
     selectedPersonId,
     setSelectedPersonId,
     submit,
+    submitting,
     createPayment,
     checkout,
     role,
@@ -98,10 +99,10 @@ export function AdminContent(props) {
           periods={periods}
           members={data.members}
           periodForm={forms.period}
-          memberForm={forms.member}
           selectedPeriodId={selectedPeriodId}
           setForm={setForm}
-          submit={submitGlobal}
+          submit={submit}
+          submitting={submitting}
         />
       </PanelSuspense>
     )

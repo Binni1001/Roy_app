@@ -136,6 +136,138 @@ export const periodMembersService = {
     };
   },
 
+  async createPeriodMembers(payload = {}) {
+    if (!payload.period_id) {
+      throw new Error("Period ID khong duoc de trong");
+    }
+
+    if (!Array.isArray(payload.person_ids) || payload.person_ids.length === 0) {
+      throw new Error("Can chon it nhat mot nguoi");
+    }
+
+    const personIds = [...new Set(payload.person_ids.filter(Boolean))];
+    if (personIds.length === 0) {
+      throw new Error("Can chon it nhat mot nguoi");
+    }
+    if (personIds.length > 100) {
+      throw new Error("Moi lan chi duoc them toi da 100 nguoi");
+    }
+
+    const periodResult = await periodMembersRepository.getPeriodById(payload.period_id);
+    if (periodResult.error) throw new Error(periodResult.error.message);
+    const period = periodResult.data;
+    if (period.status === "closed") {
+      throw new Error("Ky nay da dong, khong the them thanh vien");
+    }
+
+    const [peopleResult, existingMembersResult] = await Promise.all([
+      periodMembersRepository.getPeopleByIds(personIds),
+      periodMembersRepository.getExistingByPeriodAndPeople(payload.period_id, personIds)
+    ]);
+    if (peopleResult.error) throw new Error(peopleResult.error.message);
+    if (existingMembersResult.error) throw new Error(existingMembersResult.error.message);
+
+    const peopleById = new Map(peopleResult.data.map((person) => [person.id, person]));
+    const existingPersonIds = new Set(existingMembersResult.data.map((member) => member.person_id));
+    const skipped = [];
+    const failed = [];
+    const memberPayloads = [];
+
+    for (const personId of personIds) {
+      if (existingPersonIds.has(personId)) {
+        skipped.push({ person_id: personId, reason: "Nguoi nay da ton tai trong ky nay" });
+        continue;
+      }
+
+      const person = peopleById.get(personId);
+      if (!person) {
+        failed.push({ person_id: personId, reason: "Khong tim thay nguoi nay" });
+        continue;
+      }
+      if (person.status !== "active") {
+        failed.push({ person_id: personId, reason: "Chi co the them thanh vien dang hoat dong vao ky" });
+        continue;
+      }
+
+      const status = person.attendance_type || "guest";
+      if (!allowedStatuses.includes(status)) {
+        failed.push({ person_id: personId, reason: "Hinh thuc choi khong hop le" });
+        continue;
+      }
+
+      memberPayloads.push({ period_id: payload.period_id, person_id: personId, status, note: null });
+    }
+
+    if (memberPayloads.length === 0 && failed.length > 0) {
+      throw new Error(failed[0].reason);
+    }
+
+    let createdMembers = [];
+    if (memberPayloads.length > 0) {
+      const createMembersResult = await periodMembersRepository.createMany(memberPayloads);
+      if (createMembersResult.error) throw new Error(createMembersResult.error.message);
+      createdMembers = createMembersResult.data;
+    }
+
+    const fixedPersonIds = memberPayloads
+      .filter((member) => member.status === "fixed")
+      .map((member) => member.person_id);
+    let createdDebts = [];
+    const existingDebtsByPerson = new Map();
+
+    if (fixedPersonIds.length > 0) {
+      const existingDebtsResult = await periodMembersRepository.getMonthlyDebtsByPeriodAndPeople(
+        payload.period_id,
+        fixedPersonIds
+      );
+      if (existingDebtsResult.error) throw new Error(existingDebtsResult.error.message);
+      existingDebtsResult.data.forEach((debt) => existingDebtsByPerson.set(debt.person_id, debt));
+
+      const debtPayloads = Number(period.fixed_member_fee) > 0
+        ? fixedPersonIds
+            .filter((personId) => !existingDebtsByPerson.has(personId))
+            .map((personId) => ({
+              period_id: payload.period_id,
+              person_id: personId,
+              debt_type: "monthly_fee",
+              amount: Number(period.fixed_member_fee),
+              status: "unpaid",
+              description: `Tien co dinh ${period.name}`
+            }))
+        : [];
+
+      if (debtPayloads.length > 0) {
+        const createDebtsResult = await periodMembersRepository.createDebts(debtPayloads);
+        if (createDebtsResult.error) throw new Error(createDebtsResult.error.message);
+        createdDebts = createDebtsResult.data;
+      }
+    }
+
+    const createdDebtsByPerson = new Map(createdDebts.map((debt) => [debt.person_id, debt]));
+    const created = createdMembers.map((member) => ({
+      period_member: member,
+      created_debt: createdDebtsByPerson.get(member.person_id) || null,
+      ...(existingDebtsByPerson.has(member.person_id)
+        ? {
+            debt_action: {
+              action: "monthly_fee_debt_already_exists",
+              debt: existingDebtsByPerson.get(member.person_id)
+            }
+          }
+        : {})
+    }));
+
+    return {
+      requested_count: personIds.length,
+      created_count: created.length,
+      skipped_count: skipped.length,
+      failed_count: failed.length,
+      created,
+      skipped,
+      failed
+    };
+  },
+
   async updatePeriodMember(id, payload = {}) {
     if (!id) {
       throw new Error("Period member ID khong duoc de trong");

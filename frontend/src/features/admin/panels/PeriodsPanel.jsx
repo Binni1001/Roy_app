@@ -1,10 +1,10 @@
 import { useState } from 'react'
 import { api } from '../../../api/client'
-import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable, StatusBadge } from '../../../components/common'
+import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable, StatusBadge } from '../../../components/common'
 import { emptyPeriod } from '../../../constants/appConstants'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
 
-export function PeriodsPanel({ people, periods, members, periodForm, memberForm, selectedPeriodId, setForm, submit }) {
+export function PeriodsPanel({ people, periods, members, periodForm, selectedPeriodId, setForm, submit, submitting }) {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
   const [editingPeriod, setEditingPeriod] = useState(null)
@@ -38,7 +38,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
 
         <Panel
           title="Thành viên trong kỳ"
-          action={<button onClick={() => setShowAddMember(true)}>+ Thêm vào kỳ</button>}
+          action={<button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId}>+ Thêm vào kỳ</button>}
         >
           <SimpleTable
             rows={members}
@@ -95,31 +95,33 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
       )}
 
       {showAddMember && (
-        <Modal title="Thêm thành viên vào kỳ" onClose={() => setShowAddMember(false)}>
-          <form className="form" onSubmit={(e) => {
-            e.preventDefault()
-            submit(
-              () => api.periodMembers.create({ period_id: selectedPeriodId, person_id: memberForm.person_id }),
-              'Đã thêm thành viên vào kỳ.',
+        <AddMembersModal
+          people={people}
+          members={members}
+          submitting={submitting}
+          onClose={() => setShowAddMember(false)}
+          onSubmit={async (personIds) => {
+            const result = await submit(
+              () => api.periodMembers.createBulk({ period_id: selectedPeriodId, person_ids: personIds }),
+              `Đã thêm ${personIds.length} người vào kỳ.`,
             )
-            setShowAddMember(false)
-          }}>
-            <SelectPeople people={people} value={memberForm.person_id} onChange={(v) => setForm('member', { person_id: v })} />
-            <footer className="modal-actions">
-              <button type="button" onClick={() => setShowAddMember(false)}>Hủy</button>
-              <button type="submit">Thêm vào kỳ</button>
-            </footer>
-          </form>
-        </Modal>
+            if (result) setShowAddMember(false)
+            return result
+          }}
+        />
       )}
 
       {editingPeriod && (
         <PeriodEditModal
           period={editingPeriod}
           onClose={() => setEditingPeriod(null)}
-          onSubmit={(payload) => {
-            submit(() => api.periods.update(editingPeriod.id, payload), 'Đã cập nhật kỳ.')
-            setEditingPeriod(null)
+          onSubmit={async (payload) => {
+            const result = await submit(
+              () => api.periods.update(editingPeriod.id, payload),
+              'Đã cập nhật kỳ.',
+              'global',
+            )
+            if (result) setEditingPeriod(null)
           }}
         />
       )}
@@ -149,6 +151,101 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
         />
       )}
     </>
+  )
+}
+
+function AddMembersModal({ people, members, onClose, onSubmit, submitting }) {
+  const [query, setQuery] = useState('')
+  const [selectedIds, setSelectedIds] = useState([])
+  const existingIds = new Set(members.map((member) => member.person_id || member.person?.id))
+  const normalizedQuery = query.trim().toLowerCase()
+  const availablePeople = people
+    .filter((person) => person.status === 'active' && !existingIds.has(person.id))
+    .filter((person) => {
+      if (!normalizedQuery) return true
+      return [person.full_name, person.nickname, person.email, person.phone]
+        .some((value) => String(value || '').toLowerCase().includes(normalizedQuery))
+    })
+    .sort((left, right) => (left.full_name || '').localeCompare(right.full_name || '', 'vi'))
+
+  const selectedSet = new Set(selectedIds)
+  const allVisibleSelected = availablePeople.length > 0 && availablePeople.every((person) => selectedSet.has(person.id))
+
+  function togglePerson(personId) {
+    setSelectedIds((current) => current.includes(personId)
+      ? current.filter((id) => id !== personId)
+      : [...current, personId])
+  }
+
+  function toggleVisible() {
+    const visibleIds = availablePeople.map((person) => person.id)
+    if (allVisibleSelected) {
+      setSelectedIds((current) => current.filter((id) => !visibleIds.includes(id)))
+    } else {
+      setSelectedIds((current) => [...new Set([...current, ...visibleIds])])
+    }
+  }
+
+  return (
+    <Modal title="Thêm thành viên vào kỳ" onClose={onClose}>
+      <form className="form period-member-picker" onSubmit={(event) => {
+        event.preventDefault()
+        if (!submitting && selectedIds.length > 0) void onSubmit(selectedIds)
+      }}>
+        <div className="period-member-picker-toolbar">
+          <label className="period-member-search">
+            <span>Tìm người</span>
+            <input
+              type="search"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Tên, biệt danh, email, số điện thoại"
+              autoFocus
+            />
+          </label>
+          <div className="period-member-picker-actions">
+            <button type="button" onClick={toggleVisible} disabled={availablePeople.length === 0}>
+              {allVisibleSelected ? 'Bỏ chọn kết quả' : 'Chọn tất cả kết quả'}
+            </button>
+            <button type="button" onClick={() => setSelectedIds([])} disabled={selectedIds.length === 0}>
+              Bỏ chọn
+            </button>
+          </div>
+        </div>
+
+        <div className="period-member-picker-summary">
+          <strong>{selectedIds.length} người đã chọn</strong>
+          <span>{availablePeople.length} người phù hợp</span>
+        </div>
+
+        <div className="period-member-options">
+          {availablePeople.length === 0 ? (
+            <p className="period-member-picker-empty">
+              {normalizedQuery ? 'Không tìm thấy người phù hợp.' : 'Tất cả người đang hoạt động đã có trong kỳ.'}
+            </p>
+          ) : availablePeople.map((person) => {
+            const checked = selectedSet.has(person.id)
+            return (
+              <label key={person.id} className={`period-member-option${checked ? ' selected' : ''}`}>
+                <input type="checkbox" checked={checked} onChange={() => togglePerson(person.id)} />
+                <span className="period-member-option-copy">
+                  <strong>{person.full_name}</strong>
+                  <small>{person.nickname || person.email || person.phone || 'Chưa có thông tin liên hệ'}</small>
+                </span>
+                <StatusBadge value={person.attendance_type || 'guest'} />
+              </label>
+            )
+          })}
+        </div>
+
+        <footer className="modal-actions">
+          <button type="button" onClick={onClose} disabled={submitting}>Hủy</button>
+          <button type="submit" disabled={submitting || selectedIds.length === 0}>
+            {submitting ? 'Đang thêm...' : `Thêm ${selectedIds.length > 0 ? `${selectedIds.length} ` : ''}người`}
+          </button>
+        </footer>
+      </form>
+    </Modal>
   )
 }
 

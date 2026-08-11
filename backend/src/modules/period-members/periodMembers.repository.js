@@ -134,12 +134,62 @@ export const periodMembersRepository = {
       .single();
   },
 
+  async getPeopleByIds(personIds) {
+    return await supabase
+      .from("people")
+      .select("id, status, attendance_type")
+      .in("id", personIds);
+  },
+
+  async getExistingByPeriodAndPeople(periodId, personIds) {
+    return await supabase
+      .from("period_members")
+      .select("person_id")
+      .eq("period_id", periodId)
+      .in("person_id", personIds);
+  },
+
+  async createMany(payloads) {
+    return await supabase
+      .from("period_members")
+      .insert(payloads)
+      .select(`
+        *,
+        person:people (
+          id,
+          full_name,
+          nickname,
+          phone,
+          email,
+          avatar_url,
+          bio,
+          status
+        )
+      `);
+  },
+
   async createDebt(payload) {
     return await supabase
       .from("debts")
       .insert([payload])
       .select()
       .single();
+  },
+
+  async getMonthlyDebtsByPeriodAndPeople(periodId, personIds) {
+    return await supabase
+      .from("debts")
+      .select("*")
+      .eq("period_id", periodId)
+      .eq("debt_type", "monthly_fee")
+      .in("person_id", personIds);
+  },
+
+  async createDebts(payloads) {
+    return await supabase
+      .from("debts")
+      .insert(payloads)
+      .select();
   },
 
   async findMonthlyDebt(periodId, personId) {

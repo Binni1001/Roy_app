@@ -181,6 +181,26 @@ test("period creation resolves a safe group for legacy owner accounts", () => {
   assert.match(repository, /getGroupsForOwnerFallback/);
 });
 
+test("period members support authenticated bulk enrollment", () => {
+  const routes = read("src/modules/period-members/periodMembers.routes.js");
+  const controller = read("src/modules/period-members/periodMembers.controller.js");
+  const service = read("src/modules/period-members/periodMembers.service.js");
+  const repository = read("src/modules/period-members/periodMembers.repository.js");
+
+  assert.match(routes, /router\.post\("\/bulk", requireAuth, requireAdmin/);
+  assert.match(controller, /createBulk/);
+  assert.match(service, /createPeriodMembers/);
+  assert.match(service, /Array\.isArray\(payload\.person_ids\)/);
+  assert.match(service, /new Set\(payload\.person_ids\.filter\(Boolean\)\)/);
+  assert.match(service, /Promise\.all/);
+  assert.match(repository, /getPeopleByIds/);
+  assert.match(repository, /getExistingByPeriodAndPeople/);
+  assert.match(repository, /createMany/);
+  assert.match(repository, /createDebts/);
+  assert.match(service, /created_count/);
+  assert.match(service, /failed_count/);
+});
+
 test("group approval uses membership status and keeps legacy owners manageable", () => {
   const controller = read("src/modules/groups/groups.controller.js");
   const service = read("src/modules/groups/groups.service.js");

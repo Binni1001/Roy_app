@@ -827,6 +827,107 @@ button:disabled {
   text-shadow: none;
 }
 
+.period-member-picker {
+  gap: 12px;
+}
+
+.period-member-picker-toolbar {
+  display: grid;
+  gap: 10px;
+}
+
+.period-member-search {
+  gap: 6px;
+}
+
+.period-member-search input {
+  width: 100%;
+}
+
+.period-member-picker-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.period-member-picker-actions button {
+  min-height: 34px;
+  padding: 0 10px;
+  border: 1px solid rgba(216, 174, 82, 0.22);
+  border-radius: 7px;
+  color: #d8ae52;
+  background: rgba(216, 174, 82, 0.06);
+}
+
+.period-member-picker-summary {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8993a2;
+  font-size: 13px;
+}
+
+.period-member-picker-summary strong {
+  color: #efe7d2;
+}
+
+.period-member-options {
+  display: grid;
+  gap: 6px;
+  max-height: min(390px, 48vh);
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.period-member-option {
+  display: grid;
+  grid-template-columns: 20px minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 54px;
+  padding: 8px 10px;
+  border: 1px solid rgba(239, 231, 210, 0.09);
+  border-radius: 8px;
+  background: rgba(20, 26, 36, 0.72);
+  cursor: pointer;
+}
+
+.period-member-option:hover,
+.period-member-option.selected {
+  border-color: rgba(216, 174, 82, 0.42);
+  background: rgba(216, 174, 82, 0.08);
+}
+
+.period-member-option input {
+  width: 16px;
+  height: 16px;
+  accent-color: #d8ae52;
+}
+
+.period-member-option-copy {
+  display: grid;
+  min-width: 0;
+  gap: 2px;
+}
+
+.period-member-option-copy strong,
+.period-member-option-copy small {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.period-member-option-copy small,
+.period-member-picker-empty {
+  color: #8993a2;
+}
+
+.period-member-picker-empty {
+  margin: 0;
+  padding: 24px 12px;
+  text-align: center;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

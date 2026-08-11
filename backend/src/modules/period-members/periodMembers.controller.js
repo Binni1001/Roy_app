@@ -28,6 +28,15 @@ export const periodMembersController = {
     }
   },
 
+  async createBulk(req, res) {
+    try {
+      const data = await periodMembersService.createPeriodMembers(req.body);
+      res.status(201).json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async update(req, res) {
     try {
       const data = await periodMembersService.updatePeriodMember(
