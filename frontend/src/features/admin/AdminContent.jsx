@@ -84,6 +84,7 @@ export function AdminContent(props) {
           form={forms.person}
           setForm={setForm}
           submit={submitGlobal}
+          role={role}
         />
       </PanelSuspense>
     )

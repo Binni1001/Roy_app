@@ -128,13 +128,14 @@ function App() {
     return <RejectedScreen />
   }
 
+  const membershipStatus = person.membership_status || person.status
+  if (membershipStatus === 'pending') {
+    return <PendingApproval onRefresh={refresh} />
+  }
+
   // Các chốt chặn theo nhóm (chưa có nhóm / chờ duyệt) chỉ áp dụng khi BẬT nhóm.
   // Khi tắt nhóm: ai có hồ sơ là vào thẳng, không cần duyệt.
   if (GROUPS_ENABLED) {
-    const membershipStatus = person.membership_status || person.status
-    if (membershipStatus === 'pending') {
-      return <PendingApproval onRefresh={refresh} />
-    }
     if (!person.active_group_id) {
       return <Onboarding needsProfile={false} canCreate={false} onDone={refresh} />
     }

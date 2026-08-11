@@ -4,8 +4,9 @@ import { supabase } from '../../../lib/supabase'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, StatusBadge, filterRows } from '../../../components/common'
 import { emptyPerson } from '../../../constants/appConstants'
 import { initials } from '../../../utils/appUtils'
+import MembersPanel from './MembersPanel'
 
-export function PeoplePanel({ people, submit }) {
+export function PeoplePanel({ people, submit, role }) {
   const [showAdd, setShowAdd] = useState(false)
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
@@ -18,6 +19,8 @@ export function PeoplePanel({ people, submit }) {
 
   return (
     <>
+      {role === 'owner' && <MembersPanel role={role} />}
+
       <section className="grid one">
         <Panel
           title="Danh sách người"
