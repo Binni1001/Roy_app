@@ -167,6 +167,20 @@ test("debt payments are grouped by club and keep their original period", () => {
   assert.match(migration, /and debt_id = v_debt\.id/);
 });
 
+test("period creation resolves a safe group for legacy owner accounts", () => {
+  const controller = read("src/modules/periods/periods.controller.js");
+  const service = read("src/modules/periods/periods.service.js");
+  const repository = read("src/modules/periods/periods.repository.js");
+
+  assert.match(controller, /req\.authUser, req\.authRole/);
+  assert.match(service, /requestedGroupId/);
+  assert.match(service, /authRole !== "owner" && requestedGroupId !== profileGroupId/);
+  assert.match(service, /getGroupsForOwnerFallback/);
+  assert.match(service, /fallbackResult\.data\?\.length === 1/);
+  assert.match(repository, /getGroupById/);
+  assert.match(repository, /getGroupsForOwnerFallback/);
+});
+
 test("backend source contains no common mojibake sequences", () => {
   const files = listFiles("src", (path) => path.endsWith(".js"));
   const mojibake = /Ã.|Â.|â[€–—]|Ä[‘’]|á[»º]|ðŸ/;

@@ -24,6 +24,21 @@ export const periodsRepository = {
       .maybeSingle();
   },
 
+  async getGroupById(id) {
+    return await supabase
+      .from("groups")
+      .select("id")
+      .eq("id", id)
+      .maybeSingle();
+  },
+
+  async getGroupsForOwnerFallback() {
+    return await supabase
+      .from("groups")
+      .select("id")
+      .limit(2);
+  },
+
   async create(payload) {
     return await supabase
       .from("periods")

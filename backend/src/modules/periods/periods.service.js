@@ -24,7 +24,7 @@ export const periodsService = {
     return data;
   },
 
-  async createPeriod(payload, authUser) {
+  async createPeriod(payload, authUser, authRole = "user") {
     if (!payload.name || !payload.name.trim()) {
       throw new Error("Ten ky khong duoc de trong");
     }
@@ -54,7 +54,29 @@ export const periodsService = {
     const groupResult = await periodsRepository.getActiveGroupByEmail(authUser?.email || "");
     if (groupResult.error) throw new Error(groupResult.error.message);
 
-    const groupId = groupResult.data?.active_group_id || groupResult.data?.group_id || null;
+    const profileGroupId = groupResult.data?.active_group_id || groupResult.data?.group_id || null;
+    const requestedGroupId = typeof payload.group_id === "string" ? payload.group_id.trim() : "";
+    let groupId = profileGroupId;
+
+    if (requestedGroupId) {
+      if (authRole !== "owner" && requestedGroupId !== profileGroupId) {
+        throw new Error("Ban khong co quyen tao ky cho nhom nay");
+      }
+
+      const requestedGroup = await periodsRepository.getGroupById(requestedGroupId);
+      if (requestedGroup.error) throw new Error(requestedGroup.error.message);
+      if (!requestedGroup.data) throw new Error("Nhom duoc chon khong ton tai");
+      groupId = requestedGroupId;
+    }
+
+    // Tai khoan owner cu co the chua co ho so people. Chi tu dong chon khi
+    // he thong co duy nhat mot nhom de tranh gan ky nham nhom.
+    if (!groupId && authRole === "owner") {
+      const fallbackResult = await periodsRepository.getGroupsForOwnerFallback();
+      if (fallbackResult.error) throw new Error(fallbackResult.error.message);
+      if (fallbackResult.data?.length === 1) groupId = fallbackResult.data[0].id;
+    }
+
     if (!groupId) throw new Error("Tai khoan chua co nhom dang hoat dong");
 
     const { data, error } = await periodsRepository.create({

@@ -60,20 +60,24 @@ export function PeriodsPanel({ people, periods, members, periodForm, memberForm,
 
       {showAddPeriod && (
         <Modal title="Tạo kỳ mới" onClose={() => setShowAddPeriod(false)}>
-          <form className="form" onSubmit={(e) => {
+          <form className="form" onSubmit={async (e) => {
             e.preventDefault()
             if (periodForm.end_date && periodForm.start_date && periodForm.end_date < periodForm.start_date) {
               alert('Ngày kết thúc phải sau ngày bắt đầu.')
               return
             }
-            submit(
+            const currentGroupId = periods.find((period) => period.id === selectedPeriodId)?.group_id || null
+            const result = await submit(
               () => api.periods.create({
                 ...periodForm,
+                group_id: currentGroupId,
                 fixed_member_fee: Math.max(0, Number(periodForm.fixed_member_fee || 0)),
                 guest_fee_per_session: Math.max(0, Number(periodForm.guest_fee_per_session || 0)),
               }),
               'Đã tạo kỳ mới.',
+              'global',
             )
+            if (!result) return
             setForm('period', emptyPeriod)
             setShowAddPeriod(false)
           }}>
