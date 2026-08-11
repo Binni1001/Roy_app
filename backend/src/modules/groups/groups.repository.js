@@ -18,11 +18,27 @@ export const groupsRepository = {
       .maybeSingle()
   },
 
-  async createGroup(name, inviteCode) {
+  async getGroupsForOwnerFallback() {
     return supabase
       .from('groups')
-      .insert([{ name, invite_code: inviteCode }])
+      .select('id')
+      .limit(2)
+  },
+
+  async createGroup(name, inviteCode, createdBy = null) {
+    return supabase
+      .from('groups')
+      .insert([{ name, invite_code: inviteCode, created_by: createdBy }])
       .select()
+      .single()
+  },
+
+  async setCreatedBy(groupId, personId) {
+    return supabase
+      .from('groups')
+      .update({ created_by: personId, updated_at: new Date().toISOString() })
+      .eq('id', groupId)
+      .select('id, created_by')
       .single()
   },
 
@@ -102,6 +118,14 @@ export const groupsRepository = {
       .update({ status })
       .eq('id', personId)
       .select('id, status')
+      .single()
+  },
+
+  async getPersonState(personId) {
+    return supabase
+      .from('people')
+      .select('status, active_group_id')
+      .eq('id', personId)
       .single()
   },
 

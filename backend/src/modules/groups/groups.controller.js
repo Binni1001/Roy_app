@@ -5,6 +5,11 @@ async function getActivePerson(req) {
   return peopleService.getPersonByAuthUser(req.authUser)
 }
 
+async function getManagedGroupId(req) {
+  const person = await getActivePerson(req)
+  return groupsService.resolveManagedGroupId(person, req.authRole)
+}
+
 export const groupsController = {
   // POST /api/groups/verify-code — public
   async verifyCode(req, res) {
@@ -102,9 +107,9 @@ export const groupsController = {
   // GET /api/groups/info — thông tin nhóm đang active
   async getInfo(req, res) {
     try {
-      const person = await getActivePerson(req)
-      if (!person?.active_group_id) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
-      const data = await groupsService.getGroupInfo(person.active_group_id)
+      const groupId = await getManagedGroupId(req)
+      if (!groupId) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
+      const data = await groupsService.getGroupInfo(groupId)
       res.json(data)
     } catch (err) {
       res.status(err.statusCode || 500).json({ message: err.message })
@@ -114,9 +119,9 @@ export const groupsController = {
   // GET /api/groups/pending — owner xem danh sách chờ duyệt
   async getPending(req, res) {
     try {
-      const person = await getActivePerson(req)
-      if (!person?.active_group_id) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
-      const data = await groupsService.getPendingMembers(person.active_group_id)
+      const groupId = await getManagedGroupId(req)
+      if (!groupId) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
+      const data = await groupsService.getPendingMembers(groupId)
       res.json(data)
     } catch (err) {
       res.status(err.statusCode || 500).json({ message: err.message })
@@ -126,9 +131,9 @@ export const groupsController = {
   // PUT /api/groups/members/:personId/approve
   async approve(req, res) {
     try {
-      const person = await getActivePerson(req)
-      if (!person?.active_group_id) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
-      const data = await groupsService.approveMember(req.params.personId, person.active_group_id)
+      const groupId = await getManagedGroupId(req)
+      if (!groupId) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
+      const data = await groupsService.approveMember(req.params.personId, groupId)
       res.json({ message: 'Đã duyệt thành viên.', membership: data })
     } catch (err) {
       res.status(err.statusCode || 400).json({ message: err.message })
@@ -138,9 +143,9 @@ export const groupsController = {
   // PUT /api/groups/members/:personId/reject
   async reject(req, res) {
     try {
-      const person = await getActivePerson(req)
-      if (!person?.active_group_id) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
-      const data = await groupsService.rejectMember(req.params.personId, person.active_group_id)
+      const groupId = await getManagedGroupId(req)
+      if (!groupId) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
+      const data = await groupsService.rejectMember(req.params.personId, groupId)
       res.json({ message: 'Đã từ chối thành viên.', membership: data })
     } catch (err) {
       res.status(err.statusCode || 400).json({ message: err.message })
@@ -150,9 +155,9 @@ export const groupsController = {
   // PUT /api/groups/regenerate-code
   async regenerateCode(req, res) {
     try {
-      const person = await getActivePerson(req)
-      if (!person?.active_group_id) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
-      const data = await groupsService.regenerateCode(person.active_group_id)
+      const groupId = await getManagedGroupId(req)
+      if (!groupId) return res.status(404).json({ message: 'Bạn chưa thuộc nhóm nào.' })
+      const data = await groupsService.regenerateCode(groupId)
       res.json({ message: 'Đã tạo mã mới.', invite_code: data.invite_code })
     } catch (err) {
       res.status(err.statusCode || 500).json({ message: err.message })

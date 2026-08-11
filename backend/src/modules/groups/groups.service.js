@@ -8,6 +8,19 @@ function generateCode(length = 8) {
 }
 
 export const groupsService = {
+  async resolveManagedGroupId(person, authRole) {
+    const profileGroupId = person?.active_group_id || person?.group_id || null
+    if (profileGroupId) return profileGroupId
+
+    if (authRole === 'owner') {
+      const { data, error } = await groupsRepository.getGroupsForOwnerFallback()
+      if (error) throw new Error(error.message)
+      if (data?.length === 1) return data[0].id
+    }
+
+    return null
+  },
+
   async verifyCode(code) {
     if (!code?.trim()) throw Object.assign(new Error('Mã nhóm không được để trống'), { statusCode: 400 })
     const { data, error } = await groupsRepository.getByInviteCode(code.trim())
@@ -28,7 +41,7 @@ export const groupsService = {
 
     // Tạo nhóm
     const code = generateCode()
-    const { data: group, error: groupErr } = await groupsRepository.createGroup(name.trim(), code)
+    const { data: group, error: groupErr } = await groupsRepository.createGroup(name.trim(), code, personId)
     if (groupErr) throw new Error(groupErr.message)
 
     // Tự động join với role owner + status active
@@ -96,6 +109,8 @@ export const groupsService = {
     })
 
     await groupsRepository.addMembership(person.id, group.id, 'active', 'owner')
+    const ownerResult = await groupsRepository.setCreatedBy(group.id, person.id)
+    if (ownerResult.error) throw new Error(ownerResult.error.message)
 
     return { person, group }
   },
@@ -147,32 +162,65 @@ export const groupsService = {
   },
 
   async approveMember(personId, groupId) {
-    // Check TRƯỚC khi update để biết người này có active group chưa
-    const hadActiveGroup = await groupsRepository.hasActiveGroupMembership(personId)
+    const membershipResult = await groupsRepository.getMembership(personId, groupId)
+    if (membershipResult.error) throw new Error(membershipResult.error.message)
+    if (!membershipResult.data) {
+      throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
+    }
+    if (membershipResult.data.status === 'active') return membershipResult.data
 
+    const personStateResult = await groupsRepository.getPersonState(personId)
+    if (personStateResult.error) throw new Error(personStateResult.error.message)
+    const hadActiveGroup = await groupsRepository.hasActiveGroupMembership(personId)
     const { data, error } = await groupsRepository.updateMembershipStatus(personId, groupId, 'active')
     if (error) throw new Error(error.message)
-    if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
 
-    // Chỉ set active_group_id nếu trước đó chưa có active group
-    if (!hadActiveGroup) {
-      await groupsRepository.setActiveGroup(personId, groupId)
+    try {
+      if (!hadActiveGroup) {
+        const activeGroupResult = await groupsRepository.setActiveGroup(personId, groupId)
+        if (activeGroupResult.error) throw activeGroupResult.error
+      }
+
+      const personResult = await groupsRepository.updatePersonStatus(personId, 'active')
+      if (personResult.error) throw personResult.error
+    } catch (error) {
+      await groupsRepository.updateMembershipStatus(personId, groupId, membershipResult.data.status)
+      await groupsRepository.setActiveGroup(personId, personStateResult.data.active_group_id)
+      await groupsRepository.updatePersonStatus(personId, personStateResult.data.status)
+      throw new Error(error.message)
     }
-    // Luôn update people.status về active
-    await groupsRepository.updatePersonStatus(personId, 'active')
+
     return data
   },
 
   async rejectMember(personId, groupId) {
+    const membershipResult = await groupsRepository.getMembership(personId, groupId)
+    if (membershipResult.error) throw new Error(membershipResult.error.message)
+    if (!membershipResult.data) {
+      throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
+    }
+    if (membershipResult.data.status === 'inactive') return membershipResult.data
+
+    const personStateResult = await groupsRepository.getPersonState(personId)
+    if (personStateResult.error) throw new Error(personStateResult.error.message)
     const { data, error } = await groupsRepository.updateMembershipStatus(personId, groupId, 'inactive')
     if (error) throw new Error(error.message)
-    if (!data) throw Object.assign(new Error('Không tìm thấy thành viên trong nhóm.'), { statusCode: 404 })
 
-    // Chỉ set people.status=inactive nếu không còn active membership nào khác
-    const stillActive = await groupsRepository.hasActiveGroupMembership(personId)
-    if (!stillActive) {
-      await groupsRepository.updatePersonStatus(personId, 'inactive')
+    try {
+      const stillActive = await groupsRepository.hasActiveGroupMembership(personId)
+      if (!stillActive) {
+        const activeGroupResult = await groupsRepository.setActiveGroup(personId, null)
+        if (activeGroupResult.error) throw activeGroupResult.error
+        const personResult = await groupsRepository.updatePersonStatus(personId, 'inactive')
+        if (personResult.error) throw personResult.error
+      }
+    } catch (error) {
+      await groupsRepository.updateMembershipStatus(personId, groupId, membershipResult.data.status)
+      await groupsRepository.setActiveGroup(personId, personStateResult.data.active_group_id)
+      await groupsRepository.updatePersonStatus(personId, personStateResult.data.status)
+      throw new Error(error.message)
     }
+
     return data
   },
 

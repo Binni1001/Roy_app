@@ -47,7 +47,26 @@ export const peopleService = {
       throw new Error(error.message);
     }
 
-    return data;
+    if (!data) return null;
+
+    const membershipResult = await peopleRepository.getGroupMemberships(data.id);
+    if (membershipResult.error) {
+      throw new Error(membershipResult.error.message);
+    }
+
+    const memberships = membershipResult.data || [];
+    const membership =
+      memberships.find((item) => item.group_id === data.active_group_id) ||
+      memberships.find((item) => item.status === "pending") ||
+      memberships.find((item) => item.status === "active") ||
+      null;
+
+    return {
+      ...data,
+      membership_status: membership?.status || null,
+      membership_group_id: membership?.group_id || null,
+      member_role: membership?.member_role || null
+    };
   },
 
   async createPersonForAuthUser(user, payload) {

@@ -149,7 +149,13 @@ function PersonEditModal({ person, onClose, onSubmit }) {
 
   return (
     <Modal title="Sửa người chơi" onClose={onClose}>
-      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit(draft, avatarFile || null, newPassword || null) }}>
+      <form className="form" onSubmit={(e) => {
+        e.preventDefault()
+        const payload = person.status === 'pending'
+          ? Object.fromEntries(Object.entries(draft).filter(([key]) => key !== 'status'))
+          : draft
+        onSubmit(payload, avatarFile || null, newPassword || null)
+      }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div
             onClick={() => fileRef.current?.click()}
@@ -173,12 +179,16 @@ function PersonEditModal({ person, onClose, onSubmit }) {
             <option value="guest">Đánh vãng lai</option>
           </select>
         </label>
-        <label>Trạng thái
-          <select value={draft.status} onChange={(e) => update('status', e.target.value)}>
-            <option value="active">Đang hoạt động</option>
-            <option value="inactive">Đã nghỉ</option>
-          </select>
-        </label>
+        {person.status === 'pending' ? (
+          <p className="muted">Tài khoản đang chờ trưởng nhóm duyệt trong mục Thành viên.</p>
+        ) : (
+          <label>Trạng thái
+            <select value={draft.status} onChange={(e) => update('status', e.target.value)}>
+              <option value="active">Đang hoạt động</option>
+              <option value="inactive">Đã nghỉ</option>
+            </select>
+          </label>
+        )}
         <Input label="Ghi chú" value={draft.note} onChange={(v) => update('note', v)} />
 
         <label>

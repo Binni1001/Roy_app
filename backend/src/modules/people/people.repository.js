@@ -24,6 +24,14 @@ export const peopleRepository = {
       .maybeSingle();
   },
 
+  async getGroupMemberships(personId) {
+    return await supabase
+      .from("person_groups")
+      .select("group_id, status, member_role, joined_at")
+      .eq("person_id", personId)
+      .order("joined_at", { ascending: true });
+  },
+
   async create(payload) {
     return await supabase
       .from("people")

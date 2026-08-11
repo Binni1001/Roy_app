@@ -181,6 +181,24 @@ test("period creation resolves a safe group for legacy owner accounts", () => {
   assert.match(repository, /getGroupsForOwnerFallback/);
 });
 
+test("group approval uses membership status and keeps legacy owners manageable", () => {
+  const controller = read("src/modules/groups/groups.controller.js");
+  const service = read("src/modules/groups/groups.service.js");
+  const peopleService = read("src/modules/people/people.service.js");
+  const migration = read("../supabase/20260811_group_owner_and_membership_consistency.sql");
+
+  assert.match(controller, /getManagedGroupId/);
+  assert.match(service, /resolveManagedGroupId/);
+  assert.match(service, /getMembership\(personId, groupId\)/);
+  assert.match(service, /updateMembershipStatus\(personId, groupId, 'active'\)/);
+  assert.match(service, /updateMembershipStatus\(personId, groupId, membershipResult\.data\.status\)/);
+  assert.match(service, /getPersonState\(personId\)/);
+  assert.match(peopleService, /membership_status/);
+  assert.match(migration, /owner@example\.test/);
+  assert.match(migration, /member_role = 'owner'/);
+  assert.match(migration, /created_by = v_owner_person_id/);
+});
+
 test("backend source contains no common mojibake sequences", () => {
   const files = listFiles("src", (path) => path.endsWith(".js"));
   const mojibake = /Ã.|Â.|â[€–—]|Ä[‘’]|á[»º]|ðŸ/;
