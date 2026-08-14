@@ -11,11 +11,41 @@ export function PeoplePanel({ people, submit, role }) {
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
   const [query, setQuery] = useState('')
+  const [attendanceFilter, setAttendanceFilter] = useState('all')
+  const [statusFilter, setStatusFilter] = useState('all')
+  const [sortBy, setSortBy] = useState('name-asc')
+  const [searchResetKey, setSearchResetKey] = useState(0)
 
-  const filtered = useMemo(
-    () => filterRows(people, query, ['full_name', 'phone', 'email', 'note', 'nickname']),
-    [people, query]
-  )
+  const attendanceCounts = useMemo(() => ({
+    all: people.length,
+    fixed: people.filter((person) => person.attendance_type === 'fixed').length,
+    guest: people.filter((person) => (person.attendance_type || 'guest') === 'guest').length,
+  }), [people])
+
+  const filtered = useMemo(() => {
+    const searched = filterRows(people, query, ['full_name', 'phone', 'email', 'note', 'nickname'])
+    const visible = searched.filter((person) => {
+      const attendanceType = person.attendance_type || 'guest'
+      const status = person.status || 'active'
+      return (attendanceFilter === 'all' || attendanceType === attendanceFilter)
+        && (statusFilter === 'all' || status === statusFilter)
+    })
+
+    return [...visible].sort((left, right) => comparePeople(left, right, sortBy))
+  }, [attendanceFilter, people, query, sortBy, statusFilter])
+
+  const hasActiveFilters = Boolean(query)
+    || attendanceFilter !== 'all'
+    || statusFilter !== 'all'
+    || sortBy !== 'name-asc'
+
+  function resetControls() {
+    setQuery('')
+    setSearchResetKey((current) => current + 1)
+    setAttendanceFilter('all')
+    setStatusFilter('all')
+    setSortBy('name-asc')
+  }
 
   return (
     <>
@@ -26,7 +56,53 @@ export function PeoplePanel({ people, submit, role }) {
           title="Danh sách người"
           action={<button onClick={() => setShowAdd(true)}>+ Thêm người</button>}
         >
-          <SearchBox value={query} onChange={setQuery} placeholder="Tìm theo tên, SĐT, email..." />
+          <div className="people-controls">
+            <div className="people-control-grid">
+              <SearchBox key={searchResetKey} value={query} onChange={setQuery} placeholder="Tìm theo tên, SĐT, email..." />
+              <label className="people-control-field">Trạng thái
+                <select value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)}>
+                  <option value="all">Tất cả trạng thái</option>
+                  <option value="active">Đang hoạt động</option>
+                  <option value="pending">Đang chờ duyệt</option>
+                  <option value="inactive">Đã nghỉ</option>
+                </select>
+              </label>
+              <label className="people-control-field">Sắp xếp
+                <select value={sortBy} onChange={(event) => setSortBy(event.target.value)}>
+                  <option value="name-asc">Tên A đến Z</option>
+                  <option value="name-desc">Tên Z đến A</option>
+                  <option value="newest">Tham gia mới nhất</option>
+                  <option value="oldest">Tham gia lâu nhất</option>
+                  <option value="attendance">Cố định trước</option>
+                </select>
+              </label>
+            </div>
+
+            <div className="people-filter-tabs" role="group" aria-label="Lọc theo hình thức chơi">
+              {[
+                ['all', 'Tất cả'],
+                ['fixed', 'Cố định'],
+                ['guest', 'Vãng lai'],
+              ].map(([value, label]) => (
+                <button
+                  key={value}
+                  type="button"
+                  className={attendanceFilter === value ? 'active' : ''}
+                  aria-pressed={attendanceFilter === value}
+                  onClick={() => setAttendanceFilter(value)}
+                >
+                  {label} <span>{attendanceCounts[value]}</span>
+                </button>
+              ))}
+            </div>
+
+            <div className="people-results-line">
+              <span>Đang hiển thị <strong>{filtered.length}</strong>/{people.length} người</span>
+              {hasActiveFilters && (
+                <button type="button" onClick={resetControls}>Đặt lại bộ lọc</button>
+              )}
+            </div>
+          </div>
           <SimpleTable
             rows={filtered}
             columns={[
@@ -209,3 +285,25 @@ function PersonEditModal({ person, onClose, onSubmit }) {
 }
 
 export default PeoplePanel
+
+function comparePeople(left, right, sortBy) {
+  const leftName = left.full_name || left.nickname || ''
+  const rightName = right.full_name || right.nickname || ''
+  const byName = leftName.localeCompare(rightName, 'vi', { sensitivity: 'base' })
+
+  if (sortBy === 'name-desc') return -byName
+  if (sortBy === 'newest') return personTime(right) - personTime(left) || byName
+  if (sortBy === 'oldest') return personTime(left) - personTime(right) || byName
+  if (sortBy === 'attendance') {
+    const leftAttendance = left.attendance_type === 'fixed' ? 0 : 1
+    const rightAttendance = right.attendance_type === 'fixed' ? 0 : 1
+    return leftAttendance - rightAttendance || byName
+  }
+  return byName
+}
+
+function personTime(person) {
+  const value = person.joined_at || person.created_at
+  const timestamp = value ? new Date(value).getTime() : 0
+  return Number.isFinite(timestamp) ? timestamp : 0
+}

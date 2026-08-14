@@ -1082,6 +1082,93 @@ button:disabled {
   cursor: pointer;
 }
 
+.people-controls {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 14px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(239, 231, 210, 0.1);
+}
+
+.people-control-grid {
+  display: grid;
+  grid-template-columns: minmax(240px, 1fr) minmax(160px, 210px) minmax(170px, 220px);
+  align-items: end;
+  gap: 10px;
+}
+
+.people-controls .search-box {
+  margin-bottom: 0;
+}
+
+.people-control-field {
+  display: grid;
+  gap: 6px;
+  color: #aeb7c8;
+  font-size: 12px;
+}
+
+.people-filter-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.people-filter-tabs button {
+  min-height: 34px;
+  padding: 0 12px;
+  border: 1px solid rgba(239, 231, 210, 0.14);
+  border-radius: 8px;
+  color: #c7d0dc;
+  background: rgba(22, 28, 38, 0.88);
+}
+
+.people-filter-tabs button span {
+  display: inline-grid;
+  min-width: 20px;
+  height: 20px;
+  margin-left: 5px;
+  place-items: center;
+  border-radius: 50%;
+  color: #c9b174;
+  background: rgba(216, 174, 82, 0.12);
+  font-size: 11px;
+}
+
+.people-filter-tabs button.active {
+  border-color: rgba(216, 174, 82, 0.62);
+  color: #171717;
+  background: #d8ae52;
+  font-weight: 700;
+}
+
+.people-filter-tabs button.active span {
+  color: #fff8e6;
+  background: rgba(20, 20, 20, 0.28);
+}
+
+.people-results-line {
+  display: flex;
+  min-height: 28px;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #8f99a8;
+  font-size: 12px;
+}
+
+.people-results-line strong {
+  color: #efe7d2;
+}
+
+.people-results-line button {
+  padding: 4px 0;
+  border: 0;
+  color: #d8ae52;
+  background: transparent;
+  font-size: 12px;
+}
+
 /* pk-create-btn: player jump â€” dynamic CTA */
 .pk-create-btn {
   color: #fff;
@@ -1441,6 +1528,21 @@ button.danger:hover {
   /* Workspace */
   .workspace {
     padding: 14px;
+  }
+
+  .people-control-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .people-filter-tabs {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .people-filter-tabs button {
+    min-width: 0;
+    padding: 0 6px;
+    font-size: 12px;
   }
 
   /* Topbar */

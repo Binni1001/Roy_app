@@ -210,7 +210,7 @@ const BADGE_MAP = {
   // Member status
   fixed:     { label: 'Cố định',   cls: 'badge-gold'   },
   'drop-in': { label: 'Vãng lai',  cls: 'badge-blue'   },
-  guest:     { label: 'Khách',     cls: 'badge-blue'   },
+  guest:     { label: 'Vãng lai',  cls: 'badge-blue'   },
   // Person status
   active:    { label: 'Hoạt động', cls: 'badge-green'  },
   inactive:  { label: 'Đã nghỉ',   cls: 'badge-gray'   },
