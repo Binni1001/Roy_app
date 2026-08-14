@@ -1,6 +1,8 @@
 -- Persist positive shuttle credits and automatically apply them to unpaid debts.
 -- Positive credit is global per person because person_balances is global per person.
 
+begin;
+
 create table if not exists public.shuttle_settlement_runs (
   period_id uuid primary key references public.periods(id) on delete cascade,
   settled_at timestamptz not null default now(),
@@ -157,6 +159,115 @@ end;
 $$;
 
 grant execute on function public.offset_person_period(uuid, uuid) to service_role;
+
+-- Refund only the positive balance left after all unpaid debts have been offset.
+-- The balance, fund ledger and balance ledger are updated in one transaction.
+create or replace function public.refund_person_balance(
+  p_person_id uuid,
+  p_period_id uuid,
+  p_amount numeric,
+  p_description text default null
+)
+returns jsonb
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_offset jsonb;
+  v_balance public.person_balances%rowtype;
+  v_fund public.club_fund_transactions%rowtype;
+  v_balance_transaction public.balance_transactions%rowtype;
+  v_description text;
+begin
+  if p_person_id is null then
+    raise exception 'Vui long chon nguoi can hoan tien';
+  end if;
+
+  if p_amount is null or p_amount <= 0 then
+    raise exception 'So tien hoan phai lon hon 0';
+  end if;
+
+  if not exists (
+    select 1 from public.people
+    where id = p_person_id and status = 'active'
+  ) then
+    raise exception 'Thanh vien khong ton tai hoac khong hoat dong';
+  end if;
+
+  -- Debt always has priority over a cash withdrawal.
+  v_offset := public.offset_person_unpaid_debts(p_person_id);
+
+  select *
+  into v_balance
+  from public.person_balances
+  where person_id = p_person_id
+  for update;
+
+  if not found or v_balance.balance <= 0 then
+    raise exception 'Thanh vien khong con so du duong de hoan';
+  end if;
+
+  if p_amount > v_balance.balance then
+    raise exception 'So tien hoan vuot qua so du co the rut (% dong)', v_balance.balance;
+  end if;
+
+  v_description := coalesce(
+    nullif(trim(p_description), ''),
+    'Hoan tien so du cho thanh vien'
+  );
+
+  update public.person_balances
+  set balance = balance - p_amount,
+      updated_at = now()
+  where person_id = p_person_id
+  returning * into v_balance;
+
+  insert into public.club_fund_transactions (
+    period_id,
+    person_id,
+    payment_id,
+    transaction_type,
+    amount,
+    description
+  ) values (
+    p_period_id,
+    p_person_id,
+    null,
+    'refund',
+    p_amount,
+    v_description
+  ) returning * into v_fund;
+
+  insert into public.balance_transactions (
+    person_id,
+    period_id,
+    transaction_type,
+    amount,
+    direction,
+    description
+  ) values (
+    p_person_id,
+    p_period_id,
+    'withdraw',
+    p_amount,
+    'minus',
+    v_description
+  ) returning * into v_balance_transaction;
+
+  return jsonb_build_object(
+    'message', 'Hoan tien thanh cong',
+    'refunded_amount', p_amount,
+    'remaining_balance', v_balance.balance,
+    'offset_before_refund', v_offset,
+    'fund_transaction', to_jsonb(v_fund),
+    'balance_transaction', to_jsonb(v_balance_transaction)
+  );
+end;
+$$;
+
+revoke all on function public.refund_person_balance(uuid, uuid, numeric, text) from public;
+grant execute on function public.refund_person_balance(uuid, uuid, numeric, text) to service_role;
 
 create or replace function public.settle_shuttle_period(p_period_id uuid)
 returns jsonb
@@ -455,3 +566,5 @@ begin
   end loop;
 end;
 $$;
+
+commit;

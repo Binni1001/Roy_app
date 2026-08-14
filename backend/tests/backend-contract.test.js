@@ -215,6 +215,10 @@ test("positive balances are persisted and automatically offset every unpaid debt
   assert.match(migration, /perform public\.offset_person_unpaid_debts\(new\.person_id\)/);
   assert.match(migration, /on conflict \(person_id\) do update/);
   assert.match(migration, /credit_from_shuttle_purchase/);
+  assert.match(migration, /function public\.refund_person_balance/);
+  assert.match(migration, /'withdraw'/);
+  assert.match(migration, /p_amount > v_balance\.balance/);
+  assert.match(migration, /offset_before_refund/);
   assert.match(migration, /Restore only missing positive credits/);
   assert.match(routes, /router\.post\([\s\S]*"\/all"/);
   assert.match(routes, /"\/person\/:personId"/);
@@ -224,6 +228,15 @@ test("positive balances are persisted and automatically offset every unpaid debt
   assert.match(settlementRepository, /\.eq\("exempt_shuttle", false\)/);
   assert.match(settlementService, /resultsByPerson/);
   assert.match(settlementService, /đã tự bù công nợ/);
+});
+
+test("balance refunds are atomic and cannot make a member balance negative", () => {
+  const repository = read("src/modules/club-fund-transactions/clubFundTransactions.repository.js");
+  const service = read("src/modules/club-fund-transactions/clubFundTransactions.service.js");
+
+  assert.match(repository, /rpc\("refund_person_balance"/);
+  assert.match(service, /clubFundTransactionsRepository\.refundPerson/);
+  assert.doesNotMatch(service, /newBalance = Number\(balanceResult\.data\.balance\) - amount/);
 });
 
 test("group approval uses membership status and keeps legacy owners manageable", () => {

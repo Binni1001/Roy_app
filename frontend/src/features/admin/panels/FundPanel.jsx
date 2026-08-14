@@ -329,6 +329,18 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
     return val > 0 ? val : 0
   }, [balances, personId])
 
+  const refundablePeople = useMemo(() => {
+    const positivePersonIds = new Set(
+      balances
+        .filter((row) => Number(row.balance || 0) > 0)
+        .map((row) => row.person_id || row.person?.id),
+    )
+    return people.filter((person) => person.status === 'active' && positivePersonIds.has(person.id))
+  }, [balances, people])
+
+  const requestedAmount = Number(amount || 0)
+  const invalidAmount = requestedAmount <= 0 || requestedAmount > positiveBalance
+
   function selectPerson(id) {
     setPersonId(id)
     const row = balances.find((b) => (b.person_id || b.person?.id) === id)
@@ -340,7 +352,7 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
     <Modal title="💸 Hoàn tiền từ quỹ" onClose={onClose}>
       <form className="form" onSubmit={(e) => {
         e.preventDefault()
-        if (!personId || Number(amount) <= 0) return
+        if (!personId || invalidAmount) return
         onSubmit({
           transaction_type: 'refund',
           person_id: personId,
@@ -352,21 +364,37 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
         <label>Hoàn cho ai
           <select value={personId} onChange={(e) => selectPerson(e.target.value)} required>
             <option value="">-- Chọn người --</option>
-            {people.map((p) => (
+            {refundablePeople.map((p) => (
               <option key={p.id} value={p.id}>{p.full_name || p.nickname}</option>
             ))}
           </select>
         </label>
 
-        {personId && positiveBalance > 0 && (
-          <p className="hint">Người này đang dư <strong>{formatMoney(positiveBalance)}</strong>. Hoàn đúng số này thì số dư tự về <strong>0</strong> (đã trừ luôn, khỏi cần bù trừ).</p>
+        {refundablePeople.length === 0 && (
+          <p className="empty">Không có thành viên nào còn số dư dương để hoàn.</p>
         )}
 
-        <Input label="Số tiền hoàn" type="number" value={amount} onChange={setAmount} />
+        {personId && positiveBalance > 0 && (
+          <p className="hint">Có thể hoàn tối đa <strong>{formatMoney(positiveBalance)}</strong>. Database sẽ bù công nợ chưa trả trước, sau đó mới cho rút phần còn lại.</p>
+        )}
+
+        <label>Số tiền hoàn
+          <input
+            type="number"
+            min="1"
+            max={positiveBalance || undefined}
+            value={amount}
+            onChange={(event) => setAmount(event.target.value)}
+            required
+          />
+        </label>
+        {requestedAmount > positiveBalance && positiveBalance > 0 && (
+          <p className="form-error">Số tiền hoàn không được vượt quá {formatMoney(positiveBalance)}.</p>
+        )}
         <Input label="Lý do" value={description} onChange={setDescription} />
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit">Hoàn tiền (giảm quỹ)</button>
+          <button type="submit" disabled={!personId || invalidAmount}>Hoàn tiền (giảm quỹ)</button>
         </footer>
       </form>
     </Modal>

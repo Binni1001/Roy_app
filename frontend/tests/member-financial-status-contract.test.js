@@ -17,3 +17,13 @@ test('admin fund view shows every active member with credit, debt and net amount
   assert.match(client, /\/api\/balance-offsets\/person\/\$\{personId\}/)
   assert.match(client, /\/api\/balance-offsets\/all/)
 })
+
+test('refund form only allows withdrawing the remaining positive balance', () => {
+  const panel = readFileSync('src/features/admin/panels/FundPanel.jsx', 'utf8')
+
+  assert.match(panel, /const refundablePeople = useMemo/)
+  assert.match(panel, /requestedAmount > positiveBalance/)
+  assert.match(panel, /max=\{positiveBalance \|\| undefined\}/)
+  assert.match(panel, /Database sẽ bù công nợ chưa trả trước/)
+  assert.match(panel, /disabled=\{!personId \|\| invalidAmount\}/)
+})

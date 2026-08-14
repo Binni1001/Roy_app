@@ -89,8 +89,7 @@ export const clubFundTransactionsService = {
     return { id };
   },
 
-  // Hoàn tiền cho 1 người: ghi khoản 'refund' (giảm quỹ) VÀ trừ luôn số dư của họ
-  // => một thao tác đưa số dư về 0 (dùng cho người mua cầu nhiều CLB nợ lại).
+  // Database handles debt priority, row locking and both ledgers atomically.
   async refundPerson(payload = {}) {
     if (!payload.person_id) throw new Error("Vui long chon nguoi can hoan tien");
     assertValid(validateAmount(payload.amount, "So tien hoan"));
@@ -98,34 +97,21 @@ export const clubFundTransactionsService = {
 
     await assertPeopleActive([payload.person_id]);
 
-    const amount = Number(payload.amount);
-
-    // 1) Ghi khoản hoàn tiền -> giảm quỹ
-    const fundResult = await clubFundTransactionsRepository.create({
-      period_id: payload.period_id || null,
+    const { data, error } = await clubFundTransactionsRepository.refundPerson({
       person_id: payload.person_id,
-      payment_id: null,
-      transaction_type: "refund",
-      amount,
-      description: payload.description || "Hoan tien cho nguoi mua cau nhieu"
+      period_id: payload.period_id || null,
+      amount: Number(payload.amount),
+      description: payload.description || "Hoan tien so du cho thanh vien"
     });
-    if (fundResult.error) throw new Error(fundResult.error.message);
 
-    // 2) Trừ số dư cá nhân (CLB đã trả bớt phần nợ họ) -> số dư về đúng
-    const balanceResult = await clubFundTransactionsRepository.getPersonBalance(payload.person_id);
-    if (balanceResult.error) throw new Error(balanceResult.error.message);
-
-    let newBalance = null;
-    if (balanceResult.data) {
-      newBalance = Number(balanceResult.data.balance) - amount;
-      const updateResult = await clubFundTransactionsRepository.setPersonBalance(
-        payload.person_id,
-        newBalance
-      );
-      if (updateResult.error) throw new Error(updateResult.error.message);
+    if (error) {
+      if (error.code === "PGRST202") {
+        throw new Error("Database chua chay migration bu tru va hoan tien tu dong");
+      }
+      throw new Error(error.message);
     }
 
-    return { ...fundResult.data, new_balance: newBalance };
+    return data;
   },
 
   // Kết chuyển số dư tiền mặt của 1 kỳ sang kỳ sau:

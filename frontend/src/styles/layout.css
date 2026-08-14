@@ -1670,3 +1670,9 @@ button.danger:hover {
 }
 .btn-remind:hover:not(:disabled) { background: rgba(216,174,82,.22); }
 .btn-remind:disabled { opacity: .4; cursor: not-allowed; }
+
+.form-error {
+  margin: 0;
+  color: #ff8f8f;
+  font-size: 0.875rem;
+}

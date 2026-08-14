@@ -34,6 +34,15 @@ export const clubFundTransactionsRepository = {
       .single();
   },
 
+  async refundPerson(payload) {
+    return await supabase.rpc("refund_person_balance", {
+      p_person_id: payload.person_id,
+      p_period_id: payload.period_id || null,
+      p_amount: Number(payload.amount),
+      p_description: payload.description || null
+    });
+  },
+
   async update(id, payload) {
     return await supabase
       .from("club_fund_transactions")
@@ -50,20 +59,4 @@ export const clubFundTransactionsRepository = {
       .eq("id", id);
   },
 
-  async getPersonBalance(personId) {
-    return await supabase
-      .from("person_balances")
-      .select("*")
-      .eq("person_id", personId)
-      .maybeSingle();
-  },
-
-  async setPersonBalance(personId, newBalance) {
-    return await supabase
-      .from("person_balances")
-      .update({ balance: newBalance, updated_at: new Date().toISOString() })
-      .eq("person_id", personId)
-      .select()
-      .single();
-  },
 };
