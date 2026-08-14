@@ -5,10 +5,7 @@ function isMissingRpc(error) {
 }
 
 export const balanceOffsetsService = {
-  // Bù trừ số dư dương của TẤT CẢ mọi người vào nợ chưa trả của 1 kỳ
-  async offsetAllForPeriod(periodId) {
-    if (!periodId) throw new Error("Period ID khong duoc de trong");
-
+  async offsetAll() {
     const balancesResult = await balanceOffsetsRepository.getPositiveBalances();
     if (balancesResult.error) throw new Error(balancesResult.error.message);
 
@@ -17,7 +14,7 @@ export const balanceOffsetsService = {
     let affectedPeople = 0;
 
     for (const row of positives) {
-      const result = await this.offsetPersonPeriod(row.person_id, periodId);
+      const result = await this.offsetPerson(row.person_id);
       const offset = Number(result?.offset_amount || 0);
       if (offset > 0) {
         totalOffset += offset;
@@ -28,21 +25,21 @@ export const balanceOffsetsService = {
     return {
       message: affectedPeople > 0
         ? `Da bu tru cho ${affectedPeople} nguoi, tong ${totalOffset}d`
-        : "Khong co so du duong nao de bu tru vao ky nay",
+        : "Khong co so du duong nao can bu tru vao cong no",
       total_offset: totalOffset,
       affected_people: affectedPeople,
     };
   },
 
-  async offsetPersonPeriod(personId, periodId) {
-    if (!personId) throw new Error("Person ID khong duoc de trong");
+  async offsetAllForPeriod(periodId) {
     if (!periodId) throw new Error("Period ID khong duoc de trong");
+    return this.offsetAll();
+  },
 
-    // Ưu tiên RPC (atomic, có FOR UPDATE lock)
-    const rpcResult = await balanceOffsetsRepository.offsetPersonPeriod(
-      personId,
-      periodId
-    );
+  async offsetPerson(personId) {
+    if (!personId) throw new Error("Person ID khong duoc de trong");
+
+    const rpcResult = await balanceOffsetsRepository.offsetPerson(personId);
 
     if (!rpcResult.error) {
       return rpcResult.data;
@@ -69,7 +66,7 @@ export const balanceOffsetsService = {
 
     let availableBalance = Number(balanceRow.balance);
 
-    const debtsResult = await balanceOffsetsRepository.getUnpaidDebts(personId, periodId);
+    const debtsResult = await balanceOffsetsRepository.getUnpaidDebts(personId);
     if (debtsResult.error) throw new Error(debtsResult.error.message);
 
     const unpaidDebts = debtsResult.data;
@@ -150,7 +147,7 @@ export const balanceOffsetsService = {
     for (const item of updatedDebts) {
       const transactionResult = await balanceOffsetsRepository.createBalanceTransaction({
         person_id: personId,
-        period_id: periodId,
+        period_id: item.debt.period_id,
         related_debt_id: item.debt_id,
         transaction_type: "offset_next_period",
         amount: item.offset_amount,
@@ -169,5 +166,10 @@ export const balanceOffsetsService = {
       remaining_balance: availableBalance,
       updated_debts: updatedDebts
     };
+  },
+
+  async offsetPersonPeriod(personId, periodId) {
+    if (!periodId) throw new Error("Period ID khong duoc de trong");
+    return this.offsetPerson(personId);
   }
 };

@@ -201,6 +201,31 @@ test("period members support authenticated bulk enrollment", () => {
   assert.match(service, /failed_count/);
 });
 
+test("positive balances are persisted and automatically offset every unpaid debt", () => {
+  const migration = read("../supabase/20260814_automatic_balance_offset.sql");
+  const routes = read("src/modules/balance-offsets/balanceOffsets.routes.js");
+  const service = read("src/modules/balance-offsets/balanceOffsets.service.js");
+  const repository = read("src/modules/balance-offsets/balanceOffsets.repository.js");
+  const settlementRepository = read("src/modules/shuttle-settlements/shuttleSettlements.repository.js");
+  const settlementService = read("src/modules/shuttle-settlements/shuttleSettlements.service.js");
+
+  assert.match(migration, /create table if not exists public\.shuttle_settlement_runs/);
+  assert.match(migration, /create or replace function public\.offset_person_unpaid_debts/);
+  assert.match(migration, /after insert on public\.debts/);
+  assert.match(migration, /perform public\.offset_person_unpaid_debts\(new\.person_id\)/);
+  assert.match(migration, /on conflict \(person_id\) do update/);
+  assert.match(migration, /credit_from_shuttle_purchase/);
+  assert.match(migration, /Restore only missing positive credits/);
+  assert.match(routes, /router\.post\([\s\S]*"\/all"/);
+  assert.match(routes, /"\/person\/:personId"/);
+  assert.match(service, /async offsetPerson\(personId\)/);
+  assert.match(repository, /rpc\("offset_person_unpaid_debts"/);
+  assert.doesNotMatch(repository, /\.eq\("period_id", periodId\)/);
+  assert.match(settlementRepository, /\.eq\("exempt_shuttle", false\)/);
+  assert.match(settlementService, /resultsByPerson/);
+  assert.match(settlementService, /đã tự bù công nợ/);
+});
+
 test("group approval uses membership status and keeps legacy owners manageable", () => {
   const controller = read("src/modules/groups/groups.controller.js");
   const service = read("src/modules/groups/groups.service.js");

@@ -15,7 +15,8 @@ export const shuttleSettlementsRepository = {
         person:people(id, full_name, nickname, phone)
       `)
       .eq("period_id", periodId)
-      .eq("status", "fixed");
+      .eq("status", "fixed")
+      .eq("exempt_shuttle", false);
   },
 
   async getShuttleExpenses(periodId) {

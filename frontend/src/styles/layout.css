@@ -928,6 +928,19 @@ button:disabled {
   text-align: center;
 }
 
+.money-state {
+  color: #aab3c0;
+  white-space: nowrap;
+}
+
+.money-state.positive {
+  color: #58d6a4;
+}
+
+.money-state.negative {
+  color: #ff7d7d;
+}
+
 .metrics {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));

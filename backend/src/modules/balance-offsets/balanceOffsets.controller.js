@@ -1,6 +1,24 @@
 import { balanceOffsetsService } from "./balanceOffsets.service.js";
 
 export const balanceOffsetsController = {
+  async offsetAll(req, res) {
+    try {
+      const data = await balanceOffsetsService.offsetAll();
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
+  async offsetPerson(req, res) {
+    try {
+      const data = await balanceOffsetsService.offsetPerson(req.params.personId);
+      res.json(data);
+    } catch (error) {
+      res.status(400).json({ message: error.message });
+    }
+  },
+
   async offsetAllForPeriod(req, res) {
     try {
       const data = await balanceOffsetsService.offsetAllForPeriod(req.params.periodId);

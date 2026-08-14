@@ -114,14 +114,14 @@ export const api = {
       request({ url: `/api/person-balances/person/${personId}` }),
     transactions: (personId) =>
       request({ url: `/api/person-balances/person/${personId}/transactions` }),
-    offset: (personId, periodId) =>
+    offset: (personId) =>
       request({
-        url: `/api/balance-offsets/person/${personId}/period/${periodId}`,
+        url: `/api/balance-offsets/person/${personId}`,
         method: 'POST',
       }),
-    offsetAll: (periodId) =>
+    offsetAll: () =>
       request({
-        url: `/api/balance-offsets/period/${periodId}/all`,
+        url: '/api/balance-offsets/all',
         method: 'POST',
       }),
   },

@@ -1,10 +1,9 @@
 import { supabase } from "../../config/supabase.js";
 
 export const balanceOffsetsRepository = {
-  async offsetPersonPeriod(personId, periodId) {
-    return await supabase.rpc("offset_person_period", {
-      p_person_id: personId,
-      p_period_id: periodId
+  async offsetPerson(personId) {
+    return await supabase.rpc("offset_person_unpaid_debts", {
+      p_person_id: personId
     });
   },
 
@@ -23,12 +22,11 @@ export const balanceOffsetsRepository = {
       .gt("balance", 0);
   },
 
-  async getUnpaidDebts(personId, periodId) {
+  async getUnpaidDebts(personId) {
     return await supabase
       .from("debts")
       .select("*")
       .eq("person_id", personId)
-      .eq("period_id", periodId)
       .eq("status", "unpaid")
       .order("created_at", { ascending: true });
   },

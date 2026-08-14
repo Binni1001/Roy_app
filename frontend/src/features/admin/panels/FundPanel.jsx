@@ -13,7 +13,39 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
   const [offsetAllConfirm, setOffsetAllConfirm] = useState(false)
   const [fundQuery, setFundQuery] = useState('')
 
-  const hasPositiveBalance = (balances || []).some((b) => Number(b.balance) > 0)
+  const financialRows = useMemo(() => {
+    const balancesByPerson = new Map(
+      (balances || []).map((row) => [row.person_id || row.person?.id, row]),
+    )
+    const debtsByPerson = new Map()
+
+    for (const debt of debts) {
+      if (debt.status !== 'unpaid') continue
+      const personId = debt.person_id || debt.person?.id
+      if (!personId) continue
+      debtsByPerson.set(personId, (debtsByPerson.get(personId) || 0) + Number(debt.amount || 0))
+    }
+
+    return people
+      .filter((person) => person.status === 'active')
+      .map((person) => {
+        const balanceRow = balancesByPerson.get(person.id)
+        const balance = Number(balanceRow?.balance || 0)
+        const debt = Number(debtsByPerson.get(person.id) || 0)
+        return {
+          id: person.id,
+          person_id: person.id,
+          person,
+          balance,
+          debt,
+          net: balance - debt,
+          updated_at: balanceRow?.updated_at || null,
+        }
+      })
+      .sort((left, right) => left.net - right.net || left.person.full_name.localeCompare(right.person.full_name, 'vi'))
+  }, [balances, debts, people])
+
+  const hasOffsettableBalance = financialRows.some((row) => row.balance > 0 && row.debt > 0)
 
   const filteredFund = useMemo(
     () => filterRows(fund, fundQuery, ['description', 'person.full_name', 'transaction_type']),
@@ -24,21 +56,27 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
     <>
       <section className="grid one">
         <Panel
-          title="Số dư từng người"
-          action={hasPositiveBalance && (
+          title="Tình trạng tài chính thành viên"
+          action={hasOffsettableBalance && (
             <ActionGroup>
-              <button onClick={() => setOffsetAllConfirm(true)}>⇄ Bù trừ tất cả</button>
+              <button onClick={() => setOffsetAllConfirm(true)}>⇄ Bù trừ lại tất cả</button>
             </ActionGroup>
           )}
         >
           <SimpleTable
-            rows={balances}
-            columns={[['person.full_name', 'Người'], ['balance', 'Số dư', formatMoney], ['updated_at', 'Cập nhật', formatDate]]}
-            actions={(balance) => (
+            rows={financialRows}
+            columns={[
+              ['person.full_name', 'Người'],
+              ['balance', 'Được nhận', (value) => <MoneyState value={value} positive />],
+              ['debt', 'Công nợ', (value) => <MoneyState value={value} negative />],
+              ['net', 'Số ròng', (value) => <MoneyState value={value} />],
+              ['updated_at', 'Cập nhật', (value) => value ? formatDate(value) : '—'],
+            ]}
+            actions={(row) => row.balance > 0 && row.debt > 0 ? (
               <ActionGroup>
-                <button onClick={() => setOffsetBalance(balance)}>Bù trừ</button>
+                <button onClick={() => setOffsetBalance(row)}>Bù trừ lại</button>
               </ActionGroup>
-            )}
+            ) : null}
           />
         </Panel>
         <Panel
@@ -127,11 +165,11 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
       {offsetBalance && (
         <ConfirmModal
           title="Bù trừ số dư"
-          message={`Bù trừ số dư của ${offsetBalance.person?.full_name || 'người này'} vào kỳ đang chọn?`}
+          message={`Dùng số dư dương của ${offsetBalance.person?.full_name || 'người này'} để bù vào toàn bộ công nợ chưa trả, ưu tiên khoản cũ nhất?`}
           confirmText="Bù trừ"
           onClose={() => setOffsetBalance(null)}
           onConfirm={() => {
-            submitOffsetBalance(offsetBalance, selectedPeriodId, submit)
+            submitOffsetBalance(offsetBalance, submit)
             setOffsetBalance(null)
           }}
         />
@@ -140,11 +178,11 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
       {offsetAllConfirm && (
         <ConfirmModal
           title="Bù trừ tất cả"
-          message="Lấy số dư dương của MỌI người bù vào nợ chưa trả của kỳ đang chọn? Người nào dư tiền sẽ được trừ thẳng vào khoản phải nộp kỳ này."
+          message="Kiểm tra lại toàn bộ nhóm và dùng số dư dương để bù vào mọi công nợ chưa trả, ưu tiên khoản cũ nhất của từng người?"
           confirmText="Bù trừ tất cả"
           onClose={() => setOffsetAllConfirm(false)}
           onConfirm={() => {
-            if (selectedPeriodId) submit(() => api.balances.offsetAll(selectedPeriodId), 'Đã bù trừ số dư cho cả nhóm.')
+            submit(() => api.balances.offsetAll(), 'Đã bù trừ số dư cho cả nhóm.')
             setOffsetAllConfirm(false)
           }}
         />
@@ -335,10 +373,26 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
   )
 }
 
-function submitOffsetBalance(balance, selectedPeriodId, submit) {
+function MoneyState({ value, positive = false, negative = false }) {
+  const amount = Number(value || 0)
+  const className = positive && amount > 0
+    ? 'money-state positive'
+    : negative && amount > 0
+      ? 'money-state negative'
+      : amount > 0
+        ? 'money-state positive'
+        : amount < 0
+          ? 'money-state negative'
+          : 'money-state'
+  const displayed = negative && amount > 0 ? -amount : amount
+
+  return <strong className={className}>{formatMoney(displayed)}</strong>
+}
+
+function submitOffsetBalance(balance, submit) {
   const personId = balance.person_id || balance.person?.id
-  if (!personId || !selectedPeriodId) return
-  submit(() => api.balances.offset(personId, selectedPeriodId), 'Đã bù trừ số dư.')
+  if (!personId) return
+  submit(() => api.balances.offset(personId), 'Đã bù trừ số dư.')
 }
 
 export default FundPanel
