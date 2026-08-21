@@ -1,4 +1,5 @@
 import { peopleRepository } from "./people.repository.js";
+import { groupsService } from "../groups/groups.service.js";
 import {
   validateFullName,
   validateNickname,
@@ -14,14 +15,28 @@ const allowedAttendanceTypes = ["fixed", "guest"];
 const allowedGenders = ["male", "female", "other"];
 
 export const peopleService = {
-  async getAllPeople() {
+  async getAllPeople(user, authRole) {
+    const manager = await this.getPersonByAuthUser(user);
+    if (!manager) {
+      throw Object.assign(new Error("Không tìm thấy hồ sơ của tài khoản quản trị"), { statusCode: 403 });
+    }
+
+    const groupId = await groupsService.resolveManagedGroupId(manager, authRole);
+    if (!groupId) {
+      throw Object.assign(new Error("Tài khoản chưa có nhóm đang hoạt động"), { statusCode: 403 });
+    }
+
     const { data, error } = await peopleRepository.getAll();
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return data;
+    return (data || []).filter((person) =>
+      person.group_id === groupId ||
+      person.active_group_id === groupId ||
+      (person.person_groups || []).some((membership) => membership.group_id === groupId)
+    );
   },
 
   async getPersonById(id) {
@@ -159,6 +174,41 @@ export const peopleService = {
     }
 
     return data;
+  },
+
+  async createManagedPerson(user, authRole, payload) {
+    const manager = await this.getPersonByAuthUser(user);
+    if (!manager) {
+      throw Object.assign(new Error("Không tìm thấy hồ sơ của tài khoản quản trị"), { statusCode: 403 });
+    }
+
+    const groupId = await groupsService.resolveManagedGroupId(manager, authRole);
+    if (!groupId) {
+      throw Object.assign(new Error("Tài khoản chưa có nhóm đang hoạt động"), { statusCode: 403 });
+    }
+
+    const status = payload.status || "active";
+    const person = await this.createPerson({
+      ...payload,
+      status,
+      group_id: groupId,
+      active_group_id: status === "active" ? groupId : null
+    });
+
+    try {
+      const membership = await groupsService.addManagedMember(person.id, groupId, status);
+      return {
+        ...person,
+        person_groups: [{
+          group_id: membership.group_id,
+          status: membership.status,
+          member_role: membership.member_role
+        }]
+      };
+    } catch (error) {
+      await peopleRepository.remove(person.id);
+      throw error;
+    }
   },
 
   async updatePerson(id, payload = {}) {

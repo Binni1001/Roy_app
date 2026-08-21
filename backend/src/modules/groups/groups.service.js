@@ -21,6 +21,21 @@ export const groupsService = {
     return null
   },
 
+  async addManagedMember(personId, groupId, status = 'active') {
+    const membershipResult = await groupsRepository.getMembership(personId, groupId)
+    if (membershipResult.error) throw new Error(membershipResult.error.message)
+
+    if (membershipResult.data) {
+      const { data, error } = await groupsRepository.updateMembershipStatus(personId, groupId, status)
+      if (error) throw new Error(error.message)
+      return data
+    }
+
+    const { data, error } = await groupsRepository.addMembership(personId, groupId, status, 'member')
+    if (error) throw new Error(error.message)
+    return data
+  },
+
   async verifyCode(code) {
     if (!code?.trim()) throw Object.assign(new Error('Mã nhóm không được để trống'), { statusCode: 400 })
     const { data, error } = await groupsRepository.getByInviteCode(code.trim())

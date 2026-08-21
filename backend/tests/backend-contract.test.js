@@ -258,6 +258,21 @@ test("group approval uses membership status and keeps legacy owners manageable",
   assert.match(migration, /created_by = v_owner_person_id/);
 });
 
+test("admin-created people are attached to the managed group", () => {
+  const controller = read("src/modules/people/people.controller.js");
+  const peopleService = read("src/modules/people/people.service.js");
+  const groupsService = read("src/modules/groups/groups.service.js");
+  const migration = read("../supabase/20260821_admin_created_people_membership.sql");
+
+  assert.match(controller, /createManagedPerson\(req\.authUser, req\.authRole, req\.body\)/);
+  assert.match(peopleService, /group_id: groupId/);
+  assert.match(peopleService, /active_group_id: status === "active" \? groupId : null/);
+  assert.match(peopleService, /addManagedMember\(person\.id, groupId, status\)/);
+  assert.match(groupsService, /addMembership\(personId, groupId, status, 'member'\)/);
+  assert.match(migration, /select count\(\*\) from public\.groups\) <> 1/);
+  assert.match(migration, /insert into public\.person_groups/);
+});
+
 test("backend source contains no common mojibake sequences", () => {
   const files = listFiles("src", (path) => path.endsWith(".js"));
   const mojibake = /Ã.|Â.|â[€–—]|Ä[‘’]|á[»º]|ðŸ/;

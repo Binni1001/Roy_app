@@ -3,10 +3,10 @@ import { peopleService } from "./people.service.js";
 export const peopleController = {
   async getAll(req, res) {
     try {
-      const data = await peopleService.getAllPeople();
+      const data = await peopleService.getAllPeople(req.authUser, req.authRole);
       res.json(data);
     } catch (error) {
-      res.status(500).json({ message: error.message });
+      res.status(error.statusCode || 500).json({ message: error.message });
     }
   },
 
@@ -54,10 +54,10 @@ export const peopleController = {
 
   async create(req, res) {
     try {
-      const data = await peopleService.createPerson(req.body);
+      const data = await peopleService.createManagedPerson(req.authUser, req.authRole, req.body);
       res.status(201).json(data);
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(error.statusCode || 400).json({ message: error.message });
     }
   },
 
