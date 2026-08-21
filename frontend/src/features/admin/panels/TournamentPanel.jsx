@@ -4,6 +4,7 @@ import { api } from '../../../api/client'
 import { ConfirmModal, SkeletonMatchCards } from '../../../components/common'
 import { TournamentView } from '../../tournaments/TournamentView'
 import { TournamentFormModal } from './tournaments/TournamentFormModal'
+import { TournamentMatchOrderModal } from './tournaments/TournamentMatchOrderModal'
 import { TournamentScoreModal } from './tournaments/TournamentScoreModal'
 import { TournamentSetupModal } from './tournaments/TournamentSetupModal'
 
@@ -19,6 +20,7 @@ export function TournamentPanel({ people = [] }) {
   const [showForm, setShowForm] = useState(false)
   const [showSetup, setShowSetup] = useState(false)
   const [scoreMatch, setScoreMatch] = useState(null)
+  const [orderGroup, setOrderGroup] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [confirmKnockout, setConfirmKnockout] = useState(false)
 
@@ -89,6 +91,16 @@ export function TournamentPanel({ people = [] }) {
     catch { /* toast handled */ }
   }
 
+  async function saveGroupMatchOrder(matchIds) {
+    try {
+      await mutate(
+        () => api.tournaments.reorderGroupMatches(tournament.id, orderGroup.id, matchIds),
+        'Đã cập nhật thứ tự trận.',
+        async (updated) => { setOrderGroup(null); setTournament(updated) },
+      )
+    } catch { /* toast handled */ }
+  }
+
   async function removeTournament() {
     try { await mutate(() => api.tournaments.remove(tournament.id), 'Đã xóa giải đấu.', async () => { setConfirmDelete(false); setSelectedId(''); setTournament(null); await loadList() }) }
     catch { setConfirmDelete(false) }
@@ -118,12 +130,13 @@ export function TournamentPanel({ people = [] }) {
           {allGroupDone && <button type="button" className="primary" onClick={() => setConfirmKnockout(true)}><GitBranch size={16} />{tournament.matches.some((match) => match.stage !== 'group') ? 'Dựng lại vòng trong' : 'Tạo vòng trong'}</button>}
           <button type="button" className="danger" onClick={() => setConfirmDelete(true)}><Trash2 size={16} />Xóa giải</button>
         </div>
-        <TournamentView tournament={tournament} tab={tab} setTab={setTab} admin onEditMatch={setScoreMatch} />
+        <TournamentView tournament={tournament} tab={tab} setTab={setTab} admin onEditMatch={setScoreMatch} onReorderGroup={setOrderGroup} />
       </>}
 
       {showForm && <TournamentFormModal initial={showForm === 'edit' ? tournament : null} onClose={() => setShowForm(false)} onSubmit={saveTournament} saving={saving} />}
       {showSetup && <TournamentSetupModal tournament={tournament} people={people} onClose={() => setShowSetup(false)} onSubmit={configure} saving={saving} />}
       {scoreMatch && <TournamentScoreModal tournament={tournament} match={scoreMatch} onClose={() => setScoreMatch(null)} onSubmit={saveMatch} saving={saving} />}
+      {orderGroup && <TournamentMatchOrderModal group={orderGroup} onClose={() => setOrderGroup(null)} onSubmit={saveGroupMatchOrder} saving={saving} />}
       {confirmKnockout && <ConfirmModal title="Dựng vòng loại trực tiếp" message="Hệ thống sẽ lấy hai đội đầu mỗi bảng. Nếu vòng trong đã có kết quả, các kết quả đó sẽ được dựng lại." confirmText="Dựng vòng trong" onClose={() => setConfirmKnockout(false)} onConfirm={buildKnockout} />}
       {confirmDelete && <ConfirmModal title="Xóa giải đấu" message={`Xóa toàn bộ dữ liệu của giải “${tournament.name}”? Thao tác này không ảnh hưởng Đấu trường PK.`} confirmText="Xóa giải" danger onClose={() => setConfirmDelete(false)} onConfirm={removeTournament} />}
     </div>

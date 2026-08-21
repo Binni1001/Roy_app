@@ -53,6 +53,18 @@ export const tournamentsController = {
     } catch (error) { sendError(res, error); }
   },
 
+  async reorderGroupMatches(req, res) {
+    try {
+      res.json(await tournamentsService.reorderGroupMatches(
+        req.params.id,
+        req.params.groupId,
+        req.body,
+        req.authUser,
+        req.authRole,
+      ));
+    } catch (error) { sendError(res, error); }
+  },
+
   async remove(req, res) {
     try {
       res.json(await tournamentsService.remove(req.params.id, req.authUser, req.authRole));

@@ -404,6 +404,31 @@ export const tournamentsService = {
     return this.get(match.tournament_id, authUser, authRole);
   },
 
+  async reorderGroupMatches(tournamentId, groupId, payload, authUser, authRole) {
+    const tournament = await this.get(tournamentId, authUser, authRole);
+    const group = tournament.groups.find((item) => item.id === groupId);
+    if (!group) throw httpError("Không tìm thấy bảng đấu trong giải.", 404);
+
+    const matchIds = Array.isArray(payload.match_ids) ? payload.match_ids : [];
+    const currentIds = group.matches.map((match) => match.id);
+    const requestedIds = new Set(matchIds);
+    if (
+      matchIds.length !== currentIds.length ||
+      requestedIds.size !== currentIds.length ||
+      currentIds.some((id) => !requestedIds.has(id))
+    ) {
+      throw httpError("Danh sách trận sắp xếp không đầy đủ hoặc không thuộc bảng đã chọn.");
+    }
+
+    await unwrap(await tournamentsRepository.reorderGroupMatches(
+      tournamentId,
+      groupId,
+      matchIds,
+      authUser?.email,
+    ));
+    return this.get(tournamentId, authUser, authRole);
+  },
+
   async remove(id, authUser, authRole) {
     await this.get(id, authUser, authRole);
     return unwrap(await tournamentsRepository.remove(id));

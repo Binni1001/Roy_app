@@ -235,6 +235,11 @@ export const api = {
       method: 'PUT',
       data: payload,
     }),
+    reorderGroupMatches: (tournamentId, groupId, matchIds) => request({
+      url: `/api/tournaments/${tournamentId}/groups/${groupId}/matches/order`,
+      method: 'PUT',
+      data: { match_ids: matchIds },
+    }),
     remove: (id) => request({ url: `/api/tournaments/${id}`, method: 'DELETE' }),
   },
 

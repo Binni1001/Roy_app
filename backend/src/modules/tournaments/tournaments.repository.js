@@ -137,4 +137,13 @@ export const tournamentsRepository = {
       p_actor_email: actorEmail || null,
     });
   },
+
+  async reorderGroupMatches(tournamentId, groupId, matchIds, actorEmail) {
+    return supabase.rpc("reorder_tournament_group_matches", {
+      p_tournament_id: tournamentId,
+      p_group_id: groupId,
+      p_match_ids: matchIds,
+      p_actor_email: actorEmail || null,
+    });
+  },
 };

@@ -16,6 +16,7 @@ test("tournament module is mounted and protects every write with admin role", ()
   assert.match(routes, /router\.put\("\/:id", requireAuth, requireAdmin/);
   assert.match(routes, /router\.put\("\/:id\/configure", requireAuth, requireAdmin/);
   assert.match(routes, /router\.post\("\/:id\/knockout", requireAuth, requireAdmin/);
+  assert.match(routes, /router\.put\("\/:id\/groups\/:groupId\/matches\/order", requireAuth, requireAdmin/);
   assert.match(routes, /router\.put\("\/:id\/matches\/:matchId", requireAuth, requireAdmin/);
   assert.match(routes, /router\.delete\("\/:id", requireAuth, requireAdmin/);
 });
@@ -91,4 +92,23 @@ test("tournament setup can persist the displayed member order", () => {
   assert.match(setup, /member_ids: team\.member_ids/);
   assert.match(service, /member_slot - b\.member_slot/);
   assert.match(migration, /p_tournament_id, v_team_id, v_member_id, v_slot/);
+});
+
+test("admin can reorder group matches without changing their results", () => {
+  const routes = read("src/modules/tournaments/tournaments.routes.js");
+  const service = read("src/modules/tournaments/tournaments.service.js");
+  const repository = read("src/modules/tournaments/tournaments.repository.js");
+  const panel = read("../frontend/src/features/admin/panels/TournamentPanel.jsx");
+  const modal = read("../frontend/src/features/admin/panels/tournaments/TournamentMatchOrderModal.jsx");
+  const migration = read("../supabase/20260822_reorder_tournament_group_matches.sql");
+
+  assert.match(routes, /reorderGroupMatches/);
+  assert.match(service, /requestedIds\.size !== currentIds\.length/);
+  assert.match(repository, /reorder_tournament_group_matches/);
+  assert.match(panel, /api\.tournaments\.reorderGroupMatches/);
+  assert.match(modal, /matches\.map\(\(match\) => match\.id\)/);
+  assert.match(read("../frontend/src/features/tournaments/TournamentView.jsx"), /orderedGroupMatches/);
+  assert.match(migration, /bracket_position = requested_order\.position/);
+  assert.doesNotMatch(migration, /set_scores\s*=/);
+  assert.doesNotMatch(migration, /winner_team_id\s*=/);
 });

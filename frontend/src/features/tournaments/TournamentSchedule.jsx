@@ -1,4 +1,4 @@
-import { CalendarRange, Swords, Trophy, UsersRound } from 'lucide-react'
+import { CalendarRange, ListOrdered, Swords, Trophy, UsersRound } from 'lucide-react'
 import { TournamentMatchCard } from './TournamentMatchCard'
 
 const KNOCKOUT_STAGE_ORDER = {
@@ -21,7 +21,7 @@ function completedCount(matches) {
   return matches.filter((match) => match.status === 'completed').length
 }
 
-export function TournamentSchedule({ groups = [], knockoutMatches = [], totalMatches = 0, admin = false, onEditMatch }) {
+export function TournamentSchedule({ groups = [], knockoutMatches = [], totalMatches = 0, admin = false, onEditMatch, onReorderGroup }) {
   const orderedGroups = [...groups].sort((left, right) => Number(left.position || 0) - Number(right.position || 0))
   const orderedKnockout = [...knockoutMatches].sort((left, right) =>
     (KNOCKOUT_STAGE_ORDER[left.stage] || 99) - (KNOCKOUT_STAGE_ORDER[right.stage] || 99) ||
@@ -61,6 +61,7 @@ export function TournamentSchedule({ groups = [], knockoutMatches = [], totalMat
                   <span className="tour-group-letter">{code}</span>
                   <div><h4>{name}</h4><p>{group.standings?.length || 0} đội thi đấu vòng tròn</p></div>
                   <div className="tour-group-progress"><strong>{completed}/{matches.length}</strong><span>đã xong</span></div>
+                  {admin && matches.length > 1 && <button type="button" className="tour-order-matches" onClick={() => onReorderGroup?.({ ...group, display_name: name })}><ListOrdered size={15} />Sắp trận</button>}
                 </header>
                 {matches.length ? <div className="tour-schedule-grid tour-schedule-group-grid">
                   {matches.map((match, matchIndex) => (
