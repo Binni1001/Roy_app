@@ -2,12 +2,12 @@ import { CalendarDays, CheckCircle2, Flag, Trophy, Users } from 'lucide-react'
 import { TeamAvatarStack } from './TeamAvatarStack'
 import { TournamentBracket } from './TournamentBracket'
 import { TournamentMatchCard } from './TournamentMatchCard'
+import { TournamentSchedule } from './TournamentSchedule'
 import { TournamentStandings } from './TournamentStandings'
 import { formatTournamentDate, teamMemberNames, TOURNAMENT_STATUS, tournamentProgress } from './tournamentUtils'
 
 export function TournamentView({ tournament, tab, setTab, admin = false, onEditMatch }) {
   const progress = tournamentProgress(tournament)
-  const groupMatches = tournament.matches.filter((match) => match.stage === 'group')
   const knockoutMatches = tournament.matches.filter((match) => match.stage !== 'group')
   const upcoming = tournament.matches.filter((match) => match.status === 'pending' || match.status === 'active').slice(0, 4)
   const [statusLabel, statusClass] = TOURNAMENT_STATUS[tournament.status] || [tournament.status, 'draft']
@@ -51,9 +51,7 @@ export function TournamentView({ tournament, tab, setTab, admin = false, onEditM
 
       {tab === 'groups' && <div className="tour-section"><TournamentStandings groups={tournament.groups} /></div>}
       {tab === 'bracket' && <div className="tour-section tour-section-bracket"><TournamentBracket matches={knockoutMatches} admin={admin} onEdit={onEditMatch} /></div>}
-      {tab === 'schedule' && <div className="tour-section"><header><h3>Tất cả trận đấu</h3><span>{tournament.matches.length} trận</span></header><div className="tour-schedule-grid">
-        {[...groupMatches, ...knockoutMatches].map((match) => <TournamentMatchCard key={match.id} match={match} admin={admin} onEdit={onEditMatch} />)}
-      </div></div>}
+      {tab === 'schedule' && <TournamentSchedule groups={tournament.groups} knockoutMatches={knockoutMatches} totalMatches={tournament.matches.length} admin={admin} onEditMatch={onEditMatch} />}
       {tab === 'teams' && <div className="tour-section"><header><h3>Danh sách đội</h3><span>{tournament.teams.length} đội</span></header><div className="tour-team-grid">
         {tournament.teams.map((team) => { const group = tournament.groups.find((item) => item.standings.some((row) => row.team_id === team.id)); return <article className="tour-team-card" key={team.id}><TeamAvatarStack team={team} size="large" /><div><strong>{team.name}</strong><span>{teamMemberNames(team)}</span></div><footer>{team.seed && <span>Hạt giống {team.seed}</span>}{group && <span>{group.name}</span>}</footer></article> })}
       </div></div>}

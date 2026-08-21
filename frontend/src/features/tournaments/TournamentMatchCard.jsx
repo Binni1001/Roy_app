@@ -13,12 +13,12 @@ function TeamLine({ team, source, sets, winner }) {
   )
 }
 
-export function TournamentMatchCard({ match, admin = false, onEdit, compact = false }) {
+export function TournamentMatchCard({ match, admin = false, onEdit, compact = false, label }) {
   const canEdit = admin && match.status !== 'bye'
   return (
     <article className={`tour-match-card tour-match-card--${match.status}${compact ? ' compact' : ''}${canEdit ? ' editable' : ''}`} onClick={canEdit ? () => onEdit?.(match) : undefined}>
       <header className="tour-match-card-head">
-        <span>{stageLabel(match.stage)} {match.bracket_position}</span>
+        <span>{label || `${stageLabel(match.stage)} ${match.bracket_position}`}</span>
         <span className={`tour-match-status status-${match.status}`}>{MATCH_STATUS_LABELS[match.status]}</span>
         {canEdit && <Pencil size={14} aria-hidden="true" />}
       </header>

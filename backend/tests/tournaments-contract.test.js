@@ -67,3 +67,16 @@ test("tournament team picker only exposes active members from the selected group
   assert.match(setup, /selectedMemberIds/);
   assert.match(setup, /availablePeople\(currentPersonId\)/);
 });
+
+test("tournament schedule groups round-robin matches by named group", () => {
+  const schedule = read("../frontend/src/features/tournaments/TournamentSchedule.jsx");
+  const view = read("../frontend/src/features/tournaments/TournamentView.jsx");
+  const card = read("../frontend/src/features/tournaments/TournamentMatchCard.jsx");
+
+  assert.match(view, /<TournamentSchedule groups=\{tournament\.groups\}/);
+  assert.match(schedule, /group\.matches/);
+  assert.match(schedule, /`Bảng \$\{code\}`/);
+  assert.match(schedule, /`\$\{name\} · Trận \$\{matchIndex \+ 1\}`/);
+  assert.match(schedule, /Vòng loại trực tiếp/);
+  assert.match(card, /label \|\| `\$\{stageLabel\(match\.stage\)\}/);
+});
