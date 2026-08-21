@@ -1,4 +1,4 @@
-import { Plus, Shuffle, Trash2 } from 'lucide-react'
+import { ArrowLeftRight, Plus, Shuffle, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../../../components/common'
 import { defaultKnockoutStart, distributeTeams, isActiveTournamentMember, personName, validKnockoutStarts } from '../../../tournaments/tournamentUtils'
@@ -50,6 +50,12 @@ export function TournamentSetupModal({ tournament, people, onClose, onSubmit, sa
     updateTeam(teamIndex, { member_ids: memberIds, name: generatedName })
   }
 
+  function swapMembers(teamIndex) {
+    setTeams((current) => current.map((team, index) => index === teamIndex
+      ? { ...team, member_ids: [team.member_ids[1], team.member_ids[0]] }
+      : team))
+  }
+
   function availablePeople(currentPersonId) {
     return activePeople.filter((person) => person.id === currentPersonId || !selectedMemberIds.has(person.id))
   }
@@ -94,10 +100,9 @@ export function TournamentSetupModal({ tournament, people, onClose, onSubmit, sa
           {teams.map((team, teamIndex) => <div className="tour-team-editor" key={team.key}>
             <span className="tour-team-editor-index">{teamIndex + 1}</span>
             <label>Tên đội<input value={team.name} onChange={(event) => updateTeam(teamIndex, { name: event.target.value })} placeholder="Tên đội" /></label>
-            {[0, 1].map((memberIndex) => {
-              const currentPersonId = team.member_ids[memberIndex] || ''
-              return <label key={memberIndex}>Thành viên {memberIndex + 1}<select value={currentPersonId} onChange={(event) => updateMember(teamIndex, memberIndex, event.target.value)}><option value="">Chọn người</option>{availablePeople(currentPersonId).map((person) => <option key={person.id} value={person.id}>{personName(person)}</option>)}</select></label>
-            })}
+            <label>Thành viên 1<select value={team.member_ids[0] || ''} onChange={(event) => updateMember(teamIndex, 0, event.target.value)}><option value="">Chọn người</option>{availablePeople(team.member_ids[0] || '').map((person) => <option key={person.id} value={person.id}>{personName(person)}</option>)}</select></label>
+            <button type="button" className="icon-button tour-swap-members" onClick={() => swapMembers(teamIndex)} disabled={!team.member_ids.some(Boolean)} title="Đổi thứ tự hai thành viên" aria-label={`Đổi thứ tự thành viên của đội ${team.name || teamIndex + 1}`}><ArrowLeftRight size={16} /></button>
+            <label>Thành viên 2<select value={team.member_ids[1] || ''} onChange={(event) => updateMember(teamIndex, 1, event.target.value)}><option value="">Chọn người</option>{availablePeople(team.member_ids[1] || '').map((person) => <option key={person.id} value={person.id}>{personName(person)}</option>)}</select></label>
             <label>Hạt giống<input type="number" min="1" max={teams.length} value={team.seed} onChange={(event) => updateTeam(teamIndex, { seed: event.target.value })} placeholder="Không" /></label>
             <label>Bảng<select value={team.group_index} onChange={(event) => updateTeam(teamIndex, { group_index: Number(event.target.value) })}>{Array.from({ length: groupCount }, (_, index) => <option key={index} value={index + 1}>Bảng {String.fromCharCode(65 + index)}</option>)}</select></label>
             <button type="button" className="icon-button tour-remove-team" onClick={() => setTeams((current) => current.filter((_, index) => index !== teamIndex))} aria-label="Xóa đội"><Trash2 size={16} /></button>

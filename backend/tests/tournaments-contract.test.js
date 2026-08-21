@@ -80,3 +80,15 @@ test("tournament schedule groups round-robin matches by named group", () => {
   assert.match(schedule, /Vòng loại trực tiếp/);
   assert.match(card, /label \|\| `\$\{stageLabel\(match\.stage\)\}/);
 });
+
+test("tournament setup can persist the displayed member order", () => {
+  const setup = read("../frontend/src/features/admin/panels/tournaments/TournamentSetupModal.jsx");
+  const service = read("src/modules/tournaments/tournaments.service.js");
+  const migration = read("../supabase/20260821_doubles_tournaments.sql");
+
+  assert.match(setup, /member_ids: \[team\.member_ids\[1\], team\.member_ids\[0\]\]/);
+  assert.match(setup, /Đổi thứ tự hai thành viên/);
+  assert.match(setup, /member_ids: team\.member_ids/);
+  assert.match(service, /member_slot - b\.member_slot/);
+  assert.match(migration, /p_tournament_id, v_team_id, v_member_id, v_slot/);
+});
