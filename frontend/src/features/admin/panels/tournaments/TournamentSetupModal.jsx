@@ -1,20 +1,23 @@
 import { Plus, Shuffle, Trash2 } from 'lucide-react'
 import { useMemo, useState } from 'react'
 import { Modal } from '../../../../components/common'
-import { defaultKnockoutStart, distributeTeams, personName, validKnockoutStarts } from '../../../tournaments/tournamentUtils'
+import { defaultKnockoutStart, distributeTeams, isActiveTournamentMember, personName, validKnockoutStarts } from '../../../tournaments/tournamentUtils'
 
 function blankTeam(groupIndex = 1) {
   return { key: crypto.randomUUID(), name: '', member_ids: ['', ''], seed: '', group_index: groupIndex }
 }
 
-function initialTeams(tournament) {
+function initialTeams(tournament, eligibleIds) {
   if (!tournament.teams.length) return Array.from({ length: Math.max(4, tournament.group_count * 2) }, (_, index) => blankTeam((index % tournament.group_count) + 1))
   return tournament.teams.map((team) => {
     const group = tournament.groups.find((item) => item.standings.some((row) => row.team_id === team.id))
     return {
       key: team.id,
       name: team.name,
-      member_ids: team.members.map((member) => member.person_id),
+      member_ids: [0, 1].map((slot) => {
+        const personId = team.members.find((member) => member.member_slot === slot + 1)?.person_id || ''
+        return eligibleIds.has(personId) ? personId : ''
+      }),
       seed: team.seed || '',
       group_index: group?.position || 1,
     }
@@ -22,13 +25,18 @@ function initialTeams(tournament) {
 }
 
 export function TournamentSetupModal({ tournament, people, onClose, onSubmit, saving }) {
+  const activePeople = useMemo(() => people
+    .filter((person) => isActiveTournamentMember(person, tournament.group_id))
+    .sort((left, right) => personName(left).localeCompare(personName(right), 'vi')),
+  [people, tournament.group_id])
+  const eligibleIds = useMemo(() => new Set(activePeople.map((person) => person.id)), [activePeople])
   const [groupCount, setGroupCount] = useState(tournament.group_count || 2)
   const [bestOf, setBestOf] = useState(tournament.best_of || 3)
   const [knockoutStart, setKnockoutStart] = useState(tournament.knockout_start || defaultKnockoutStart(groupCount))
   const [thirdPlace, setThirdPlace] = useState(Boolean(tournament.third_place_enabled))
-  const [teams, setTeams] = useState(() => initialTeams(tournament))
+  const [teams, setTeams] = useState(() => initialTeams(tournament, eligibleIds))
   const [error, setError] = useState('')
-  const activePeople = useMemo(() => people.filter((person) => person.status === 'active'), [people])
+  const selectedMemberIds = useMemo(() => new Set(teams.flatMap((team) => team.member_ids).filter(Boolean)), [teams])
 
   function updateTeam(index, patch) {
     setTeams((current) => current.map((team, teamIndex) => teamIndex === index ? { ...team, ...patch } : team))
@@ -40,6 +48,10 @@ export function TournamentSetupModal({ tournament, people, onClose, onSubmit, sa
     const selected = memberIds.map((id) => activePeople.find((person) => person.id === id)).filter(Boolean)
     const generatedName = selected.length === 2 ? selected.map(personName).join(' & ') : teams[teamIndex].name
     updateTeam(teamIndex, { member_ids: memberIds, name: generatedName })
+  }
+
+  function availablePeople(currentPersonId) {
+    return activePeople.filter((person) => person.id === currentPersonId || !selectedMemberIds.has(person.id))
   }
 
   function changeGroupCount(value) {
@@ -82,12 +94,16 @@ export function TournamentSetupModal({ tournament, people, onClose, onSubmit, sa
           {teams.map((team, teamIndex) => <div className="tour-team-editor" key={team.key}>
             <span className="tour-team-editor-index">{teamIndex + 1}</span>
             <label>Tên đội<input value={team.name} onChange={(event) => updateTeam(teamIndex, { name: event.target.value })} placeholder="Tên đội" /></label>
-            {[0, 1].map((memberIndex) => <label key={memberIndex}>Thành viên {memberIndex + 1}<select value={team.member_ids[memberIndex] || ''} onChange={(event) => updateMember(teamIndex, memberIndex, event.target.value)}><option value="">Chọn người</option>{activePeople.map((person) => <option key={person.id} value={person.id}>{personName(person)}</option>)}</select></label>)}
+            {[0, 1].map((memberIndex) => {
+              const currentPersonId = team.member_ids[memberIndex] || ''
+              return <label key={memberIndex}>Thành viên {memberIndex + 1}<select value={currentPersonId} onChange={(event) => updateMember(teamIndex, memberIndex, event.target.value)}><option value="">Chọn người</option>{availablePeople(currentPersonId).map((person) => <option key={person.id} value={person.id}>{personName(person)}</option>)}</select></label>
+            })}
             <label>Hạt giống<input type="number" min="1" max={teams.length} value={team.seed} onChange={(event) => updateTeam(teamIndex, { seed: event.target.value })} placeholder="Không" /></label>
             <label>Bảng<select value={team.group_index} onChange={(event) => updateTeam(teamIndex, { group_index: Number(event.target.value) })}>{Array.from({ length: groupCount }, (_, index) => <option key={index} value={index + 1}>Bảng {String.fromCharCode(65 + index)}</option>)}</select></label>
             <button type="button" className="icon-button tour-remove-team" onClick={() => setTeams((current) => current.filter((_, index) => index !== teamIndex))} aria-label="Xóa đội"><Trash2 size={16} /></button>
           </div>)}
         </div>
+        {!activePeople.length && <p className="form-error">Nhóm chưa có thành viên đang hoạt động để xếp đội.</p>}
         <button type="button" className="tour-add-team" onClick={() => setTeams((current) => [...current, blankTeam((current.length % groupCount) + 1)])}><Plus size={16} />Thêm đội</button>
         {error && <p className="form-error">{error}</p>}
         <footer className="modal-actions"><button type="button" onClick={onClose}>Hủy</button><button type="submit" disabled={saving}>{saving ? 'Đang dựng...' : 'Lưu và dựng vòng bảng'}</button></footer>

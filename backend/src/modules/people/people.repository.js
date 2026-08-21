@@ -4,7 +4,7 @@ export const peopleRepository = {
   async getAll() {
     return await supabase
       .from("people")
-      .select("*")
+      .select("*, person_groups(group_id, status, member_role)")
       .order("created_at", { ascending: false });
   },
 

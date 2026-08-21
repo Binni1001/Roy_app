@@ -17,7 +17,16 @@ export const MATCH_STATUS_LABELS = {
 }
 
 export function personName(person) {
-  return person?.nickname || person?.full_name || 'Thành viên'
+  return person?.full_name || person?.nickname || 'Thành viên'
+}
+
+export function isActiveTournamentMember(person, groupId) {
+  if (!person || person.status !== 'active' || !groupId) return false
+  const hasActiveMembership = (person.person_groups || []).some(
+    (membership) => membership.group_id === groupId && membership.status === 'active',
+  )
+  const hasLegacyGroupLink = person.group_id === groupId || person.active_group_id === groupId
+  return hasActiveMembership || hasLegacyGroupLink
 }
 
 export function teamMemberNames(team) {

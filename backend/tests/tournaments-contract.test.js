@@ -55,3 +55,15 @@ test("round robin standings and knockout rules match the approved format", () =>
   assert.match(service, /third_place/);
   assert.match(service, /groupMatches\.some\(\(match\) => match\.status !== "completed"\)/);
 });
+
+test("tournament team picker only exposes active members from the selected group", () => {
+  const peopleRepository = read("src/modules/people/people.repository.js");
+  const setup = read("../frontend/src/features/admin/panels/tournaments/TournamentSetupModal.jsx");
+  const utils = read("../frontend/src/features/tournaments/tournamentUtils.js");
+
+  assert.match(peopleRepository, /person_groups\(group_id, status, member_role\)/);
+  assert.match(utils, /person\?\.full_name \|\| person\?\.nickname/);
+  assert.match(utils, /membership\.group_id === groupId && membership\.status === 'active'/);
+  assert.match(setup, /selectedMemberIds/);
+  assert.match(setup, /availablePeople\(currentPersonId\)/);
+});
