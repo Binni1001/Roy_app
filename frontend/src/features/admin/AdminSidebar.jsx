@@ -1,4 +1,4 @@
-import { BarChart2, CalendarDays, DollarSign, LayoutDashboard, LogOut, Shield, Swords, Users, Wallet, Wind, Zap } from 'lucide-react'
+import { BarChart2, CalendarDays, DollarSign, LayoutDashboard, LogOut, Shield, Swords, Trophy, Users, Wallet, Wind, Zap } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
 import { GroupSwitcher } from '../../components/GroupSwitcher'
 import { GROUPS_ENABLED } from '../../config/features'
@@ -14,6 +14,7 @@ const ADMIN_NAV = [
   ['debts',     'Công nợ',   'Khoản cần thu',           Wallet],
   ['fund',      'Sổ quỹ',    'Thu chi câu lạc bộ',      DollarSign],
   ['pk',        'Đấu trường','Quản lý kèo PK',          Swords],
+  ['tournaments','Đấu giải', 'Vòng bảng và vòng trong', Trophy],
   // Tab nhóm — chỉ hiện khi bật lại tính năng nhóm
   ...(GROUPS_ENABLED ? [['members', 'Thành viên', 'Duyệt và mã nhóm', Shield]] : []),
 ]

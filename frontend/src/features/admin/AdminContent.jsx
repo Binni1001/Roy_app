@@ -12,6 +12,7 @@ const PeriodsPanel    = lazy(() => import('./panels/PeriodsPanel'))
 const SessionsPanel   = lazy(() => import('./panels/SessionsPanel'))
 const ShuttlePanel    = lazy(() => import('./panels/ShuttlePanel'))
 const MembersPanel    = lazy(() => import('./panels/MembersPanel'))
+const TournamentPanel = lazy(() => import('./panels/TournamentPanel'))
 
 function PanelSuspense({ children }) {
   return (
@@ -165,6 +166,10 @@ export function AdminContent(props) {
 
   if (activeTab === 'pk') {
     return <PanelSuspense><PkPanel periodId={selectedPeriodId} role={role} /></PanelSuspense>
+  }
+
+  if (activeTab === 'tournaments') {
+    return <PanelSuspense><TournamentPanel people={people} /></PanelSuspense>
   }
 
   if (activeTab === 'members' && GROUPS_ENABLED) {

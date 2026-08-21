@@ -222,6 +222,22 @@ export const api = {
     people: () => request({ url: '/api/pk-matches/people' }),
   },
 
+  tournaments: {
+    list: () => request({ url: '/api/tournaments' }),
+    get: (id) => request({ url: `/api/tournaments/${id}` }),
+    create: (payload) => request({ url: '/api/tournaments', method: 'POST', data: payload }),
+    update: (id, payload) => request({ url: `/api/tournaments/${id}`, method: 'PUT', data: payload }),
+    configure: (id, payload) => request({ url: `/api/tournaments/${id}/configure`, method: 'PUT', data: payload }),
+    publish: (id) => request({ url: `/api/tournaments/${id}/publish`, method: 'POST' }),
+    buildKnockout: (id) => request({ url: `/api/tournaments/${id}/knockout`, method: 'POST' }),
+    saveMatch: (tournamentId, matchId, payload) => request({
+      url: `/api/tournaments/${tournamentId}/matches/${matchId}`,
+      method: 'PUT',
+      data: payload,
+    }),
+    remove: (id) => request({ url: `/api/tournaments/${id}`, method: 'DELETE' }),
+  },
+
   groups: {
     verifyCode:     (code)              => request({ url: '/api/groups/verify-code', method: 'POST', data: { invite_code: code } }),
     mine:           ()                  => request({ url: '/api/groups/mine' }),

@@ -1,4 +1,4 @@
-import { CalendarDays, History, Home, LogOut, Swords, UserPen, Wallet } from 'lucide-react'
+import { CalendarDays, History, Home, LogOut, Swords, Trophy, UserPen, Wallet } from 'lucide-react'
 import { BrandLogo } from '../../components/shell'
 import { GroupSwitcher } from '../../components/GroupSwitcher'
 import { GROUPS_ENABLED } from '../../config/features'
@@ -9,6 +9,7 @@ const USER_NAV = [
   ['profile',  'Sửa hồ sơ',    UserPen],
   ['schedule', 'Lịch đánh',    CalendarDays],
   ['pk',       'Đấu trường',   Swords],
+  ['tournaments','Đấu giải',   Trophy],
   ['debts',    'Công nợ',      Wallet],
   ['history',  'Lịch sử',      History],
   ['payment',  'Thanh toán',   Wallet],

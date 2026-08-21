@@ -12,6 +12,7 @@ import { UserSidebar } from './UserSidebar'
 import { useUserPortalData } from './useUserPortalData'
 
 const PkArena = lazy(() => import('./PkArena'))
+const TournamentHub = lazy(() => import('./TournamentHub'))
 
 export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
   const [activeTab, setActiveTab] = useState(() => sessionStorage.getItem('user_tab') || 'home')
@@ -123,6 +124,10 @@ export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
         ) : activeTab === 'pk' ? (
           <Suspense fallback={<div style={{ padding: 24 }}><SkeletonMatchCards count={3} /></div>}>
             <PkArena activePerson={activePerson} periodId={selectedPeriodId} />
+          </Suspense>
+        ) : activeTab === 'tournaments' ? (
+          <Suspense fallback={<div style={{ padding: 24 }}><SkeletonMatchCards count={3} /></div>}>
+            <TournamentHub />
           </Suspense>
         ) : (
           <>

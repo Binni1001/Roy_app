@@ -27,6 +27,7 @@ import adminUsersRoutes from "./modules/admin-users/adminUsers.routes.js";
 import pkMatchesRoutes from "./modules/pk-matches/pkMatches.routes.js";
 import notificationsRoutes from "./modules/notifications/notifications.routes.js";
 import groupsRoutes from "./modules/groups/groups.routes.js";
+import tournamentsRoutes from "./modules/tournaments/tournaments.routes.js";
 
 const app = express();
 
@@ -74,5 +75,6 @@ app.use("/api/admin-users", adminUsersRoutes);
 app.use("/api/pk-matches", pkMatchesRoutes);
 app.use("/api/notifications", notificationsRoutes);
 app.use("/api/groups", groupsRoutes);
+app.use("/api/tournaments", tournamentsRoutes);
 
 export default app;

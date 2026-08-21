@@ -56,7 +56,7 @@ modules/<tên-tính-năng>/
 
 Luồng 1 request: `routes → controller → service → repository → Supabase` rồi trả ngược lại.
 
-Các module hiện có: `people`, `periods`, `period-members`, `debts`, `payments`, `pk-matches`, `groups`, `shuttle-expenses`, `shuttle-settlements`, `guest-attendances`, `funds`, `admin-users`...
+Các module hiện có: `people`, `periods`, `period-members`, `debts`, `payments`, `pk-matches`, `tournaments`, `groups`, `shuttle-expenses`, `shuttle-settlements`, `guest-attendances`, `funds`, `admin-users`...
 
 File hạ tầng:
 ```
@@ -81,12 +81,15 @@ features/admin/              → Cổng admin (owner/admin)
   useAdminPortalData.js      → 1 hook quản lý toàn bộ data/state/mutation của admin
   panels/                    → Từng tab: PeoplePanel, PeriodsPanel, PkPanel, FundPanel...
   panels/pk/                 → Phần con của PkPanel (xem mục 4)
+  panels/tournaments/        → Tạo giải, xếp đội/chia bảng, nhập tỷ số
 
 features/user/               → Cổng người dùng thường
   UserPortal.jsx, UserSidebar.jsx, UserContent.jsx, MemberHero.jsx
   useUserPortalData.js       → 1 hook quản lý toàn bộ data/state của user
   RandomMatchmaker.jsx       → Modal ghép ngẫu nhiên
   pk/                        → Phần con của PK (xem mục 4)
+
+features/tournaments/        → Giao diện giải đấu dùng chung cho admin và user
 
 components/                  → Dùng chung: common.jsx (Panel, Modal, Table), shell.jsx, finance.jsx
 utils/                       → appUtils.js, leaderboardUtils.js, printReport.js
@@ -142,6 +145,7 @@ Tất cả CSS được nạp qua `App.css` bằng `@import` (thứ tự import 
 | `login.css` | Trang đăng nhập |
 | `pk-arena.css` | Đấu trường: bảng xếp hạng, thẻ kèo, bộ lọc |
 | `matchmaker.css` | Modal ghép ngẫu nhiên (class `rm-*`) |
+| `tournaments.css` | Giải đôi: tổng quan, bảng xếp hạng, lịch và nhánh loại trực tiếp |
 | `navigation.css`, `calendar.css`, `analytics.css`, `profile.css`, `member-hero.css`, `onboarding.css`, `home-summary.css`, `buttons.css`, `notifications.css` | Theo tên |
 
 **Theme tối-vàng:** nền `#10141b`, chữ `#efe7d2`, nhấn `#d8ae52`. Breakpoint: 860px (sidebar thành drawer), 480px (mobile).
@@ -159,6 +163,7 @@ Khi thêm CSS mới: ưu tiên bỏ vào file đúng chủ đề; nếu là cụ
 - **Person** (`people`): thành viên, `email` khớp email Supabase Auth.
 - **Debt** (`debts`): công nợ tự sinh theo người + kỳ; `unpaid → paid/cancelled`.
 - **PkMatch**: kèo đấu đơn/đôi. `pending → active → completed/cancelled`. Khoá kết quả sau 24h. Xếp hạng bằng Wilson Score.
+- **Tournament**: giải đấu đôi độc lập với PK/Elo. Vòng bảng đấu vòng tròn, thắng 3 điểm; hai đội đầu bảng vào nhánh loại trực tiếp. Admin có thể sửa và hệ thống ghi lịch sử thay đổi.
 
 Cách ly dữ liệu giữa các nhóm: `periods.group_id` + `people.group_id`; các bảng con (debts, sessions) liên kết qua period nên tự động cách ly theo nhóm.
 

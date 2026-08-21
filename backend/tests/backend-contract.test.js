@@ -34,7 +34,8 @@ test("app mounts all active backend modules", () => {
     "/api/club-fund-transactions",
     "/api/dashboard",
     "/api/payments",
-    "/api/admin-users"
+    "/api/admin-users",
+    "/api/tournaments"
   ];
 
   for (const mount of mounts) {

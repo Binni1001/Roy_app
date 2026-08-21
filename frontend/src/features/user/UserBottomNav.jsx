@@ -5,6 +5,7 @@ const TAB_ICONS = {
   profile:  '👤',
   schedule: '📅',
   pk:       '⚔️',
+  tournaments: '🏆',
   debts:    '💸',
   history:  '📜',
   payment:  '💳',
@@ -12,7 +13,7 @@ const TAB_ICONS = {
 
 export function UserBottomNav({ activeTab, setActiveTab, pkBadge = 0, debtCount = 0 }) {
   // Show only the most important tabs in the bottom bar (max 5)
-  const primary = ['home', 'schedule', 'pk', 'debts', 'profile']
+  const primary = ['home', 'schedule', 'pk', 'tournaments', 'debts']
   const visibleTabs = userTabs.filter(([key]) => primary.includes(key))
 
   return (

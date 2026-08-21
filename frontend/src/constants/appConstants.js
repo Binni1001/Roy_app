@@ -25,6 +25,7 @@ export const adminTabs = [
   ['debts', 'Công nợ', 'Khoản cần thu'],
   ['fund', 'Sổ quỹ', 'Thu chi câu lạc bộ'],
   ['pk', 'Đấu trường', 'Quản lý kèo PK'],
+  ['tournaments', 'Đấu giải', 'Vòng bảng và vòng trong'],
 ]
 
 export const userTabs = [
@@ -32,6 +33,7 @@ export const userTabs = [
   ['profile', 'Sửa hồ sơ'],
   ['schedule', 'Lịch đánh'],
   ['pk', 'Đấu trường'],
+  ['tournaments', 'Đấu giải'],
   ['debts', 'Công nợ'],
   ['history', 'Lịch sử'],
   ['payment', 'Thanh toán'],
