@@ -34,6 +34,23 @@ export function TournamentStandings({ groups = [] }) {
             ))}</tbody>
           </table>
         </div>
+        <div className="tour-standing-mobile" aria-label={`Bảng xếp hạng ${activeGroup.name}`}>
+          {activeGroup.standings.map((row) => (
+            <article className={row.qualified ? 'qualified' : ''} key={row.team_id}>
+              <div className="tour-standing-mobile-rank"><span>{row.rank}</span><small>{row.qualified ? 'Đi tiếp' : 'Hạng'}</small></div>
+              <TeamAvatarStack team={row.team} size="small" />
+              <div className="tour-standing-mobile-team"><strong>{row.team?.name}</strong><small>{row.team?.seed ? `Hạt giống ${row.team.seed}` : `${row.played} trận đã đấu`}</small></div>
+              <b className="tour-standing-points">{row.standing_points}</b>
+              <dl>
+                <div><dt>Trận</dt><dd>{row.played}</dd></div>
+                <div><dt>Thắng</dt><dd>{row.wins}</dd></div>
+                <div><dt>Thua</dt><dd>{row.losses}</dd></div>
+                <div><dt>Hiệu số hiệp</dt><dd><Difference value={row.set_difference} /></dd></div>
+                <div><dt>Hiệu số điểm</dt><dd><Difference value={row.point_difference} /></dd></div>
+              </dl>
+            </article>
+          ))}
+        </div>
       </div>
     </section>
   )
