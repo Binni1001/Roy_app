@@ -533,6 +533,7 @@ declare
   v_needed integer;
   v_winner uuid;
   v_loser uuid;
+  v_source_loser uuid;
   v_old_winner uuid;
   v_descendants uuid[] := '{}';
   v_source record;
@@ -668,14 +669,14 @@ begin
       end if;
       if v_source.loser_next_match_id is not null and v_source.loser_next_match_id = any(v_descendants) then
         if v_source.winner_team_id = v_source.team1_id then
-          v_loser := v_source.team2_id;
+          v_source_loser := v_source.team2_id;
         else
-          v_loser := v_source.team1_id;
+          v_source_loser := v_source.team1_id;
         end if;
         if v_source.loser_next_slot = 1 then
-          update public.tournament_matches set team1_id = v_loser where id = v_source.loser_next_match_id;
+          update public.tournament_matches set team1_id = v_source_loser where id = v_source.loser_next_match_id;
         else
-          update public.tournament_matches set team2_id = v_loser where id = v_source.loser_next_match_id;
+          update public.tournament_matches set team2_id = v_source_loser where id = v_source.loser_next_match_id;
         end if;
       end if;
     end loop;

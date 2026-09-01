@@ -112,3 +112,16 @@ test("admin can reorder group matches without changing their results", () => {
   assert.doesNotMatch(migration, /set_scores\s*=/);
   assert.doesNotMatch(migration, /winner_team_id\s*=/);
 });
+
+test("replaying a completed semifinal does not overwrite the current match loser", () => {
+  const baseMigration = read("../supabase/20260821_doubles_tournaments.sql");
+  const fixMigration = read("../supabase/20260901_fix_tournament_semifinal_loser.sql");
+
+  for (const migration of [baseMigration, fixMigration]) {
+    assert.match(migration, /v_source_loser uuid/);
+    assert.match(migration, /v_source_loser := v_source\.team2_id/);
+    assert.match(migration, /team1_id = v_source_loser/);
+    assert.match(migration, /team2_id = v_source_loser/);
+    assert.doesNotMatch(migration, /v_loser := v_source\.team[12]_id/);
+  }
+});
