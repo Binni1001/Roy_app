@@ -1758,6 +1758,20 @@ button.danger:hover {
   border-bottom: 1px solid rgba(216, 174, 82, .18);
 }
 
+.debt-date {
+  color: #c7d0dc;
+  white-space: nowrap;
+}
+
+.debt-content {
+  display: block;
+  min-width: 190px;
+  max-width: 360px;
+  color: #efe7d2;
+  line-height: 1.45;
+  overflow-wrap: anywhere;
+}
+
 /* ── Remind debt button ── */
 .btn-remind {
   background: rgba(216,174,82,.12);

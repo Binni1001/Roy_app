@@ -1,17 +1,19 @@
 import { useState } from 'react'
 import { api } from '../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, SimpleTable, StatusBadge } from './common'
-import { formatDate, formatMoney } from '../utils/appUtils'
+import { formatDate, formatDebtDescription, formatMoney } from '../utils/appUtils'
 
 export function DebtTable({ debts, admin = false, showPeriod = false, submit }) {
   const columns = [
     ['person.full_name', 'Người'],
+    ['created_at', 'Ngày phát sinh', (value) => <time className="debt-date" dateTime={value || undefined}>{formatDate(value)}</time>],
+    ['description', 'Nội dung', (value, debt) => <span className="debt-content">{formatDebtDescription(debt)}</span>],
     ['debt_type', 'Loại', (v) => <StatusBadge value={v} />],
     ['amount', 'Số tiền', formatMoney],
     ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
   ]
 
-  if (showPeriod) columns.splice(1, 0, ['period.name', 'Kỳ phát sinh'])
+  if (showPeriod) columns.splice(3, 0, ['period.name', 'Kỳ phát sinh'])
 
   return (
     <SimpleTable
