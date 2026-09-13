@@ -38,20 +38,20 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
 
         <Panel
           title="Thành viên trong kỳ"
-          action={<button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId}>+ Thêm vào kỳ</button>}
+          action={<button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId || members.some((member) => member.shuttle_settled)}>+ Thêm vào kỳ</button>}
         >
           <SimpleTable
             rows={members}
             columns={[
               ['person.full_name', 'Người'],
               ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
-              ['exempt_shuttle', 'Miễn cầu', (v) => v ? <span style={{ color: '#d8ae52', fontSize: 12 }}>✓ Miễn</span> : '—'],
+              ['shuttle_discount_percent', 'Miễn cầu', (v) => v ? `Miễn ${v}%` : 'Không miễn'],
               ['period.fixed_member_fee', 'Phí cố định kỳ', formatMoney],
             ]}
             actions={(member) => (
               <ActionGroup>
                 <button onClick={() => setEditingMember(member)}>Sửa</button>
-                <button className="danger" onClick={() => setDeletingMember(member)}>Xóa</button>
+                <button className="danger" disabled={member.shuttle_settled} onClick={() => setDeletingMember(member)}>Xóa</button>
               </ActionGroup>
             )}
           />
@@ -130,9 +130,9 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
         <MemberEditModal
           member={editingMember}
           onClose={() => setEditingMember(null)}
-          onSubmit={(payload) => {
-            submit(() => api.periodMembers.update(editingMember.id, payload), 'Đã cập nhật thành viên trong kỳ.')
-            setEditingMember(null)
+          onSubmit={async (payload) => {
+            const result = await submit(() => api.periodMembers.update(editingMember.id, payload), 'Đã cập nhật thành viên trong kỳ.')
+            if (result) setEditingMember(null)
           }}
         />
       )}
@@ -293,29 +293,31 @@ function PeriodEditModal({ period, onClose, onSubmit }) {
 
 function MemberEditModal({ member, onClose, onSubmit }) {
   const [status, setStatus] = useState(member.status || 'fixed')
-  const [exemptShuttle, setExemptShuttle] = useState(member.exempt_shuttle || false)
+  const [discount, setDiscount] = useState(member.shuttle_discount_percent ?? (member.exempt_shuttle ? 100 : 0))
+  const locked = member.shuttle_settled
 
   return (
     <Modal title="Sửa thành viên trong kỳ" onClose={onClose}>
-      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit({ status, exempt_shuttle: exemptShuttle }) }}>
+      <form className="form" onSubmit={(e) => { e.preventDefault(); onSubmit({ status, shuttle_discount_percent: discount }) }}>
         <label>Trạng thái
-          <select value={status} onChange={(e) => setStatus(e.target.value)}>
+          <select value={status} disabled={locked} onChange={(e) => setStatus(e.target.value)}>
             <option value="fixed">Đánh cố định</option>
             <option value="guest">Đánh vãng lai</option>
             <option value="inactive">Tạm nghỉ</option>
           </select>
         </label>
         {status === 'fixed' && (
-          <label style={{ flexDirection: 'row', alignItems: 'center', gap: 10, cursor: 'pointer' }}>
-            <input
-              type="checkbox"
-              checked={exemptShuttle}
-              onChange={(e) => setExemptShuttle(e.target.checked)}
-              style={{ width: 16, height: 16, accentColor: '#d8ae52' }}
-            />
-            Miễn tiền cầu cuối kỳ
+          <label>Miễn tiền cầu cuối kỳ
+            <select value={discount} disabled={locked} onChange={(e) => setDiscount(Number(e.target.value))}>
+              <option value={0}>Không miễn (0%)</option>
+              <option value={50}>Miễn 50%</option>
+              <option value={100}>Miễn hoàn toàn (100%)</option>
+            </select>
           </label>
         )}
+        <p className="hint">{locked
+          ? 'Kỳ đã chốt chia cầu, mức miễn và trạng thái đã được khóa.'
+          : 'Giảm từ phần chia đều ban đầu. Phần được giảm chia cho người không miễn; tiền đã ứng mua cầu vẫn được ghi nhận đầy đủ.'}</p>
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>

@@ -1,6 +1,9 @@
 import { supabase } from "../../config/supabase.js";
 
 export const shuttleSettlementsRepository = {
+  async previewPeriod(periodId) {
+    return supabase.rpc("preview_shuttle_period", { p_period_id: periodId });
+  },
   async settlePeriod(periodId) {
     return await supabase.rpc("settle_shuttle_period", {
       p_period_id: periodId

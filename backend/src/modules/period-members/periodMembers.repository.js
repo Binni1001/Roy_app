@@ -1,6 +1,10 @@
 import { supabase } from "../../config/supabase.js";
 
 export const periodMembersRepository = {
+  async getSettlement(periodId) {
+    return supabase.from("shuttle_settlement_runs").select("period_id")
+      .eq("period_id", periodId).maybeSingle();
+  },
   async getByPeriodId(periodId) {
     return await supabase
       .from("period_members")

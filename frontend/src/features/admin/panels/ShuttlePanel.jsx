@@ -15,7 +15,18 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
         <Panel title="Chốt chia cầu">
           <div className="stack">
             <p>Tiền tạm tính: {formatMoney(settlementPreview?.total_shuttle_amount || 0)}</p>
-            <button onClick={() => submit(() => api.shuttleSettlements.settle(selectedPeriodId), 'Đã chốt chia cầu.')}>Chốt chia cầu</button>
+            {settlementPreview?.error && <p className="form-error">{settlementPreview.error}</p>}
+            <button disabled={!settlementPreview || Boolean(settlementPreview.error) || settlementPreview.settled} onClick={() => submit(() => api.shuttleSettlements.settle(selectedPeriodId), 'Đã chốt chia cầu.')}>
+              {settlementPreview?.settled ? 'Đã chốt chia cầu' : 'Chốt chia cầu'}
+            </button>
+            <p className="hint">Chia đều trước, giảm theo mức miễn rồi phân bổ phần giảm cho người không miễn. Chênh lệch làm tròn được phân bổ từng đồng để khớp tổng tiền.</p>
+            <SimpleTable rows={settlementPreview?.details || []} columns={[
+              ['person.full_name', 'Thành viên'],
+              ['shuttle_discount_percent', 'Miễn', (v) => `${v ?? 0}%`],
+              ['paid_for_shuttles', 'Đã ứng mua cầu', formatMoney],
+              ['shuttle_share', 'Phần phải chịu', formatMoney],
+              ['net_amount', 'Được nhận (+) / Cần đóng (−)', formatMoney],
+            ]} />
           </div>
         </Panel>
         <Panel

@@ -60,7 +60,7 @@ export function useAdminPortalData(role) {
         api.balances.list().catch(() => []),
         api.fund.byPeriod(periodId).catch(() => []),
         api.shuttleExpenses.byPeriod(periodId).catch(() => []),
-        api.shuttleSettlements.preview(periodId).catch(() => null),
+        api.shuttleSettlements.preview(periodId).catch((error) => ({ error: errorText(error) })),
       ])
       setData((current) => ({
         ...current,

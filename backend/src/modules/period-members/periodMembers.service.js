@@ -14,7 +14,13 @@ export const periodMembersService = {
       throw new Error(error.message);
     }
 
-    return data;
+    const settlement = await periodMembersRepository.getSettlement(periodId);
+    if (settlement.error) throw new Error(settlement.error.message);
+    return data.map((member) => ({
+      ...member,
+      shuttle_settled: Boolean(settlement.data),
+      shuttle_discount_percent: member.shuttle_discount_percent ?? (member.exempt_shuttle ? 100 : 0)
+    }));
   },
 
   async getPeriodMemberById(id) {
@@ -28,7 +34,10 @@ export const periodMembersService = {
       throw new Error(error.message);
     }
 
-    return data;
+    const settlement = await periodMembersRepository.getSettlement(data.period_id);
+    if (settlement.error) throw new Error(settlement.error.message);
+    return { ...data, shuttle_settled: Boolean(settlement.data),
+      shuttle_discount_percent: data.shuttle_discount_percent ?? (data.exempt_shuttle ? 100 : 0) };
   },
 
   async createPeriodMember(payload = {}) {
@@ -280,6 +289,16 @@ export const periodMembersService = {
     }
 
     const currentMember = currentResult.data;
+    const settlement = await periodMembersRepository.getSettlement(currentMember.period_id);
+    if (settlement.error) throw new Error(settlement.error.message);
+    if (settlement.data && (
+      (payload.status !== undefined && payload.status !== currentMember.status) ||
+      (payload.shuttle_discount_percent !== undefined &&
+        payload.shuttle_discount_percent !== currentMember.shuttle_discount_percent) ||
+      (payload.exempt_shuttle !== undefined && payload.exempt_shuttle !== currentMember.exempt_shuttle)
+    )) {
+      throw new Error("Kỳ đã chốt chia cầu, không thể đổi mức miễn hoặc trạng thái");
+    }
 
     const oldStatus = currentMember.status;
     const newStatus = payload.status ?? oldStatus;
@@ -302,6 +321,13 @@ export const periodMembersService = {
 
     if (payload.exempt_shuttle !== undefined) {
       updateData.exempt_shuttle = Boolean(payload.exempt_shuttle);
+    }
+    if (payload.shuttle_discount_percent !== undefined) {
+      if (![0, 50, 100].includes(payload.shuttle_discount_percent)) {
+        throw new Error("Mức miễn cầu chỉ được là 0%, 50% hoặc 100%");
+      }
+      updateData.shuttle_discount_percent = payload.shuttle_discount_percent;
+      updateData.exempt_shuttle = payload.shuttle_discount_percent === 100;
     }
 
     const { data, error } = await periodMembersRepository.update(id, updateData);
@@ -402,6 +428,9 @@ export const periodMembersService = {
     const memberResult = await periodMembersRepository.getById(id);
     const member = memberResult?.data;
     if (member) {
+      const settlement = await periodMembersRepository.getSettlement(member.period_id);
+      if (settlement.error) throw new Error(settlement.error.message);
+      if (settlement.data) throw new Error("Kỳ đã chốt chia cầu, không thể xóa thành viên");
       const personId = member.person_id || member.person?.id;
       const periodId = member.period_id || member.period?.id;
       if (personId && periodId) {
