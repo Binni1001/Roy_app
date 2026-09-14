@@ -193,6 +193,8 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
 
 function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
   const [personId, setPersonId] = useState('')
+  const activePeople = people.filter((person) => person.status === 'active')
+  const canDeposit = activePeople.some((person) => person.id === personId)
   const [selectedDebtIds, setSelectedDebtIds] = useState([])
   const [amount, setAmount] = useState('')
   const [description, setDescription] = useState('')
@@ -224,7 +226,7 @@ function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
     <Modal title="Nộp quỹ" onClose={onClose}>
       <form className="form" onSubmit={(e) => {
         e.preventDefault()
-        if (!personId) return
+        if (!canDeposit) return
         onSubmit({
           person_id: personId,
           period_id: periodId,
@@ -234,15 +236,15 @@ function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
         })
       }}>
         <label>Người nộp
-          <select value={personId} onChange={(e) => selectPerson(e.target.value)} required>
+          <select value={canDeposit ? personId : ''} onChange={(e) => selectPerson(e.target.value)} required>
             <option value="">-- Chọn người --</option>
-            {people.map((p) => (
+            {activePeople.map((p) => (
               <option key={p.id} value={p.id}>{p.full_name || p.nickname}</option>
             ))}
           </select>
         </label>
 
-        {personId && (
+        {canDeposit && (
           <div className="stack">
             <strong>Khoản nợ chưa thu của người này</strong>
             {personDebts.length === 0 && <p className="empty">Không có khoản nợ chưa thu.</p>}
@@ -263,7 +265,7 @@ function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
         <Input label="Nội dung" value={description} onChange={setDescription} />
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit">Nộp quỹ</button>
+        <button type="submit" disabled={!canDeposit}>Nộp quỹ</button>
         </footer>
       </form>
     </Modal>

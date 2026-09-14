@@ -26,9 +26,11 @@ export function DebtsPanel({
   const [showCustomDebt, setShowCustomDebt] = useState(false)
   const [remindToast, setRemindToast] = useState('')
   const [remindToastType, setRemindToastType] = useState('success')
+  const activePeople = people.filter((person) => person.status === 'active')
+  const canActOnPerson = activePeople.some((person) => person.id === selectedPersonId)
 
   async function handleRemindDebt() {
-    if (!selectedPersonId) return
+    if (!canActOnPerson) return
     try {
       await api.notifications.remindDebt(selectedPersonId)
       setRemindToastType('success')
@@ -67,17 +69,17 @@ export function DebtsPanel({
         title="Tạo thanh toán"
         action={
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
-            <SelectPeople people={people} value={selectedPersonId} onChange={setSelectedPersonId} />
+            <SelectPeople people={activePeople} value={canActOnPerson ? selectedPersonId : ''} onChange={setSelectedPersonId} />
             <button
-              onClick={() => createPayment(selectedPersonId)}
-              disabled={!selectedPersonId || selectedPersonDebts.length === 0}
+              onClick={() => canActOnPerson && createPayment(selectedPersonId)}
+              disabled={!canActOnPerson || selectedPersonDebts.length === 0}
             >
               Thanh toán tất cả · {formatMoney(selectedPersonTotal)}
             </button>
             <button
               className="btn-remind"
               onClick={handleRemindDebt}
-              disabled={!selectedPersonId}
+              disabled={!canActOnPerson}
               title="Gửi thông báo nhắc nợ đến chuông 🔔 của người này"
             >
               🔔 Nhắc nợ
@@ -88,7 +90,9 @@ export function DebtsPanel({
         <div className="debt-payment-summary">
           <strong>Một QR cho toàn bộ công nợ</strong>
           <span>
-            Người đang chọn có {selectedPersonDebts.length} khoản chưa trả, tổng cộng {formatMoney(selectedPersonTotal)}.
+            {canActOnPerson
+              ? `Người đang chọn có ${selectedPersonDebts.length} khoản chưa trả, tổng cộng ${formatMoney(selectedPersonTotal)}.`
+              : 'Chọn thành viên đang hoạt động để thanh toán hoặc gửi nhắc nợ.'}
           </span>
         </div>
         <StatusLine text={remindToast} type={remindToastType} />
