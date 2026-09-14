@@ -11,7 +11,7 @@ Mẫu sử dụng Node, lockfile và Actions tham khảo [GitHub — Building an
 
 ## Phần cần cấu hình/xác minh trên dịch vụ
 
-1. Xem lần chạy đầu tại tab Actions, bảo đảm cả hai job đạt trên Linux từ checkout sạch.
+1. Đã xác minh lần chạy đầu: [run 34831556102](https://github.com/Binni1001/Roy_app/actions/runs/34831556102), commit `3f9e801`, cả `Backend tests` và `Frontend checks` đều thành công; mọi bước npm đạt trên Node 22/Linux từ checkout sạch.
 2. Cấu hình ruleset/branch protection cho `main`: bắt buộc hai status checks trên. Kiểm tra quyền bypass và đường push trực tiếp đang dùng trước khi bật để không vô tình chặn quy trình của chủ dự án.
 3. Vercel Git integration có thể deploy song song với Actions; có workflow **không đồng nghĩa deploy đã bị chặn khi test lỗi**. Cần chốt quy trình PR/merge hoặc cơ chế deployment gate của cả hai project và kiểm tra với một bản test thất bại.
 4. Database baseline/migration ordering gate bổ sung sau DB-001; hiện không tuyên bố các migration dựng được database trống.

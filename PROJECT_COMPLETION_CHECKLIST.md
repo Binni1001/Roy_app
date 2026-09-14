@@ -49,7 +49,7 @@ Các checkbox ở đây xác nhận **code và kiểm thử local**, không thay
 | 14/09/2026 | Kế hoạch | Giữ nguyên backlog chi tiết; bổ sung đợt thực hiện và quy tắc tick/commit | Bắt đầu SEC-001; không đánh dấu các mục chưa kiểm tra |
 | 14/09/2026 | SEC-001 | 56 test backend, 23 test frontend; lint/build đạt. Audit Auth chỉ đọc: 19 tài khoản, 1 owner tin cậy, không có quản trị phụ thuộc role cũ. Chi tiết: `docs/AUTH_ROLE_SECURITY.md` | Smoke test sau deploy; không tự đổi quyền tài khoản |
 | 14/09/2026 | SEC-001 / Git | Code, test và checklist đã push `origin/main`, commit `614ee63` | Chưa ghi nhận nghiệm thu đăng nhập sau deploy |
-| 14/09/2026 | OPS-001 / CI | Bổ sung workflow `Quality checks`: Node 22, lockfile, hai job backend/frontend, không dùng secret production | Chờ lần chạy GitHub; còn branch/deploy gate và kiểm tra migration |
+| 14/09/2026 | OPS-001 / CI | Commit `3f9e801`; [GitHub Actions #34831556102](https://github.com/Binni1001/Roy_app/actions/runs/34831556102) thành công. Đã kiểm tra từng bước của hai job: `npm ci`, backend syntax/tests, frontend lint/tests/build | Còn branch/deploy gate và kiểm tra migration; không đánh dấu toàn bộ OPS-001 Done |
 
 ## Mục tiêu hoàn thiện
 
@@ -192,14 +192,15 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 ### OPS-001 — Thêm CI quality gate
 
-**Trạng thái:** In progress. Đã viết workflow, các lệnh tương ứng đã đạt local; chỉ tick các mục chạy CI sau khi có bằng chứng từ GitHub Actions. Xem `docs/QUALITY_CHECKS.md`.
+**Trạng thái:** In review. Hai job của workflow đã thành công trên GitHub Actions, Node 22/Linux, commit `3f9e801`, run `34831556102`. Xem `docs/QUALITY_CHECKS.md`. Chưa nghiệm thu chặn merge/deploy và migration gate.
 
-- [ ] CI cài dependency bằng lockfile.
-- [ ] Chạy backend tests.
-- [ ] Chạy frontend tests.
-- [ ] Chạy frontend lint.
-- [ ] Chạy frontend production build.
-- [ ] Kiểm tra syntax/import backend.
+- [x] CI cài dependency bằng lockfile (`npm ci` cho cả hai package).
+- [x] Chạy backend tests trên CI.
+- [x] Chạy frontend tests trên CI.
+- [x] Chạy frontend lint trên CI.
+- [x] Chạy frontend production build trên CI.
+- [x] Kiểm tra syntax backend và các import được thực thi trong test trên CI.
+- [ ] Smoke-load toàn bộ backend với cấu hình test để kiểm tra các import chưa được test thực thi.
 - [ ] Kiểm tra migration ordering/baseline.
 - [ ] Chặn merge/deploy nếu bất kỳ bước nào thất bại.
 
@@ -458,10 +459,10 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 ### Application
 
-- [ ] Backend tests pass.
-- [ ] Frontend tests pass.
-- [ ] Lint pass.
-- [ ] Production build pass.
+- [x] Backend tests pass — CI commit `3f9e801`, run `34831556102`; cần chạy lại cho release sau.
+- [x] Frontend tests pass — cùng lần chạy CI trên.
+- [x] Lint pass — cùng lần chạy CI trên.
+- [x] Production build pass — cùng lần chạy CI trên (build kiểm thử, không phải xác nhận deployment).
 - [ ] E2E critical flows pass trên staging.
 
 ### Operations
