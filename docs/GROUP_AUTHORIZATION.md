@@ -63,6 +63,8 @@ Test local dùng Auth/DB mock, không mời hay sửa tài khoản thật:
 
 Còn nghiệm thu trên môi trường test sau deploy: owner phân công/thu hồi một admin thử; admin A không truy cập B; thử thay ID/body; kiểm tra session đang mở và retry; kiểm tra UI lưu lỗi giữ modal. Không tạo hoặc đổi quyền admin thật chỉ để làm test.
 
+Bằng chứng 14/09/2026: 69 test backend, 25 test frontend, lint/build đạt. Commit `c2d1961` đã push; [CI run 34834736485](https://github.com/Binni1001/Roy_app/actions/runs/34834736485) thành công cả hai job. Audit Auth chỉ đọc trước rollout: 1 owner, 0 admin; không thay đổi quyền/phân công thực tế.
+
 ## Tiếp theo
 
 1. Period Members, Sessions/Guests: scope kỳ và toàn bộ người tham gia, đồng bộ debt không vượt nhóm.

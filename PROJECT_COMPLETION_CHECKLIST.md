@@ -51,6 +51,7 @@ Các checkbox ở đây xác nhận **code và kiểm thử local**, không thay
 | 14/09/2026 | SEC-001 / Git | Code, test và checklist đã push `origin/main`, commit `614ee63` | Chưa ghi nhận nghiệm thu đăng nhập sau deploy |
 | 14/09/2026 | OPS-001 / CI | Commit `3f9e801`; [GitHub Actions #34831556102](https://github.com/Binni1001/Roy_app/actions/runs/34831556102) thành công. Đã kiểm tra từng bước của hai job: `npm ci`, backend syntax/tests, frontend lint/tests/build | Còn branch/deploy gate và kiểm tra migration; không đánh dấu toàn bộ OPS-001 Done |
 | 14/09/2026 | SEC-002/003 — đợt 2.1 | Chủ dự án xác nhận mô hình quyền. Code phân công nhóm, scope People/Periods, bảo vệ replay; 69 test backend + 25 test frontend, lint/build đạt local. Chi tiết `docs/GROUP_AUTHORIZATION.md` | Chưa nghiệm thu deploy. Module chưa scope tạm khóa với admin; owner vẫn dùng. Không đánh dấu SEC-003 hoàn tất |
+| 14/09/2026 | SEC-002/003 — CI | Đã push `c2d1961`; [CI #34834736485](https://github.com/Binni1001/Roy_app/actions/runs/34834736485) có cả `Backend tests` và `Frontend checks` thành công. Audit trước push: 1 owner, 0 admin; không thay quyền thật | Còn nghiệm thu giao diện/deploy và triển khai các module tiếp theo |
 
 ## Mục tiêu hoàn thiện
 
@@ -105,6 +106,7 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 - [x] Chốt global role từ `app_metadata`; `person_groups.member_role` là membership, không cấp quyền quản trị toàn cục.
 - [x] Chốt mô hình: owner toàn hệ thống; admin chỉ `app_metadata.managed_group_ids` do owner phân công.
 - [x] Thêm API owner-only và giao diện phân công/thu hồi nhóm cho admin; kiểm thử local.
+- [x] CI kiểm thử bản phân công và scope đợt 2.1 thành công — commit `c2d1961`, run `34834736485`.
 - [ ] Viết ma trận quyền owner/admin/member cho từng endpoint.
 - [x] Ghi ma trận cho các endpoint đợt 2.1 tại `docs/GROUP_AUTHORIZATION.md`; các module còn lại chưa mở cho admin.
 - [x] Owner xem People/Periods toàn hệ thống không cần membership; tạo dữ liệu cần nhóm đích rõ, chỉ fallback khi có một nhóm.
