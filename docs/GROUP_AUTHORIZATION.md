@@ -67,6 +67,16 @@ Bằng chứng 14/09/2026: 69 test backend, 25 test frontend, lint/build đạt.
 
 ## Tiếp theo
 
+### Bổ sung 15/09/2026 — scope API buổi cầu, chưa mở lại màn hình admin
+
+- Danh sách buổi cầu lọc ngay trong database qua nhóm của kỳ; không tải mọi buổi rồi lọc ở frontend. Owner vẫn xem toàn hệ thống.
+- GET theo kỳ kiểm tra membership nhóm đang hoạt động của user; ID kỳ nhóm khác bị từ chối. Tra cứu ID buổi, tạo, sửa và xóa đều kiểm tra kỳ thực tế trước khi trả dữ liệu hoặc ghi.
+- Sửa buổi chỉ trong kỳ đang mở, không cho chuyển kỳ qua payload. Số cầu phải là số nguyên không âm trong giới hạn an toàn.
+- Guard kiểm tra entity trước idempotency replay đã bổ sung buổi cầu để chuẩn bị mở admin. **Rollout guard vẫn khóa module này với admin** cho tới khi kiểm tra đồng bộ khách/thành viên và UI. Test service quyền admin không có nghĩa endpoint admin đã mở.
+- `backend/tests/session-group-scope.test.js`: 8 test hành vi bổ sung, dùng DB mock; chưa thay dữ liệu thật và chưa nghiệm thu truy vấn trên Supabase triển khai.
+
+Phụ thuộc tài chính tìm thấy khi rà luồng: `supabase/20260814_automatic_balance_offset.sql` có trigger `debts_auto_offset_after_insert` gọi `offset_person_unpaid_debts`, xử lý số dư/công nợ theo người trên toàn hệ thống. Vì vậy tạo nợ tháng/khách cần xử lý FIN/DB trước khi mở cho admin theo nhóm; chỉ kiểm tra ID ở API là chưa đủ. Các luồng sửa/xóa khách còn cần kiểm tra giữ lịch sử nợ đã trả và tính nguyên khối. Không sửa trigger hay chạy migration production trong đợt này.
+
 1. Period Members, Sessions/Guests: scope kỳ và toàn bộ người tham gia, đồng bộ debt không vượt nhóm.
 2. Debts/Payments/Fund/Shuttle/Balances: đặc biệt sổ dư theo người đang tổng hợp toàn hệ thống; cần phân tách truy vấn và giao dịch theo nhóm trước khi mở cho admin.
 3. PK/Tournament/Notifications/Dashboard: kiểm tra list, entity con, quyền participant và tổng hợp.

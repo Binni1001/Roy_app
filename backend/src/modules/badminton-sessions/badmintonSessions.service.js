@@ -1,15 +1,19 @@
 import { badmintonSessionsRepository } from "./badmintonSessions.repository.js";
+import { periodsService } from "../periods/periods.service.js";
+import { groupAccess } from "../../services/groupAccess.js";
 import { validateDateNotFuture, validateText, assertValid } from "../../utils/validators.js";
 
 export const badmintonSessionsService = {
-  async getAll() {
-    const { data, error } = await badmintonSessionsRepository.getAll();
+  async getAll(authUser) {
+    const groups = await groupAccess.visibleGroupIds(authUser);
+    const { data, error } = await badmintonSessionsRepository.getAll(groups);
     if (error) throw new Error(error.message);
     return data;
   },
 
-  async getByPeriod(periodId) {
+  async getByPeriod(periodId, authUser) {
     if (!periodId) throw new Error("Period ID khong duoc de trong");
+    await periodsService.getAccessiblePeriod(periodId, authUser);
 
     const { data, error } =
       await badmintonSessionsRepository.getByPeriodId(periodId);
@@ -18,21 +22,21 @@ export const badmintonSessionsService = {
     return data;
   },
 
-  async getById(id) {
+  async getById(id, authUser, write = false) {
     if (!id) throw new Error("Session ID khong duoc de trong");
 
     const { data, error } = await badmintonSessionsRepository.getById(id);
     if (error) throw new Error(error.message);
+    await periodsService.getAccessiblePeriod(data.period_id, authUser, write);
     return data;
   },
 
-  async create(payload = {}) {
+  async create(payload = {}, authUser) {
     if (!payload.period_id) throw new Error("Period ID khong duoc de trong");
     if (!payload.play_date) throw new Error("Ngay danh khong duoc de trong");
 
     // FIX #5: check period status trước khi tạo buổi tập
-    const { data: period, error: periodError } = await badmintonSessionsRepository.getPeriodById(payload.period_id);
-    if (periodError) throw new Error(periodError.message);
+    const period = await periodsService.getAccessiblePeriod(payload.period_id, authUser, true);
     if (period.status === "closed") {
       throw new Error("Ky nay da dong, khong the them buoi tap moi");
     }
@@ -44,10 +48,10 @@ export const badmintonSessionsService = {
     assertValid(validateDateNotFuture(payload.play_date, "Ngay danh"));
     assertValid(validateText(payload.note, "Ghi chu", 500));
 
-    const shuttleUsedCount = Number(payload.shuttle_used_count || 0);
+    const shuttleUsedCount = Number(payload.shuttle_used_count ?? 0);
 
-    if (shuttleUsedCount < 0) {
-      throw new Error("So cau da dung khong duoc nho hon 0");
+    if (!Number.isSafeInteger(shuttleUsedCount) || shuttleUsedCount < 0) {
+      throw new Error("So cau da dung phai la so nguyen khong am hop le");
     }
 
     const { data, error } = await badmintonSessionsRepository.create({
@@ -61,8 +65,14 @@ export const badmintonSessionsService = {
     return data;
   },
 
-  async update(id, payload = {}) {
+  async update(id, payload = {}, authUser) {
     if (!id) throw new Error("Session ID khong duoc de trong");
+    const current = await this.getById(id, authUser, true);
+    const period = await periodsService.getAccessiblePeriod(current.period_id, authUser, true);
+    if (period.status !== "open") throw new Error("Chi duoc sua buoi danh trong ky dang mo");
+    if (payload.period_id !== undefined && payload.period_id !== current.period_id) {
+      throw new Error("Khong duoc chuyen buoi danh sang ky khac");
+    }
 
     const updateData = {
       updated_at: new Date().toISOString()
@@ -74,8 +84,8 @@ export const badmintonSessionsService = {
     }
 
     if (payload.shuttle_used_count !== undefined) {
-      if (Number(payload.shuttle_used_count) < 0) {
-        throw new Error("So cau da dung khong duoc nho hon 0");
+      if (!Number.isSafeInteger(Number(payload.shuttle_used_count)) || Number(payload.shuttle_used_count) < 0) {
+        throw new Error("So cau da dung phai la so nguyen khong am hop le");
       }
 
       updateData.shuttle_used_count = Number(payload.shuttle_used_count);
@@ -95,8 +105,9 @@ export const badmintonSessionsService = {
     return data;
   },
 
-  async remove(id) {
+  async remove(id, authUser) {
     if (!id) throw new Error("Session ID khong duoc de trong");
+    await this.getById(id, authUser, true);
 
     const { data, error } = await badmintonSessionsRepository.remove(id);
     if (error) throw new Error(error.message);

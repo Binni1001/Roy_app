@@ -1,14 +1,16 @@
 import { supabase } from "../../config/supabase.js";
 
 export const badmintonSessionsRepository = {
-  async getAll() {
-    return await supabase
+  async getAll(groupIds) {
+    if (groupIds !== null && !groupIds.length) return { data: [], error: null };
+    let query = supabase
       .from("badminton_sessions")
       .select(`
         *,
-        period:periods(id, name, start_date, end_date, status)
-      `)
-      .order("play_date", { ascending: false });
+        period:periods${groupIds === null ? "" : "!inner"}(id, group_id, name, start_date, end_date, status)
+      `);
+    if (groupIds !== null) query = query.in("period.group_id", groupIds);
+    return await query.order("play_date", { ascending: false });
   },
 
   async getByPeriodId(periodId) {

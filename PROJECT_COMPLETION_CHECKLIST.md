@@ -44,8 +44,16 @@ Các checkbox ở đây xác nhận **code và kiểm thử local**, không thay
 
 ### Nhật ký thực hiện
 
+Tiến độ con đợt 2 (cập nhật 15/09/2026):
+
+- [x] Bổ sung scope API buổi cầu theo nhóm của kỳ, kiểm tra ID thực tế trước ghi/replay; test mock hai nhóm đạt.
+- [x] Chặn sửa buổi ở kỳ không mở, chuyển kỳ qua payload và số cầu không hợp lệ; kiểm thử hồi quy local đạt.
+- [ ] Hoàn thiện scope thành viên/khách, UI admin và nghiệm thu Supabase; chưa mở lại module buổi cầu cho admin.
+- [ ] Tách bù trừ số dư/công nợ theo nhóm trước khi mở các thao tác phát sinh nợ cho admin (trigger hiện hoạt động theo người toàn hệ thống).
+
 | Ngày | Hạng mục | Kết quả / bằng chứng | Còn lại |
 |---|---|---|---|
+| 15/09/2026 | SEC-003 — buổi cầu | 8 test mới; tổng 77 test backend và syntax check đạt local. Scope query/ID, validation kỳ/số cầu; chi tiết `docs/GROUP_AUTHORIZATION.md` | Chưa mở module admin; còn scope khách/thành viên, phụ thuộc bù trừ tài chính và nghiệm thu DB/deploy |
 | 14/09/2026 | Kế hoạch | Giữ nguyên backlog chi tiết; bổ sung đợt thực hiện và quy tắc tick/commit | Bắt đầu SEC-001; không đánh dấu các mục chưa kiểm tra |
 | 14/09/2026 | SEC-001 | 56 test backend, 23 test frontend; lint/build đạt. Audit Auth chỉ đọc: 19 tài khoản, 1 owner tin cậy, không có quản trị phụ thuộc role cũ. Chi tiết: `docs/AUTH_ROLE_SECURITY.md` | Smoke test sau deploy; không tự đổi quyền tài khoản |
 | 14/09/2026 | SEC-001 / Git | Code, test và checklist đã push `origin/main`, commit `614ee63` | Chưa ghi nhận nghiệm thu đăng nhập sau deploy |
