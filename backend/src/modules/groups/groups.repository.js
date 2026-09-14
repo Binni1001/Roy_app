@@ -1,6 +1,12 @@
 import { supabase } from '../../config/supabase.js'
 
 export const groupsRepository = {
+  async getVisibleGroups(groupIds) {
+    if (Array.isArray(groupIds) && !groupIds.length) return { data: [], error: null }
+    let query = supabase.from('groups').select('*').order('name')
+    if (groupIds !== null) query = query.in('id', groupIds)
+    return query
+  },
   // ── Groups ──────────────────────────────────────────────
   async getByInviteCode(code) {
     return supabase

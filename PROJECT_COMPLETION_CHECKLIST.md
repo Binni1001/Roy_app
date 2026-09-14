@@ -22,7 +22,7 @@
 | Đợt | Công việc theo thứ tự | Điều kiện bắt đầu / đầu ra nghiệm thu | Trạng thái |
 |---|---|---|---|
 | 1 | SEC-001: nguồn role an toàn; đồng bộ frontend, backend, quản lý admin và bộ lọc người chơi | Code/test local và audit Auth đã đạt; còn smoke test sau deploy | In review |
-| 2 | SEC-002 → SEC-003: ma trận quyền và cách ly nhóm | Chốt quyền global/group trước khi sửa; test hai nhóm với cả list, đọc theo ID và ghi dữ liệu | Not started |
+| 2 | SEC-002 → SEC-003: ma trận quyền và cách ly nhóm | Đã chốt owner toàn hệ thống/admin được phân công; đợt 2.1 có phân công, People/Periods và test hai nhóm; còn các module khác | In progress |
 | 3 | SEC-004 → SEC-005 → PK-001: avatar, dữ liệu công khai và quyền PK | Test không sửa avatar người khác; response tối thiểu; kiểm tra creator/participant/group | Not started |
 | 4 | DB-001 → FIN-001: database tái tạo được và giao dịch tài chính nguyên khối | Có schema được xác minh; dựng DB thử; lỗi giữa luồng không ghi dở; retry không nhân đôi | Not started |
 | 5 | FIN-002 + FE-002: PayOS và màn hình kết quả thanh toán | Có môi trường test; webhook, hủy, đối soát, redirect được kiểm thử; không tạo thanh toán thật để thử | Not started |
@@ -50,6 +50,7 @@ Các checkbox ở đây xác nhận **code và kiểm thử local**, không thay
 | 14/09/2026 | SEC-001 | 56 test backend, 23 test frontend; lint/build đạt. Audit Auth chỉ đọc: 19 tài khoản, 1 owner tin cậy, không có quản trị phụ thuộc role cũ. Chi tiết: `docs/AUTH_ROLE_SECURITY.md` | Smoke test sau deploy; không tự đổi quyền tài khoản |
 | 14/09/2026 | SEC-001 / Git | Code, test và checklist đã push `origin/main`, commit `614ee63` | Chưa ghi nhận nghiệm thu đăng nhập sau deploy |
 | 14/09/2026 | OPS-001 / CI | Commit `3f9e801`; [GitHub Actions #34831556102](https://github.com/Binni1001/Roy_app/actions/runs/34831556102) thành công. Đã kiểm tra từng bước của hai job: `npm ci`, backend syntax/tests, frontend lint/tests/build | Còn branch/deploy gate và kiểm tra migration; không đánh dấu toàn bộ OPS-001 Done |
+| 14/09/2026 | SEC-002/003 — đợt 2.1 | Chủ dự án xác nhận mô hình quyền. Code phân công nhóm, scope People/Periods, bảo vệ replay; 69 test backend + 25 test frontend, lint/build đạt local. Chi tiết `docs/GROUP_AUTHORIZATION.md` | Chưa nghiệm thu deploy. Module chưa scope tạm khóa với admin; owner vẫn dùng. Không đánh dấu SEC-003 hoàn tất |
 
 ## Mục tiêu hoàn thiện
 
@@ -101,11 +102,14 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 ### SEC-002 — Thiết kế nguồn sự thật cho authorization theo group
 
-- [ ] Quyết định global role và `person_groups.member_role` có ý nghĩa chính xác gì.
-- [ ] Chọn mô hình quyền: global platform role, group-local role, hoặc kết hợp có quy tắc rõ ràng.
+- [x] Chốt global role từ `app_metadata`; `person_groups.member_role` là membership, không cấp quyền quản trị toàn cục.
+- [x] Chốt mô hình: owner toàn hệ thống; admin chỉ `app_metadata.managed_group_ids` do owner phân công.
+- [x] Thêm API owner-only và giao diện phân công/thu hồi nhóm cho admin; kiểm thử local.
 - [ ] Viết ma trận quyền owner/admin/member cho từng endpoint.
-- [ ] Xác định cách xử lý legacy owner chưa có person/membership.
+- [x] Ghi ma trận cho các endpoint đợt 2.1 tại `docs/GROUP_AUTHORIZATION.md`; các module còn lại chưa mở cho admin.
+- [x] Owner xem People/Periods toàn hệ thống không cần membership; tạo dữ liệu cần nhóm đích rõ, chỉ fallback khi có một nhóm.
 - [ ] Không bật lại multi-group trước khi ma trận quyền được triển khai và test.
+- [ ] Nghiệm thu toàn bộ endpoint và trải nghiệm owner chọn nhóm; chưa đóng SEC-002 chỉ vì có nguồn phân công.
 
 **Definition of Done:** Mọi request đều xác định được actor, active group, group membership và quyền thao tác từ một quy tắc duy nhất.
 
@@ -115,12 +119,13 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 ### SEC-003 — Chống cross-group IDOR
 
-- [ ] Tạo helper/middleware resolve active group từ authenticated person.
-- [ ] Tạo guard xác minh `personId` thuộc group đang quản lý.
-- [ ] Tạo guard xác minh `periodId` thuộc active group.
+- [x] Tạo helper resolve quyền từ authenticated Auth user; nhóm đang chọn không tự cấp quyền.
+- [x] Tạo guard xác minh `personId` trong phạm vi quản lý; hồ sơ dùng chung ngoài phạm vi chỉ owner được sửa.
+- [x] Tạo guard xác minh nhóm của `periodId` được phép truy cập.
 - [ ] Tạo guard xác minh entity con thuộc period/group hợp lệ.
-- [ ] Áp dụng guard cho People get/update/delete/password.
-- [ ] Áp dụng guard cho Periods và Period Members.
+- [x] Áp dụng guard cho People list/get/create/update/delete/password; kiểm thử local hai nhóm.
+- [x] Áp dụng scope cho Periods list/get/create/update; kiểm thử local hai nhóm.
+- [ ] Áp dụng scope cho Period Members (chưa mở cho admin trong đợt 2.1).
 - [ ] Áp dụng guard cho Sessions và Guest Attendances.
 - [ ] Áp dụng guard cho Debts, Balances và Balance Offsets.
 - [ ] Áp dụng guard cho Payments và payment cancellation.
@@ -128,6 +133,7 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 - [ ] Áp dụng guard cho PK matches, leaderboard và people picker.
 - [ ] Xác minh Tournament luôn scope theo managed group ở cả list và entity-by-ID.
 - [ ] Thêm test với ít nhất hai group: admin nhóm A không đọc/sửa dữ liệu nhóm B.
+- [x] Có test hai nhóm cho People/Periods và phân công; chưa thay thế test toàn bộ các module còn lại.
 
 **Definition of Done:** Không endpoint nào có thể vượt group chỉ bằng cách thay UUID trên request.
 
@@ -486,7 +492,7 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 | Milestone | Owner | Target date | Status | Ghi chú |
 |---|---|---|---|---|
-| Security foundation | Codex + chủ dự án nghiệm thu | Theo đợt | In progress | SEC-001 code/test + audit đạt; SEC-002 cần chốt phạm vi quyền nhóm |
+| Security foundation | Codex + chủ dự án nghiệm thu | Theo đợt | In progress | SEC-001 code/test + audit đạt; SEC-002 đã chốt quyền, SEC-003 hoàn tất code/test phần People/Periods; các module khác còn mở trong checklist |
 | Database & finance safety |  |  | Not started |  |
 | Stable API & testing | Codex + chủ dự án nghiệm thu | Theo đợt | In progress | Bổ sung CI sớm; API/E2E chưa hoàn tất |
 | Product completeness |  |  | Not started |  |

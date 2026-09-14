@@ -1,11 +1,14 @@
 import { supabase } from "../../config/supabase.js";
 
 export const periodsRepository = {
-  async getAll() {
-    return await supabase
+  async getAll(groupIds = null) {
+    if (Array.isArray(groupIds) && groupIds.length === 0) return { data: [], error: null };
+    let query = supabase
       .from("periods")
       .select("*")
       .order("start_date", { ascending: false });
+    if (groupIds !== null) query = query.in("group_id", groupIds);
+    return await query;
   },
 
   async getById(id) {

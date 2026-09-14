@@ -7,6 +7,16 @@ function handleError(error, res) {
 }
 
 export const adminUsersController = {
+  async groups(req, res) {
+    try { res.json(await adminUsersService.listGroups()); }
+    catch (error) { handleError(error, res); }
+  },
+
+  async assignGroups(req, res) {
+    try { res.json(await adminUsersService.assignGroups(req.params.id, req.body.group_ids)); }
+    catch (error) { handleError(error, res); }
+  },
+
   async list(req, res) {
     try {
       const users = await adminUsersService.listAdmins();

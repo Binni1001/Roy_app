@@ -7,7 +7,7 @@ const router = express.Router()
 // Auth — mọi user đã đăng nhập
 router.post('/verify-code',                      requireAuth, groupsController.verifyCode)
 router.get('/mine',                              requireAuth, groupsController.mine)
-router.post('/create',                           requireAuth, groupsController.create)
+router.post('/create',                           requireAuth, requireOwner, groupsController.create)
 router.post('/join',                             requireAuth, groupsController.join)
 router.put('/switch/:groupId',                   requireAuth, groupsController.switchGroup)
 router.delete('/:groupId/leave',                 requireAuth, groupsController.leaveGroup)

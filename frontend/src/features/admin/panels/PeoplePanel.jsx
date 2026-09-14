@@ -6,7 +6,7 @@ import { emptyPerson } from '../../../constants/appConstants'
 import { initials } from '../../../utils/appUtils'
 import MembersPanel from './MembersPanel'
 
-export function PeoplePanel({ people, submit, role }) {
+export function PeoplePanel({ people, submit, role, groupId }) {
   const [showAdd, setShowAdd] = useState(false)
   const [editingPerson, setEditingPerson] = useState(null)
   const [deletingPerson, setDeletingPerson] = useState(null)
@@ -113,12 +113,12 @@ export function PeoplePanel({ people, submit, role }) {
               ['status', 'Trạng thái', (v) => <StatusBadge value={v} />],
               ['note', 'Ghi chú'],
             ]}
-            actions={(person) => (
+            actions={(person) => role === 'owner' || person.can_manage_profile === true ? (
               <ActionGroup>
                 <button onClick={() => setEditingPerson(person)}>Sửa</button>
                 <button className="danger" onClick={() => setDeletingPerson(person)}>Xóa</button>
               </ActionGroup>
-            )}
+            ) : <small className="muted">Chỉ owner được sửa hồ sơ này</small>}
           />
         </Panel>
       </section>
@@ -127,7 +127,7 @@ export function PeoplePanel({ people, submit, role }) {
         <PersonAddModal
           onClose={() => setShowAdd(false)}
           onSubmit={(payload) => {
-            submit(() => api.people.create(payload), 'Đã thêm người mới.')
+            submit(() => api.people.create({ ...payload, group_id: groupId }), 'Đã thêm người mới.')
             setShowAdd(false)
           }}
         />
@@ -135,6 +135,7 @@ export function PeoplePanel({ people, submit, role }) {
 
       {editingPerson && (
         <PersonEditModal
+          role={role}
           person={editingPerson}
           onClose={() => setEditingPerson(null)}
           onSubmit={async (payload, avatarFile, newPassword) => {
@@ -202,7 +203,7 @@ function PersonAddModal({ onClose, onSubmit }) {
   )
 }
 
-function PersonEditModal({ person, onClose, onSubmit }) {
+function PersonEditModal({ person, role, onClose, onSubmit }) {
   const [draft, setDraft] = useState({
     full_name: person.full_name || '',
     phone: person.phone || '',
@@ -234,7 +235,8 @@ function PersonEditModal({ person, onClose, onSubmit }) {
         const payload = person.status === 'pending'
           ? Object.fromEntries(Object.entries(draft).filter(([key]) => key !== 'status'))
           : draft
-        onSubmit(payload, avatarFile || null, newPassword || null)
+        const safePayload = role === 'owner' ? payload : Object.fromEntries(Object.entries(payload).filter(([key]) => key !== 'email'))
+        onSubmit(safePayload, avatarFile || null, newPassword || null)
       }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 8, marginBottom: 8 }}>
           <div
@@ -252,7 +254,9 @@ function PersonEditModal({ person, onClose, onSubmit }) {
 
         <Input label="Họ tên" value={draft.full_name} onChange={(v) => update('full_name', v)} required />
         <Input label="Điện thoại" value={draft.phone} onChange={(v) => update('phone', v)} />
-        <Input label="Thư điện tử" value={draft.email} onChange={(v) => update('email', v)} />
+        {role === 'owner'
+          ? <Input label="Thư điện tử" value={draft.email} onChange={(v) => update('email', v)} />
+          : <label>Thư điện tử (chỉ owner được đổi)<input value={draft.email} readOnly /></label>}
         <label>Hình thức chơi
           <select value={draft.attendance_type} onChange={(e) => update('attendance_type', e.target.value)}>
             <option value="fixed">Đánh cố định</option>

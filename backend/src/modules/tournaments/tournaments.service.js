@@ -251,7 +251,7 @@ async function unwrap(result, fallback = "Không thể xử lý dữ liệu gi�
 export const tournamentsService = {
   async resolveGroup(authUser, authRole) {
     const person = await peopleService.getPersonByAuthUser(authUser);
-    const groupId = await groupsService.resolveManagedGroupId(person, authRole);
+    const groupId = await groupsService.resolveManagedGroupId(person, authRole, authUser);
     if (!groupId) throw httpError("Tài khoản chưa có nhóm đang hoạt động.", 403);
     return { person, groupId };
   },

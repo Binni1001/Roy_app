@@ -1,5 +1,7 @@
 import { groupsService } from './groups.service.js'
 import { peopleService } from '../people/people.service.js'
+import { groupAccess } from '../../services/groupAccess.js'
+import { groupsRepository } from './groups.repository.js'
 
 async function getActivePerson(req) {
   return peopleService.getPersonByAuthUser(req.authUser)
@@ -7,7 +9,7 @@ async function getActivePerson(req) {
 
 async function getManagedGroupId(req) {
   const person = await getActivePerson(req)
-  return groupsService.resolveManagedGroupId(person, req.authRole)
+  return groupsService.resolveManagedGroupId(person, req.authRole, req.authUser, req.query.group_id)
 }
 
 export const groupsController = {
@@ -24,6 +26,12 @@ export const groupsController = {
   // GET /api/groups/mine — danh sách nhóm của tôi
   async mine(req, res) {
     try {
+      if (['owner', 'admin'].includes(req.authRole)) {
+        const ids = await groupAccess.visibleGroupIds(req.authUser)
+        const { data, error } = await groupsRepository.getVisibleGroups(ids)
+        if (error) throw error
+        return res.json((data || []).map((group) => ({ ...group, membership_status: 'active', member_role: req.authRole })))
+      }
       const person = await getActivePerson(req)
       if (!person) return res.status(404).json({ message: 'Chưa có hồ sơ.' })
       const groups = await groupsService.getMyGroups(person.id)
@@ -85,7 +93,7 @@ export const groupsController = {
     try {
       const person = await getActivePerson(req)
       if (!person) return res.status(404).json({ message: 'Chưa có hồ sơ.' })
-      const group = await groupsService.switchGroup(person.id, req.params.groupId)
+      const group = await groupsService.switchGroup(person.id, req.params.groupId, req.authUser)
       res.json({ message: `Đã chuyển sang nhóm "${group.name}".`, group })
     } catch (err) {
       res.status(err.statusCode || 400).json({ message: err.message })

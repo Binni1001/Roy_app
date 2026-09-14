@@ -190,6 +190,8 @@ export const api = {
   },
 
   adminUsers: {
+    groups: () => request({ url: '/api/admin-users/groups' }),
+    assignGroups: (id, groupIds) => request({ url: `/api/admin-users/${id}/groups`, method: 'PUT', data: { group_ids: groupIds } }),
     list: () => request({ url: '/api/admin-users' }),
     invite: (payload) =>
       request({ url: '/api/admin-users', method: 'POST', data: payload }),

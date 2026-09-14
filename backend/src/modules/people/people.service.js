@@ -1,5 +1,8 @@
 import { peopleRepository } from "./people.repository.js";
 import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
+import { canReadManagedPerson, canEditManagedPerson, canManageGroup } from "../../utils/groupAuthorization.js";
+import { getUserRole } from "../../utils/roles.js";
+import { groupAccess, groupError } from "../../services/groupAccess.js";
 import { groupsService } from "../groups/groups.service.js";
 import {
   validateFullName,
@@ -17,27 +20,56 @@ const allowedGenders = ["male", "female", "other"];
 
 export const peopleService = {
   async getAllPeople(user, authRole) {
-    const manager = await this.getPersonByAuthUser(user);
-    if (!manager) {
-      throw Object.assign(new Error("Không tìm thấy hồ sơ của tài khoản quản trị"), { statusCode: 403 });
-    }
-
-    const groupId = await groupsService.resolveManagedGroupId(manager, authRole);
-    if (!groupId) {
-      throw Object.assign(new Error("Tài khoản chưa có nhóm đang hoạt động"), { statusCode: 403 });
-    }
-
+    if (!["owner", "admin"].includes(authRole)) throw groupError();
     const { data, error } = await peopleRepository.getAll();
 
     if (error) {
       throw new Error(error.message);
     }
 
-    return annotateActivityPeople((data || []).filter((person) =>
-      person.group_id === groupId ||
-      person.active_group_id === groupId ||
-      (person.person_groups || []).some((membership) => membership.group_id === groupId)
-    ));
+    const visible = await annotateActivityPeople((data || []).filter((person) => canReadManagedPerson(user, person)));
+    return visible.map((person) => this.managedView(user, person));
+  },
+
+  managedView(user, person) {
+    const editable = canEditManagedPerson(user, person);
+    if (getUserRole(user) === "owner") return { ...person, can_manage_profile: editable };
+    return { ...person, can_manage_profile: editable,
+      group_id: canManageGroup(user, person.group_id) ? person.group_id : null,
+      active_group_id: canManageGroup(user, person.active_group_id) ? person.active_group_id : null,
+      person_groups: (person.person_groups || []).filter((membership) => canManageGroup(user, membership.group_id)) };
+  },
+
+  async assertManagedPerson(user, id, write = false) {
+    const person = await this.getPersonById(id);
+    if (!canReadManagedPerson(user, person)) throw groupError();
+    const [annotated] = await annotateActivityPeople([person]);
+    if (write && !canEditManagedPerson(user, annotated)) {
+      throw groupError("Chỉ owner được sửa hồ sơ quản trị hoặc hồ sơ dùng chung với nhóm ngoài phạm vi của bạn.");
+    }
+    return annotated;
+  },
+
+  async getManagedPerson(user, id) {
+    return this.managedView(user, await this.assertManagedPerson(user, id));
+  },
+
+  async updateManagedPerson(user, id, payload) {
+    await this.assertManagedPerson(user, id, true);
+    if (getUserRole(user) !== "owner" && ["email", "group_id", "active_group_id"].some((key) => payload[key] !== undefined)) {
+      throw groupError("Chỉ owner được thay đổi email liên kết hoặc nhóm của hồ sơ.");
+    }
+    return this.updatePerson(id, payload);
+  },
+
+  async updateManagedPassword(user, id, password) {
+    await this.assertManagedPerson(user, id, true);
+    return this.updatePersonPassword(id, password);
+  },
+
+  async deleteManagedPerson(user, id) {
+    await this.assertManagedPerson(user, id, true);
+    return this.deletePerson(id);
   },
 
   async getPersonById(id) {
@@ -179,13 +211,10 @@ export const peopleService = {
 
   async createManagedPerson(user, authRole, payload) {
     const manager = await this.getPersonByAuthUser(user);
-    if (!manager) {
-      throw Object.assign(new Error("Không tìm thấy hồ sơ của tài khoản quản trị"), { statusCode: 403 });
-    }
-
-    const groupId = await groupsService.resolveManagedGroupId(manager, authRole);
-    if (!groupId) {
-      throw Object.assign(new Error("Tài khoản chưa có nhóm đang hoạt động"), { statusCode: 403 });
+    const groupId = await groupAccess.resolveManagedGroup(user, manager, payload.group_id);
+    if (getUserRole(user) !== "owner") {
+      const [candidate] = await annotateActivityPeople([{ email: payload.email, status: "active" }]);
+      if (candidate.account_role !== "user") throw groupError("Chỉ owner được tạo hồ sơ liên kết với tài khoản quản trị.");
     }
 
     const status = payload.status || "active";

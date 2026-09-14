@@ -3,9 +3,11 @@ import { api } from '../../../api/client'
 import { ActionGroup, Input, Modal, Panel, SimpleTable } from '../../../components/common'
 import { DebtTable, FundTable } from '../../../components/finance'
 import { displayRole, formatMoney, initials } from '../../../utils/appUtils'
+import AdminGroupAssignment from './AdminGroupAssignment'
 
 export function DashboardPanel({ summary, debts, fund, members, sessions, shuttleExpenses, role, adminUsers, adminUserForm, setForm, submit }) {
   const [showInvite, setShowInvite] = useState(false)
+  const [assigningAdmin, setAssigningAdmin] = useState(null)
 
   const fixedMembers = members.filter((m) => m.status === 'fixed')
   const memberPaymentStatus = fixedMembers.map((m) => {
@@ -100,10 +102,12 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
           >
             <SimpleTable
               rows={adminUsers}
-              columns={[['email', 'Thư điện tử'], ['role', 'Quyền', displayRole], ['full_name', 'Tên hiển thị']]}
+              columns={[['email', 'Thư điện tử'], ['role', 'Quyền', displayRole], ['full_name', 'Tên hiển thị'],
+                ['managed_group_ids', 'Nhóm được phân công', (ids, user) => user.role === 'owner' ? 'Toàn hệ thống' : `${ids?.length || 0} nhóm`]]}
               actions={(user) =>
                 user.role !== 'owner' ? (
                   <ActionGroup>
+                    <button onClick={() => setAssigningAdmin(user)}>Phân công nhóm</button>
                     <button
                       className="danger"
                       onClick={() => submit(() => api.adminUsers.revoke(user.id), 'Đã thu hồi quyền quản trị viên.')}
@@ -118,6 +122,8 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
         </section>
       )}
 
+      {assigningAdmin && <AdminGroupAssignment user={assigningAdmin} onClose={() => setAssigningAdmin(null)} submit={submit} />}
+
       {showInvite && (
         <Modal title="Mời quản trị viên" onClose={() => setShowInvite(false)}>
           <form className="form" onSubmit={(e) => {
@@ -128,6 +134,7 @@ export function DashboardPanel({ summary, debts, fund, members, sessions, shuttl
           }}>
             <Input label="Thư điện tử quản trị viên" value={adminUserForm.email} onChange={(v) => setForm('adminUser', { email: v })} required />
             <Input label="Tên hiển thị" value={adminUserForm.full_name} onChange={(v) => setForm('adminUser', { full_name: v })} />
+            <p className="muted">Sau khi mời, dùng “Phân công nhóm” để cấp phạm vi quản lý. Admin chưa được phân công không có quyền quản lý nhóm.</p>
             <footer className="modal-actions">
               <button type="button" onClick={() => setShowInvite(false)}>Hủy</button>
               <button type="submit">Mời làm quản trị viên</button>

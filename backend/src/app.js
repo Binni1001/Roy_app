@@ -11,6 +11,8 @@ import {
 import { idempotencyMiddleware } from "./middleware/idempotency.js";
 import { requireAuth } from "./middleware/auth.js";
 import { activityStatusGuard } from "./middleware/activityStatusDb.js";
+import { adminScopeRollout } from "./middleware/adminScopeRollout.js";
+import { adminResourceScope } from "./middleware/adminResourceScope.js";
 
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
@@ -64,6 +66,8 @@ app.use("/api", (req, res, next) => {
   if (req.method === "POST" && /^\/payments\/payos-webhook\/?$/i.test(req.path)) return next();
   return requireAuth(req, res, next);
 });
+app.use("/api", adminScopeRollout);
+app.use("/api", adminResourceScope);
 app.use("/api", activityStatusGuard);
 app.use("/api", idempotencyMiddleware);
 

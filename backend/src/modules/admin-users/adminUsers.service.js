@@ -1,6 +1,7 @@
 import { supabase } from "../../config/supabase.js";
 import { requireEmail, validateFullName, assertValid } from "../../utils/validators.js";
 import { getUserRole } from "../../utils/roles.js";
+import { assignedGroupIds, isGroupId } from "../../utils/groupAuthorization.js";
 
 const adminRoles = new Set(["owner", "admin"]);
 
@@ -37,6 +38,7 @@ function publicUser(user) {
     id: user.id,
     email: user.email,
     role: getUserRole(user),
+    managed_group_ids: assignedGroupIds(user),
     full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
     created_at: user.created_at,
     last_sign_in_at: user.last_sign_in_at
@@ -53,7 +55,8 @@ async function findUserByEmail(email) {
 async function updateRole(user, role, fullName = "") {
   const appMetadata = {
     ...(user.app_metadata || {}),
-    role
+    role,
+    ...(role === "user" || (role === "admin" && getUserRole(user) !== "admin") ? { managed_group_ids: [] } : {})
   };
   const userMetadata = {
     ...(user.user_metadata || {}),
@@ -73,6 +76,35 @@ async function updateRole(user, role, fullName = "") {
 }
 
 export const adminUsersService = {
+  async listGroups() {
+    const { data, error } = await supabase.from("groups").select("id, name").order("name");
+    if (error) throw error;
+    return data || [];
+  },
+
+  async assignGroups(userId, groupIds) {
+    if (!Array.isArray(groupIds) || groupIds.length > 100 || !groupIds.every(isGroupId)) {
+      throw Object.assign(new Error("Danh sách nhóm không hợp lệ (tối đa 100 nhóm)."), { statusCode: 400 });
+    }
+    const ids = [...new Set(groupIds.map((id) => id.toLowerCase()))];
+    const { data, error } = await supabase.auth.admin.getUserById(userId);
+    if (error) throw error;
+    if (!data?.user) throw Object.assign(new Error("Không tìm thấy tài khoản."), { statusCode: 404 });
+    if (getUserRole(data.user) !== "admin") {
+      throw Object.assign(new Error("Chỉ phân công nhóm cho tài khoản admin; owner quản lý toàn hệ thống."), { statusCode: 400 });
+    }
+    if (ids.length) {
+      const result = await supabase.from("groups").select("id").in("id", ids);
+      if (result.error) throw result.error;
+      if (result.data?.length !== ids.length) throw Object.assign(new Error("Có nhóm không tồn tại."), { statusCode: 400 });
+    }
+    const result = await supabase.auth.admin.updateUserById(userId, {
+      app_metadata: { managed_group_ids: ids }
+    });
+    if (result.error) throw result.error;
+    return publicUser(result.data.user);
+  },
+
   async listAdmins() {
     const users = await listAllUsers();
 

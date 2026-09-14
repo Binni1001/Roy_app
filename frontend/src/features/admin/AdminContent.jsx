@@ -1,6 +1,6 @@
 import { Suspense, lazy } from 'react'
 import { isActivityPerson } from '../../utils/activityEligibility'
-import { SkeletonTable } from '../../components/common'
+import { Panel, SkeletonTable } from '../../components/common'
 import { GROUPS_ENABLED } from '../../config/features'
 
 const DashboardPanel  = lazy(() => import('./panels/DashboardPanel'))
@@ -45,6 +45,13 @@ export function AdminContent(props) {
 
   const submitGlobal = (action, msg) => submit(action, msg, 'global')
 
+  if (role === 'admin' && !['people', 'periods'].includes(activeTab)) {
+    return <Panel title="Phạm vi quản trị theo nhóm">
+      <p>Bạn có thể quản lý Nhân sự và thông tin Kỳ quỹ của các nhóm được owner phân công.</p>
+      <p>Các chức năng còn lại đang chờ hoàn tất kiểm tra cách ly dữ liệu nhóm. Owner vẫn có thể thao tác; đây không phải thông báo quỹ hoặc công nợ bằng 0.</p>
+    </Panel>
+  }
+
   if (activeTab === 'dashboard') {
     return (
       <PanelSuspense>
@@ -83,6 +90,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <PeoplePanel
+          groupId={props.activePeriod?.group_id}
           people={people}
           form={forms.person}
           setForm={setForm}
@@ -97,6 +105,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <PeriodsPanel
+          canManageMembers={role === 'owner'}
           people={people}
           periods={periods}
           members={data.members}

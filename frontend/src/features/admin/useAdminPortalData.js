@@ -42,6 +42,10 @@ export function useAdminPortalData(role) {
   useAutoDismissToast(toast, setToast)
 
   const loadPeriodData = useCallback(async (periodId) => {
+    if (role === 'admin') {
+      setData(defaultData())
+      return
+    }
     try {
       const [
         dashboard,
@@ -76,7 +80,7 @@ export function useAdminPortalData(role) {
     } catch (error) {
       setToast(errorText(error))
     }
-  }, [])
+  }, [role])
 
   const boot = useCallback(async () => {
     setLoading(true)

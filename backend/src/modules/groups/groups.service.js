@@ -1,4 +1,5 @@
 import { groupsRepository } from './groups.repository.js'
+import { groupAccess } from '../../services/groupAccess.js'
 
 const MAX_GROUPS = 3
 
@@ -8,8 +9,12 @@ function generateCode(length = 8) {
 }
 
 export const groupsService = {
-  async resolveManagedGroupId(person, authRole) {
+  async resolveManagedGroupId(person, authRole, authUser, requestedGroupId) {
+    if (authRole === 'admin' || requestedGroupId) {
+      return groupAccess.resolveManagedGroup(authUser, person, requestedGroupId)
+    }
     const profileGroupId = person?.active_group_id || person?.group_id || null
+    if (authRole === 'user' && profileGroupId) await groupAccess.assertGroup(authUser, profileGroupId)
     if (profileGroupId) return profileGroupId
 
     if (authRole === 'owner') {
@@ -141,7 +146,14 @@ export const groupsService = {
     }))
   },
 
-  async switchGroup(personId, groupId) {
+  async switchGroup(personId, groupId, authUser) {
+    if (['owner', 'admin'].includes(authUser?.app_metadata?.role)) {
+      await groupAccess.assertGroup(authUser, groupId, true)
+      const group = await this.getGroupInfo(groupId)
+      const result = await groupsRepository.setActiveGroup(personId, groupId)
+      if (result.error) throw new Error(result.error.message)
+      return group
+    }
     // Kiểm tra người đó có trong nhóm và đã active chưa
     const { data: mem, error } = await groupsRepository.getMembership(personId, groupId)
     if (error) throw new Error(error.message)

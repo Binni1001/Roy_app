@@ -11,7 +11,7 @@ export const peopleRepository = {
   async getById(id) {
     return await supabase
       .from("people")
-      .select("*")
+      .select("*, person_groups(group_id, status, member_role)")
       .eq("id", id)
       .single();
   },

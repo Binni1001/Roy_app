@@ -12,10 +12,10 @@ export const peopleController = {
 
   async getById(req, res) {
     try {
-      const data = await peopleService.getPersonById(req.params.id);
+      const data = await peopleService.getManagedPerson(req.authUser, req.params.id);
       res.json(data);
     } catch (error) {
-      res.status(404).json({ message: error.message });
+      res.status(error.statusCode || 404).json({ message: error.message });
     }
   },
 
@@ -63,31 +63,31 @@ export const peopleController = {
 
   async update(req, res) {
     try {
-      const data = await peopleService.updatePerson(req.params.id, req.body);
+      const data = await peopleService.updateManagedPerson(req.authUser, req.params.id, req.body);
       res.json(data);
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(error.statusCode || 400).json({ message: error.message });
     }
   },
 
   async updatePassword(req, res) {
     try {
-      const data = await peopleService.updatePersonPassword(req.params.id, req.body.password);
+      const data = await peopleService.updateManagedPassword(req.authUser, req.params.id, req.body.password);
       res.json(data);
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(error.statusCode || 400).json({ message: error.message });
     }
   },
 
   async remove(req, res) {
     try {
-      const data = await peopleService.deletePerson(req.params.id);
+      const data = await peopleService.deleteManagedPerson(req.authUser, req.params.id);
       res.json({
         message: "Xoa nguoi choi thanh cong",
         data
       });
     } catch (error) {
-      res.status(400).json({ message: error.message });
+      res.status(error.statusCode || 400).json({ message: error.message });
     }
   }
 };

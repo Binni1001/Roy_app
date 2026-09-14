@@ -175,7 +175,7 @@ test("period creation resolves a safe group for legacy owner accounts", () => {
 
   assert.match(controller, /req\.authUser, req\.authRole/);
   assert.match(service, /requestedGroupId/);
-  assert.match(service, /authRole !== "owner" && requestedGroupId !== profileGroupId/);
+  assert.match(service, /groupAccess\.assertGroup\(authUser, requestedGroupId, true\)/);
   assert.match(service, /getGroupsForOwnerFallback/);
   assert.match(service, /fallbackResult\.data\?\.length === 1/);
   assert.match(repository, /getGroupById/);

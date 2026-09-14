@@ -52,6 +52,26 @@ function response() {
 
 const nextTurn = () => new Promise((resolve) => setImmediate(resolve));
 
+test("changed role or group assignment never replays a previous privileged response", () => {
+  const middleware = createIdempotencyMiddleware();
+  const first = request();
+  first.authRole = "admin";
+  first.authUser = { app_metadata: { managed_group_ids: ["aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa"] } };
+  const firstResponse = response();
+  middleware(first, firstResponse, () => firstResponse.json({ privileged: true }));
+  for (const role of ["admin", "user"]) {
+    const retry = request();
+    retry.authRole = role;
+    retry.authUser = { app_metadata: { managed_group_ids: [] } };
+    const res = response();
+    let checkedAgain = false;
+    middleware(retry, res, () => { checkedAgain = true; res.status(403).json({ denied: true }); });
+    assert.equal(checkedAgain, true);
+    assert.equal(res.statusCode, 403);
+    assert.equal(res.getHeader("Idempotency-Replayed"), undefined);
+  }
+});
+
 test("replays a completed write without executing the handler twice", () => {
   const middleware = createIdempotencyMiddleware({ ttlMs: 1000, maxEntries: 10 });
   const firstResponse = response();

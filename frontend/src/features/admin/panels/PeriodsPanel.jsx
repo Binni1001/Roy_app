@@ -5,7 +5,7 @@ import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable, StatusBadg
 import { emptyPeriod } from '../../../constants/appConstants'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
 
-export function PeriodsPanel({ people, periods, members, periodForm, selectedPeriodId, setForm, submit, submitting }) {
+export function PeriodsPanel({ people, periods, members, periodForm, selectedPeriodId, setForm, submit, submitting, canManageMembers = true }) {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
   const [showAddMember, setShowAddMember] = useState(false)
   const [editingPeriod, setEditingPeriod] = useState(null)
@@ -37,7 +37,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
           />
         </Panel>
 
-        <Panel
+        {canManageMembers ? <Panel
           title="Thành viên trong kỳ"
           action={<button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId || members.some((member) => member.shuttle_settled)}>+ Thêm vào kỳ</button>}
         >
@@ -56,7 +56,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
               </ActionGroup>
             )}
           />
-        </Panel>
+        </Panel> : <p className="muted">Quản lý thành viên trong kỳ đang chờ hoàn tất kiểm tra cách ly nhóm; hiện chỉ owner được thao tác.</p>}
       </section>
 
       {showAddPeriod && (

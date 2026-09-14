@@ -1,4 +1,5 @@
 import { createHash } from "node:crypto";
+import { assignedGroupIds } from "../utils/groupAuthorization.js";
 
 const WRITE_METHODS = new Set(["POST", "PUT", "PATCH", "DELETE"]);
 const DEFAULT_TTL_MS = 5 * 60 * 1000;
@@ -70,7 +71,11 @@ export function createIdempotencyMiddleware({
     const now = Date.now();
     cleanup(now);
 
-    const authScope = hash(req.get("Authorization") || "anonymous");
+    const authScope = hash(JSON.stringify({
+      token: req.get("Authorization") || "anonymous",
+      role: req.authRole || "user",
+      groups: assignedGroupIds(req.authUser).sort()
+    }));
     const storeKey = `${authScope}:${idempotencyKey}`;
     const fingerprint = fingerprintRequest(req);
     const existing = entries.get(storeKey);

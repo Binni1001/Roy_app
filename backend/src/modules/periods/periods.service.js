@@ -1,11 +1,13 @@
 import { periodsRepository } from "./periods.repository.js";
+import { groupAccess } from "../../services/groupAccess.js";
 import { validateText, validateAmount, requireDate, assertValid } from "../../utils/validators.js";
 
 const allowedStatuses = ["draft", "open", "closed"];
 
 export const periodsService = {
-  async getAllPeriods() {
-    const { data, error } = await periodsRepository.getAll();
+  async getAllPeriods(authUser) {
+    const ids = await groupAccess.visibleGroupIds(authUser);
+    const { data, error } = await periodsRepository.getAll(ids);
 
     if (error) {
       throw new Error(error.message);
@@ -22,6 +24,12 @@ export const periodsService = {
     }
 
     return data;
+  },
+
+  async getAccessiblePeriod(id, authUser, write = false) {
+    const period = await this.getPeriodById(id);
+    await groupAccess.assertGroup(authUser, period.group_id, write);
+    return period;
   },
 
   async createPeriod(payload, authUser, authRole = "user") {
@@ -59,9 +67,7 @@ export const periodsService = {
     let groupId = profileGroupId;
 
     if (requestedGroupId) {
-      if (authRole !== "owner" && requestedGroupId !== profileGroupId) {
-        throw new Error("Ban khong co quyen tao ky cho nhom nay");
-      }
+      await groupAccess.assertGroup(authUser, requestedGroupId, true);
 
       const requestedGroup = await periodsRepository.getGroupById(requestedGroupId);
       if (requestedGroup.error) throw new Error(requestedGroup.error.message);
@@ -78,6 +84,7 @@ export const periodsService = {
     }
 
     if (!groupId) throw new Error("Tai khoan chua co nhom dang hoat dong");
+    await groupAccess.assertGroup(authUser, groupId, true);
 
     const { data, error } = await periodsRepository.create({
       name: payload.name.trim(),
