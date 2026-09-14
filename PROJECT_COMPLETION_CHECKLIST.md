@@ -48,6 +48,8 @@ Các checkbox ở đây xác nhận **code và kiểm thử local**, không thay
 |---|---|---|---|
 | 14/09/2026 | Kế hoạch | Giữ nguyên backlog chi tiết; bổ sung đợt thực hiện và quy tắc tick/commit | Bắt đầu SEC-001; không đánh dấu các mục chưa kiểm tra |
 | 14/09/2026 | SEC-001 | 56 test backend, 23 test frontend; lint/build đạt. Audit Auth chỉ đọc: 19 tài khoản, 1 owner tin cậy, không có quản trị phụ thuộc role cũ. Chi tiết: `docs/AUTH_ROLE_SECURITY.md` | Smoke test sau deploy; không tự đổi quyền tài khoản |
+| 14/09/2026 | SEC-001 / Git | Code, test và checklist đã push `origin/main`, commit `614ee63` | Chưa ghi nhận nghiệm thu đăng nhập sau deploy |
+| 14/09/2026 | OPS-001 / CI | Bổ sung workflow `Quality checks`: Node 22, lockfile, hai job backend/frontend, không dùng secret production | Chờ lần chạy GitHub; còn branch/deploy gate và kiểm tra migration |
 
 ## Mục tiêu hoàn thiện
 
@@ -189,6 +191,8 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 - [ ] Có runbook xử lý user đã chuyển tiền nhưng debt chưa cập nhật.
 
 ### OPS-001 — Thêm CI quality gate
+
+**Trạng thái:** In progress. Đã viết workflow, các lệnh tương ứng đã đạt local; chỉ tick các mục chạy CI sau khi có bằng chứng từ GitHub Actions. Xem `docs/QUALITY_CHECKS.md`.
 
 - [ ] CI cài dependency bằng lockfile.
 - [ ] Chạy backend tests.
@@ -481,9 +485,9 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 
 | Milestone | Owner | Target date | Status | Ghi chú |
 |---|---|---|---|---|
-| Security foundation |  |  | Not started |  |
+| Security foundation | Codex + chủ dự án nghiệm thu | Theo đợt | In progress | SEC-001 code/test + audit đạt; SEC-002 cần chốt phạm vi quyền nhóm |
 | Database & finance safety |  |  | Not started |  |
-| Stable API & testing |  |  | Not started |  |
+| Stable API & testing | Codex + chủ dự án nghiệm thu | Theo đợt | In progress | Bổ sung CI sớm; API/E2E chưa hoàn tất |
 | Product completeness |  |  | Not started |  |
 | Release readiness |  |  | Not started |  |
 
