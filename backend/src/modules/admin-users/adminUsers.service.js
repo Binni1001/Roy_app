@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase.js";
 import { requireEmail, validateFullName, assertValid } from "../../utils/validators.js";
+import { getUserRole } from "../../utils/roles.js";
 
 const adminRoles = new Set(["owner", "admin"]);
 
@@ -35,7 +36,7 @@ function publicUser(user) {
   return {
     id: user.id,
     email: user.email,
-    role: user.app_metadata?.role || user.user_metadata?.role || "user",
+    role: getUserRole(user),
     full_name: user.user_metadata?.full_name || user.user_metadata?.name || "",
     created_at: user.created_at,
     last_sign_in_at: user.last_sign_in_at
@@ -76,7 +77,7 @@ export const adminUsersService = {
     const users = await listAllUsers();
 
     return users
-      .filter((user) => adminRoles.has(user.app_metadata?.role || user.user_metadata?.role))
+      .filter((user) => adminRoles.has(getUserRole(user)))
       .map(publicUser);
   },
 
@@ -93,7 +94,7 @@ export const adminUsersService = {
     const existingUser = await findUserByEmail(normalizedEmail);
 
     if (existingUser) {
-      const currentRole = existingUser.app_metadata?.role || existingUser.user_metadata?.role;
+      const currentRole = getUserRole(existingUser);
 
       // Never downgrade the owner account.
       if (currentRole === "owner") {
@@ -111,8 +112,7 @@ export const adminUsersService = {
 
     const { data, error } = await supabase.auth.admin.inviteUserByEmail(normalizedEmail, {
       data: {
-        full_name: fullName,
-        role: "admin"
+        full_name: fullName
       }
     });
 
@@ -153,7 +153,7 @@ export const adminUsersService = {
       throw err;
     }
 
-    const currentRole = user.app_metadata?.role || user.user_metadata?.role;
+    const currentRole = getUserRole(user);
     if (currentRole === "owner") {
       const err = new Error("Khong the thu hoi quyen cua owner");
       err.statusCode = 403;

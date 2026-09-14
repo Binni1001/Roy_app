@@ -1,5 +1,8 @@
 import { supabase } from "../config/supabase.js";
 import { createAccountStatusGuard } from "./accountStatus.js";
+import { getUserRole } from "../utils/roles.js";
+
+export { getUserRole } from "../utils/roles.js";
 
 const accountStatusGuard = createAccountStatusGuard(async (email) => {
   if (!email) throw new Error("Missing account email");
@@ -18,10 +21,6 @@ function readBearerToken(req) {
   }
 
   return token;
-}
-
-export function getUserRole(user) {
-  return user?.app_metadata?.role || user?.user_metadata?.role || "user";
 }
 
 export async function requireAuth(req, res, next) {

@@ -61,11 +61,8 @@ export function errorText(error) {
 }
 
 export function getSessionRole(session) {
-  return (
-    session?.user?.app_metadata?.role ||
-    session?.user?.user_metadata?.role ||
-    'user'
-  )
+  const role = session?.user?.app_metadata?.role
+  return ['user', 'admin', 'owner'].includes(role) ? role : 'user'
 }
 
 export function canOpenAdmin(role) {

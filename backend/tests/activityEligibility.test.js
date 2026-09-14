@@ -19,7 +19,7 @@ test("eligibility uses Auth roles, not names; preserves history and supports off
   ];
   const result = await annotate(people);
   assert.equal(result.length, people.length);
-  assert.deepEqual(result.map((p) => p.activity_eligible), [false, false, true, true, false, false, false]);
+  assert.deepEqual(result.map((p) => p.activity_eligible), [false, false, true, true, true, false, false]);
   assert.equal(people[0].account_role, undefined);
 });
 

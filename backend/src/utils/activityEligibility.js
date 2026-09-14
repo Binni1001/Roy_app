@@ -1,4 +1,6 @@
-// Match the application's existing Auth role precedence. Never infer a role
+import { getUserRole } from "./roles.js";
+
+// Match the application's trusted Auth role. Never infer a role
 // from a person's display name or expose Auth metadata to the browser.
 export function createActivityEligibility(listUsers) {
   return async function annotatePeople(people = []) {
@@ -12,7 +14,7 @@ export function createActivityEligibility(listUsers) {
       if (!Array.isArray(users)) throw new Error("Không thể kiểm tra vai trò tài khoản");
       for (const user of users) {
         if (user.email) roles.set(user.email.trim().toLowerCase(),
-          user.app_metadata?.role || user.user_metadata?.role || "user");
+          getUserRole(user));
       }
       if (users.length < perPage) break;
     }

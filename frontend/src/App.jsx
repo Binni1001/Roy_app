@@ -40,9 +40,9 @@ function App() {
   useEffect(() => {
     let mounted = true
 
-    // Chỉ đổi session state khi user thực sự thay đổi (đăng nhập / đăng xuất /
-    // đổi tài khoản). Bỏ qua TOKEN_REFRESHED / SIGNED_IN / INITIAL_SESSION của
-    // cùng 1 người — các sự kiện này fire khi quay lại tab, nếu set lại sẽ tạo
+    // Chỉ đổi session state khi user hoặc role tin cậy thay đổi.
+    // Bỏ qua TOKEN_REFRESHED / SIGNED_IN / INITIAL_SESSION nếu cả hai không đổi
+    // — các sự kiện này fire khi quay lại tab, nếu set lại sẽ tạo
     // object session mới → remount portal → màn hình loading nhấp nháy.
     const applySession = (nextSession) => {
       if (!mounted) return
@@ -50,7 +50,7 @@ function App() {
         if (prev === undefined) return nextSession ?? null
         const prevId = prev?.user?.id ?? null
         const nextId = nextSession?.user?.id ?? null
-        if (prevId === nextId) return prev
+        if (prevId === nextId && getSessionRole(prev) === getSessionRole(nextSession)) return prev
         return nextSession ?? null
       })
     }
