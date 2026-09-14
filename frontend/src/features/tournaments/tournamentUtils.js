@@ -1,3 +1,5 @@
+import { isActivityPerson } from '../../utils/activityEligibility.js'
+
 export const TOURNAMENT_STATUS = {
   draft: ['Bản nháp', 'draft'],
   group_stage: ['Vòng bảng', 'groups'],
@@ -21,7 +23,7 @@ export function personName(person) {
 }
 
 export function isActiveTournamentMember(person, groupId) {
-  if (!person || person.status !== 'active' || !groupId) return false
+  if (!isActivityPerson(person) || !groupId) return false
   const hasActiveMembership = (person.person_groups || []).some(
     (membership) => membership.group_id === groupId && membership.status === 'active',
   )

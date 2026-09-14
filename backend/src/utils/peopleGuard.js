@@ -1,4 +1,5 @@
 import { supabase } from "../config/supabase.js";
+import { annotateActivityPeople } from "./activityEligibilityDb.js";
 
 // Chan khong cho dung nguoi da nghi (status != "active") vao bat ky hoat dong
 // nao tren web (ky sinh hoat, kèo PK, chi phi cau, cong no, so quy, buoi danh...).
@@ -8,7 +9,7 @@ export async function assertPeopleActive(personIds = []) {
 
   const { data, error } = await supabase
     .from("people")
-    .select("id, full_name, status")
+    .select("id, full_name, status, email")
     .in("id", ids);
 
   if (error) throw new Error(error.message);
@@ -26,5 +27,10 @@ export async function assertPeopleActive(personIds = []) {
   if (inactive.length > 0) {
     const names = inactive.map((p) => p.full_name).join(", ");
     throw new Error(`Khong the thuc hien: nguoi sau da nghi va khong the them vao hoat dong: ${names}`);
+  }
+  const people = await annotateActivityPeople(found);
+  const unavailable = people.filter((person) => !person.activity_eligible);
+  if (unavailable.length) {
+    throw new Error(`Tài khoản quản trị không được tham gia nghiệp vụ người chơi: ${unavailable.map((person) => person.full_name).join(", ")}`);
   }
 }

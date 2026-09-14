@@ -1,4 +1,5 @@
 import { peopleRepository } from "./people.repository.js";
+import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 import { groupsService } from "../groups/groups.service.js";
 import {
   validateFullName,
@@ -32,11 +33,11 @@ export const peopleService = {
       throw new Error(error.message);
     }
 
-    return (data || []).filter((person) =>
+    return annotateActivityPeople((data || []).filter((person) =>
       person.group_id === groupId ||
       person.active_group_id === groupId ||
       (person.person_groups || []).some((membership) => membership.group_id === groupId)
-    );
+    ));
   },
 
   async getPersonById(id) {

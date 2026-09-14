@@ -116,7 +116,7 @@ export const pkMatchesRepository = {
   async getPublicPeople() {
     return supabase
       .from("people")
-      .select("id, full_name, nickname, phone, gender, bio, avatar_url, attendance_type")
+      .select("id, full_name, nickname, phone, gender, bio, avatar_url, attendance_type, email, status")
       .eq("status", "active")
       .order("full_name", { ascending: true });
   },

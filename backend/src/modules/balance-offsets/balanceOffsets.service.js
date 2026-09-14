@@ -1,5 +1,6 @@
 import { balanceOffsetsRepository } from "./balanceOffsets.repository.js";
 import { assertPeopleActive } from "../../utils/peopleGuard.js";
+import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 
 function isMissingRpc(error) {
   return error?.code === "PGRST202" || /function .* does not exist/i.test(error?.message || "");
@@ -10,7 +11,10 @@ export const balanceOffsetsService = {
     const balancesResult = await balanceOffsetsRepository.getPositiveBalances();
     if (balancesResult.error) throw new Error(balancesResult.error.message);
 
-    const positives = balancesResult.data || [];
+    const rows = balancesResult.data || [];
+    const people = await annotateActivityPeople(rows.map((row) => row.person));
+    const eligibleIds = new Set(people.filter((person) => person.activity_eligible).map((person) => person.id));
+    const positives = rows.filter((row) => eligibleIds.has(row.person_id));
     let totalOffset = 0;
     let affectedPeople = 0;
 

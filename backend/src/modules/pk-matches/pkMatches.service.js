@@ -1,5 +1,6 @@
 import { pkMatchesRepository } from "./pkMatches.repository.js";
 import { assertPeopleActive } from "../../utils/peopleGuard.js";
+import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 import { buildSeasonAchievements } from "./pkAchievements.js";
 
 const MATCH_TYPES = new Set(["singles", "doubles"]);
@@ -403,6 +404,11 @@ export const pkMatchesService = {
   async getPublicPeople() {
     const { data, error } = await pkMatchesRepository.getPublicPeople();
     if (error) throw databaseError(error);
-    return data;
+    const people = await annotateActivityPeople(data || []);
+    return people.filter((person) => person.activity_eligible).map((person) => {
+      const result = { ...person };
+      delete result.email;
+      return result;
+    });
   },
 };

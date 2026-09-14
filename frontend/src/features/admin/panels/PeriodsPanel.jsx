@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { isActivityPerson } from '../../../utils/activityEligibility'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable, StatusBadge } from '../../../components/common'
 import { emptyPeriod } from '../../../constants/appConstants'
@@ -160,7 +161,7 @@ function AddMembersModal({ people, members, onClose, onSubmit, submitting }) {
   const existingIds = new Set(members.map((member) => member.person_id || member.person?.id))
   const normalizedQuery = query.trim().toLowerCase()
   const availablePeople = people
-    .filter((person) => person.status === 'active' && !existingIds.has(person.id))
+    .filter((person) => isActivityPerson(person) && !existingIds.has(person.id))
     .filter((person) => {
       if (!normalizedQuery) return true
       return [person.full_name, person.nickname, person.email, person.phone]

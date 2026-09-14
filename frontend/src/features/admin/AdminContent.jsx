@@ -1,4 +1,5 @@
 import { Suspense, lazy } from 'react'
+import { isActivityPerson } from '../../utils/activityEligibility'
 import { SkeletonTable } from '../../components/common'
 import { GROUPS_ENABLED } from '../../config/features'
 
@@ -113,7 +114,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <SessionsPanel
-          people={people.filter((person) => person.status === 'active')}
+          people={people.filter(isActivityPerson)}
           sessions={data.sessions}
           sessionForm={forms.session}
           guestForm={forms.guest}
@@ -129,7 +130,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <ShuttlePanel
-          people={people.filter((person) => person.status === 'active')}
+          people={people.filter(isActivityPerson)}
           expenses={data.shuttleExpenses}
           settlementPreview={data.settlementPreview}
           shuttleForm={forms.shuttle}

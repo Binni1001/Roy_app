@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { isActivityPerson } from '../../../utils/activityEligibility'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable, filterRows } from '../../../components/common'
 import { FundTable } from '../../../components/finance'
@@ -27,7 +28,7 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
     }
 
     return people
-      .filter((person) => person.status === 'active')
+      .filter(isActivityPerson)
       .map((person) => {
         const balanceRow = balancesByPerson.get(person.id)
         const balance = Number(balanceRow?.balance || 0)
@@ -193,7 +194,7 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
 
 function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
   const [personId, setPersonId] = useState('')
-  const activePeople = people.filter((person) => person.status === 'active')
+  const activePeople = people.filter(isActivityPerson)
   const canDeposit = activePeople.some((person) => person.id === personId)
   const [selectedDebtIds, setSelectedDebtIds] = useState([])
   const [amount, setAmount] = useState('')
@@ -337,7 +338,7 @@ function RefundModal({ people, balances = [], periodId, onClose, onSubmit }) {
         .filter((row) => Number(row.balance || 0) > 0)
         .map((row) => row.person_id || row.person?.id),
     )
-    return people.filter((person) => person.status === 'active' && positivePersonIds.has(person.id))
+    return people.filter((person) => isActivityPerson(person) && positivePersonIds.has(person.id))
   }, [balances, people])
 
   const requestedAmount = Number(amount || 0)

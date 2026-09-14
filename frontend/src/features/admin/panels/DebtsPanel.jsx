@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { isActivityPerson } from '../../../utils/activityEligibility'
 import { api } from '../../../api/client'
 import { CheckoutBox, DebtTable } from '../../../components/finance'
 import { Input, Modal, Panel, SearchBox, SelectPeople, StatusLine, filterRows } from '../../../components/common'
@@ -26,7 +27,7 @@ export function DebtsPanel({
   const [showCustomDebt, setShowCustomDebt] = useState(false)
   const [remindToast, setRemindToast] = useState('')
   const [remindToastType, setRemindToastType] = useState('success')
-  const activePeople = people.filter((person) => person.status === 'active')
+  const activePeople = people.filter(isActivityPerson)
   const canActOnPerson = activePeople.some((person) => person.id === selectedPersonId)
 
   async function handleRemindDebt() {
@@ -128,7 +129,7 @@ export function DebtsPanel({
 
       {showCustomDebt && (
         <CustomDebtModal
-          people={people.filter((person) => person.status === 'active')}
+          people={people.filter(isActivityPerson)}
           periodId={selectedPeriodId}
           onClose={() => setShowCustomDebt(false)}
           onSubmit={(payload) => {
