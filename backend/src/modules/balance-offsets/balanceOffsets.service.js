@@ -1,4 +1,5 @@
 import { balanceOffsetsRepository } from "./balanceOffsets.repository.js";
+import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 function isMissingRpc(error) {
   return error?.code === "PGRST202" || /function .* does not exist/i.test(error?.message || "");
@@ -38,6 +39,7 @@ export const balanceOffsetsService = {
 
   async offsetPerson(personId) {
     if (!personId) throw new Error("Person ID khong duoc de trong");
+    await assertPeopleActive([personId]);
 
     const rpcResult = await balanceOffsetsRepository.offsetPerson(personId);
 

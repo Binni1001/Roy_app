@@ -76,13 +76,32 @@ function App() {
   const userId = session?.user?.id ?? null
   useEffect(() => {
     if (!userId) return
+    const onInactive = () => setPerson({ status: 'inactive' })
+    const checkStatus = () => {
+      if (document.visibilityState !== 'visible') return
+      api.people.me().then((data) => setPerson(data ?? null)).catch(() => {})
+    }
+    window.addEventListener('roy:account-inactive', onInactive)
+    window.addEventListener('focus', checkStatus)
+    const timer = window.setInterval(checkStatus, 30000)
+    return () => {
+      window.removeEventListener('roy:account-inactive', onInactive)
+      window.removeEventListener('focus', checkStatus)
+      window.clearInterval(timer)
+    }
+  }, [userId])
+  useEffect(() => {
+    if (!userId) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPerson(undefined)
+    let mounted = true
     api.people.me().then((data) => {
-      setPerson(data ?? null)
-    }).catch(() => {
-      setPerson(null)
+      if (mounted) setPerson(data ?? null)
+    }).catch((error) => {
+      if (mounted) setPerson(error.cause?.response?.data?.code === 'ACCOUNT_INACTIVE'
+        ? { status: 'inactive' } : null)
     })
+    return () => { mounted = false }
   }, [userId, personTick])
 
   if (session === undefined) return <AppLoading />
@@ -102,6 +121,8 @@ function App() {
   async function signOut() {
     await supabase.auth.signOut()
   }
+
+  if (person?.status === 'inactive') return <RejectedScreen />
 
   // Admin/owner bypass toàn bộ group check — vào thẳng portal
   // Ngoại trừ khi đang mở màn hình thêm nhóm

@@ -137,9 +137,9 @@ export function PeoplePanel({ people, submit, role }) {
         <PersonEditModal
           person={editingPerson}
           onClose={() => setEditingPerson(null)}
-          onSubmit={(payload, avatarFile, newPassword) => {
+          onSubmit={async (payload, avatarFile, newPassword) => {
             const id = editingPerson.id
-            submit(async () => {
+            const result = await submit(async () => {
               let avatar_url = payload.avatar_url
               if (avatarFile) {
                 const ext = avatarFile.name.split('.').pop()
@@ -150,10 +150,11 @@ export function PeoplePanel({ people, submit, role }) {
                 const { data: urlData } = supabase.storage.from('avatars').getPublicUrl(path)
                 avatar_url = urlData.publicUrl
               }
-              await api.people.update(id, { ...payload, avatar_url })
+              const updated = await api.people.update(id, { ...payload, avatar_url })
               if (newPassword) await api.people.updatePassword(id, newPassword)
-            }, 'Đã cập nhật người.')
-            setEditingPerson(null)
+              return updated
+            }, 'Đã cập nhật người.', 'global')
+            if (result) setEditingPerson(null)
           }}
         />
       )}

@@ -1,4 +1,13 @@
 import { supabase } from "../config/supabase.js";
+import { createAccountStatusGuard } from "./accountStatus.js";
+
+const accountStatusGuard = createAccountStatusGuard(async (email) => {
+  if (!email) throw new Error("Missing account email");
+  const { data, error } = await supabase.from("people").select("id, status")
+    .eq("email", email.trim().toLowerCase()).maybeSingle();
+  if (error) throw error;
+  return data;
+});
 
 function readBearerToken(req) {
   const header = req.headers.authorization || "";
@@ -16,6 +25,7 @@ export function getUserRole(user) {
 }
 
 export async function requireAuth(req, res, next) {
+  if (req.authChecked) return next();
   const token = readBearerToken(req);
 
   if (!token) {
@@ -36,7 +46,10 @@ export async function requireAuth(req, res, next) {
 
   req.authUser = data.user;
   req.authRole = getUserRole(data.user);
-  next();
+  return accountStatusGuard(req, res, () => {
+    req.authChecked = true;
+    next();
+  });
 }
 
 export function requireOwner(req, res, next) {

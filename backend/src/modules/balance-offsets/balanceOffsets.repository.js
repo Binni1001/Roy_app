@@ -18,7 +18,8 @@ export const balanceOffsetsRepository = {
   async getPositiveBalances() {
     return await supabase
       .from("person_balances")
-      .select("person_id, balance")
+      .select("person_id, balance, person:people!inner(status)")
+      .eq("person.status", "active")
       .gt("balance", 0);
   },
 

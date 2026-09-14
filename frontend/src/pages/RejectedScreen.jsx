@@ -14,12 +14,12 @@ export default function RejectedScreen() {
         </div>
 
         <div className="rejected-icon">🚫</div>
-        <h1 className="invite-title">Tài khoản bị từ chối</h1>
+        <h1 className="invite-title">Tài khoản chưa được phép hoạt động</h1>
         <p className="invite-sub">
-          Yêu cầu của bạn đã bị từ chối hoặc tài khoản đã bị vô hiệu hóa.
+          Tài khoản đã nghỉ hoặc chưa được duyệt. Bạn không thể sử dụng các chức năng trong lúc này.
         </p>
         <p className="pending-hint">
-          Liên hệ trưởng nhóm nếu bạn cho rằng đây là nhầm lẫn.
+          Liên hệ quản trị viên đang hoạt động để được kích hoạt lại. Quy định này áp dụng cả quản trị viên và chủ sở hữu.
         </p>
 
         <button className="invite-signout" onClick={handleSignOut}>

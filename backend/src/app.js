@@ -9,6 +9,8 @@ import {
   writeApiLimiter
 } from "./middleware/security.js";
 import { idempotencyMiddleware } from "./middleware/idempotency.js";
+import { requireAuth } from "./middleware/auth.js";
+import { activityStatusGuard } from "./middleware/activityStatusDb.js";
 
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
@@ -56,6 +58,13 @@ app.use("/api", writeApiLimiter);
 app.use("/api/payments/create-for-person-period", paymentLimiter);
 app.use("/api/payments/:id/cancel", paymentLimiter);
 app.use("/api/payments/payos-webhook", webhookLimiter);
+// Authenticate before replaying cached writes, so an inactive account cannot replay.
+// PayOS callbacks acknowledge money already sent; they are verified by the payment service.
+app.use("/api", (req, res, next) => {
+  if (req.method === "POST" && /^\/payments\/payos-webhook\/?$/i.test(req.path)) return next();
+  return requireAuth(req, res, next);
+});
+app.use("/api", activityStatusGuard);
 app.use("/api", idempotencyMiddleware);
 
 app.use("/api/people", peopleRoutes);

@@ -113,7 +113,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <SessionsPanel
-          people={people}
+          people={people.filter((person) => person.status === 'active')}
           sessions={data.sessions}
           sessionForm={forms.session}
           guestForm={forms.guest}
@@ -129,7 +129,7 @@ export function AdminContent(props) {
     return (
       <PanelSuspense>
         <ShuttlePanel
-          people={people}
+          people={people.filter((person) => person.status === 'active')}
           expenses={data.shuttleExpenses}
           settlementPreview={data.settlementPreview}
           shuttleForm={forms.shuttle}

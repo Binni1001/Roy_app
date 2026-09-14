@@ -124,7 +124,7 @@ export function DebtsPanel({
 
       {showCustomDebt && (
         <CustomDebtModal
-          people={people}
+          people={people.filter((person) => person.status === 'active')}
           periodId={selectedPeriodId}
           onClose={() => setShowCustomDebt(false)}
           onSubmit={(payload) => {

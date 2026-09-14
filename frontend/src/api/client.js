@@ -28,6 +28,9 @@ async function executeRequest(config) {
     const { data } = await http.request(config)
     return data
   } catch (error) {
+    if (error.response?.data?.code === 'ACCOUNT_INACTIVE') {
+      window.dispatchEvent(new Event('roy:account-inactive'))
+    }
     const message =
       error.response?.data?.message ||
       error.response?.data?.error ||
