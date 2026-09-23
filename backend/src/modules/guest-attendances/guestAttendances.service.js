@@ -8,8 +8,8 @@ function buildGuestDebtDescription(session, attendanceId) {
 }
 
 export const guestAttendancesService = {
-  async getAll() {
-    const { data, error } = await guestAttendancesRepository.getAll();
+  async getAll(groupIds) {
+    const { data, error } = await guestAttendancesRepository.getAll(groupIds);
     if (error) throw new Error(error.message);
     return data;
   },
@@ -24,11 +24,11 @@ export const guestAttendancesService = {
     return data;
   },
 
-  async getByPerson(personId) {
+  async getByPerson(personId, groupIds) {
     if (!personId) throw new Error("Person ID khong duoc de trong");
 
     const { data, error } =
-      await guestAttendancesRepository.getByPersonId(personId);
+      await guestAttendancesRepository.getByPersonId(personId, groupIds);
 
     if (error) throw new Error(error.message);
     return data;

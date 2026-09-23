@@ -2,12 +2,14 @@ import { Panel, SimpleTable } from '../../components/common'
 import { CheckoutBox, DebtTable } from '../../components/finance'
 import { SessionCalendar } from '../../components/SessionCalendar'
 import { formatDate, formatMoney } from '../../utils/appUtils'
+import SessionPlanningPanel from '../session-planning/SessionPlanningPanel'
 
-export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, checkout }) {
+export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, checkout, selectedPeriodId }) {
   if (activeTab === 'schedule') {
     return (
       <div className="tab-scene" style={{ '--tab-img': 'url(/images/court.jpg)' }}>
         <section className="grid one">
+          <SessionPlanningPanel key={selectedPeriodId} periodId={selectedPeriodId} />
           <Panel title="📅 Lịch buổi đánh">
             <SessionCalendar sessions={sessions} />
           </Panel>

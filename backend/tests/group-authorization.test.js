@@ -36,7 +36,7 @@ test("viewing preference and local member roles never grant management; shared p
 
 test("unreviewed modules are closed to scoped admins, including reads and deletes", () => {
   for (const method of ["GET", "POST", "PUT", "DELETE"]) {
-    for (const path of ["/debts", "/balance-offsets/all", "/PAYMENTS/x/cancel", "/pk-matches", "/period-members", "/tournaments"]) {
+    for (const path of ["/debts", "/balance-offsets/all", "/PAYMENTS/x/cancel", "/pk-matches", "/tournaments"]) {
       let code;
       let next = false;
       adminScopeRollout({ authRole: "admin", method, path }, {

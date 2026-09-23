@@ -101,6 +101,14 @@ export const api = {
     remove: (id) => request({ url: `/api/guest-attendances/${id}`, method: 'DELETE' }),
   },
 
+  sessionPlanning: {
+    get: (periodId, weekStart) => request({ url: `/api/session-planning/period/${periodId}`,
+      params: weekStart ? { week_start: weekStart } : undefined }),
+    save: (periodId, personId, payload) => request({
+      url: `/api/session-planning/period/${periodId}/people/${personId}`, method: 'PUT', data: payload,
+    }),
+  },
+
   debts: {
     list: () => request({ url: '/api/debts' }),
     byPeriod: (periodId) => request({ url: `/api/debts/period/${periodId}` }),

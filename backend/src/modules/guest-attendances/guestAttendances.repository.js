@@ -1,21 +1,23 @@
 import { supabase } from "../../config/supabase.js";
 
 export const guestAttendancesRepository = {
-  async getAll() {
-    return await supabase
+  async getAll(groupIds) {
+    if (groupIds !== null && !groupIds?.length) return { data: [], error: null };
+    let query = supabase
       .from("guest_attendances")
       .select(`
         *,
-        person:people(id, full_name, nickname, phone),
-        session:badminton_sessions(
+        person:people(id, full_name, nickname),
+        session:badminton_sessions${groupIds === null ? "" : "!inner"}(
           id,
           period_id,
           play_date,
           shuttle_used_count,
-          period:periods(id, name, guest_fee_per_session)
+          period:periods${groupIds === null ? "" : "!inner"}(id, name, guest_fee_per_session)
         )
-      `)
-      .order("created_at", { ascending: false });
+      `);
+    if (groupIds !== null) query = query.in("session.period.group_id", groupIds);
+    return await query.order("created_at", { ascending: false });
   },
 
   async getBySessionId(sessionId) {
@@ -23,7 +25,7 @@ export const guestAttendancesRepository = {
       .from("guest_attendances")
       .select(`
         *,
-        person:people(id, full_name, nickname, phone),
+        person:people(id, full_name, nickname),
         session:badminton_sessions(
           id,
           period_id,
@@ -36,22 +38,24 @@ export const guestAttendancesRepository = {
       .order("created_at", { ascending: false });
   },
 
-  async getByPersonId(personId) {
-    return await supabase
+  async getByPersonId(personId, groupIds) {
+    if (groupIds !== null && !groupIds?.length) return { data: [], error: null };
+    let query = supabase
       .from("guest_attendances")
       .select(`
         *,
-        person:people(id, full_name, nickname, phone),
-        session:badminton_sessions(
+        person:people(id, full_name, nickname),
+        session:badminton_sessions${groupIds === null ? "" : "!inner"}(
           id,
           period_id,
           play_date,
           shuttle_used_count,
-          period:periods(id, name, guest_fee_per_session)
+          period:periods${groupIds === null ? "" : "!inner"}(id, name, guest_fee_per_session)
         )
       `)
-      .eq("person_id", personId)
-      .order("created_at", { ascending: false });
+      .eq("person_id", personId);
+    if (groupIds !== null) query = query.in("session.period.group_id", groupIds);
+    return await query.order("created_at", { ascending: false });
   },
 
   async getById(id) {
@@ -59,7 +63,7 @@ export const guestAttendancesRepository = {
       .from("guest_attendances")
       .select(`
         *,
-        person:people(id, full_name, nickname, phone),
+        person:people(id, full_name, nickname),
         session:badminton_sessions(
           id,
           period_id,

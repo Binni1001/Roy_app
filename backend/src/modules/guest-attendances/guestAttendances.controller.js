@@ -3,7 +3,7 @@ import { guestAttendancesService } from "./guestAttendances.service.js";
 export const guestAttendancesController = {
   async getAll(req, res) {
     try {
-      const data = await guestAttendancesService.getAll();
+      const data = await guestAttendancesService.getAll(req.visibleGroupIds);
       res.json(data);
     } catch (error) {
       res.status(500).json({ message: error.message });
@@ -24,7 +24,7 @@ export const guestAttendancesController = {
   async getByPerson(req, res) {
     try {
       const data = await guestAttendancesService.getByPerson(
-        req.params.personId
+        req.params.personId, req.visibleGroupIds
       );
       res.json(data);
     } catch (error) {

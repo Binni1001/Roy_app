@@ -14,6 +14,7 @@ const SessionsPanel   = lazy(() => import('./panels/SessionsPanel'))
 const ShuttlePanel    = lazy(() => import('./panels/ShuttlePanel'))
 const MembersPanel    = lazy(() => import('./panels/MembersPanel'))
 const TournamentPanel = lazy(() => import('./panels/TournamentPanel'))
+const SessionPlanningPanel = lazy(() => import('../session-planning/SessionPlanningPanel'))
 
 function PanelSuspense({ children }) {
   return (
@@ -45,12 +46,18 @@ export function AdminContent(props) {
 
   const submitGlobal = (action, msg) => submit(action, msg, 'global')
 
-  if (role === 'admin' && !['people', 'periods'].includes(activeTab)) {
+  if (role === 'admin' && !['people', 'periods', 'sessions'].includes(activeTab)) {
     return <Panel title="Phạm vi quản trị theo nhóm">
-      <p>Bạn có thể quản lý Nhân sự và thông tin Kỳ quỹ của các nhóm được owner phân công.</p>
+      <p>Bạn có thể quản lý Nhân sự, thông tin Kỳ quỹ, tạo/sửa Buổi cầu và xem thành viên/khách của các nhóm được owner phân công.</p>
       <p>Các chức năng còn lại đang chờ hoàn tất kiểm tra cách ly dữ liệu nhóm. Owner vẫn có thể thao tác; đây không phải thông báo quỹ hoặc công nợ bằng 0.</p>
     </Panel>
   }
+
+  if (data.periodError && !['people', 'members'].includes(activeTab)) {
+    return <Panel title="Không thể tải dữ liệu kỳ"><p role="alert">{data.periodError}</p><button onClick={data.retryPeriod}>Thử lại</button></Panel>
+  }
+  if (!['people', 'members'].includes(activeTab) && selectedPeriodId &&
+    (data.periodLoading || data.loadedPeriodId !== selectedPeriodId)) return <SkeletonTable rows={5} cols={4} />
 
   if (activeTab === 'dashboard') {
     return (
@@ -102,6 +109,8 @@ export function AdminContent(props) {
   }
 
   if (activeTab === 'periods') {
+    if (data.periodError) return <Panel title="Không thể tải dữ liệu kỳ"><p role="alert">{data.periodError}</p><button onClick={data.retryPeriod}>Thử lại</button></Panel>
+    if (data.periodLoading || (data.loadedPeriodId !== selectedPeriodId && selectedPeriodId)) return <SkeletonTable rows={5} cols={4} />
     return (
       <PanelSuspense>
         <PeriodsPanel
@@ -120,9 +129,15 @@ export function AdminContent(props) {
   }
 
   if (activeTab === 'sessions') {
+    if (data.periodError) return <Panel title="Không thể tải dữ liệu kỳ"><p role="alert">{data.periodError}</p><button onClick={data.retryPeriod}>Thử lại</button></Panel>
+    if (data.periodLoading || (data.loadedPeriodId !== selectedPeriodId && selectedPeriodId)) return <SkeletonTable rows={5} cols={4} />
     return (
       <PanelSuspense>
+        <SessionPlanningPanel key={selectedPeriodId} periodId={selectedPeriodId} />
         <SessionsPanel
+          canManageGuests={role === 'owner'}
+          canDeleteSessions={role === 'owner'}
+          canWriteSessions={props.activePeriod?.status === 'open'}
           people={people.filter(isActivityPerson)}
           sessions={data.sessions}
           sessionForm={forms.session}

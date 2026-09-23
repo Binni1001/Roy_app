@@ -16,6 +16,7 @@
     "express": "latest"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "0.5.8",
     "nodemon": "latest"
   }
 }

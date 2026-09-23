@@ -515,3 +515,16 @@ Dự án được xem là sẵn sàng vận hành production khi đáp ứng đ�
 - `Blocked`: có blocker được ghi rõ.
 - `In review`: đã hoàn thành code, đang review/QA.
 - `Done`: đạt Definition of Done và có bằng chứng kiểm thử.
+
+## Đợt ưu tiên — Xếp lịch 8 người/buổi (23/09/2026)
+
+Kế hoạch chi tiết: [SESSION_SCHEDULING_PLAN.md](docs/SESSION_SCHEDULING_PLAN.md). Hướng dẫn bước 1: [SESSION_PLANNING_STAGE1.md](docs/SESSION_PLANNING_STAGE1.md).
+
+- [x] Bước 1A — code/test local: lịch bận thường lệ và ngoại lệ theo kỳ, admin đúng CLB/user tự sửa, revision và audit nguyên tử; migration thử trên PostgreSQL nhúng với dữ liệu giả.
+- [x] Kiểm tra khả năng đáp ứng 4 buổi/người theo ngày rảnh và giới hạn 8 người/buổi; thông báo thiếu chỗ thay vì tự giảm chỉ tiêu. Không còn điều kiện chẵn/lẻ trong quy tắc mới.
+- [ ] Chạy migration trên schema staging thực, nghiệm thu giao diện và áp dụng Supabase production; code/test local chưa đồng nghĩa đã dùng được trên web thật.
+- [ ] Bước 1B/2 — level, cặp ưu tiên, tự xếp nháp và admin duyệt/công bố.
+- [ ] Bước 3 — đăng ký thêm, ưu tiên cố định trước khách, hàng chờ và cảnh cáo báo nghỉ muộn.
+- [ ] Bước 4/5 — điểm danh, tích hợp tài chính an toàn và nghiệm thu toàn luồng.
+
+Bước 1 chưa thay đổi lịch buổi cũ, chưa tạo booking, chưa gửi thông báo hoặc phát sinh công nợ. Không tự chạy SQL production. Các phần chưa hoàn tất giữ trạng thái In progress/In review.

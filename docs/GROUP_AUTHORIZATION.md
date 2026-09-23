@@ -43,6 +43,10 @@ Hồ sơ dùng chung nhiều nhóm chứa email/mật khẩu/trạng thái toàn
 
 ## Rollout có giới hạn — chưa hoàn tất SEC-003
 
+**Cập nhật code 23/09/2026 (chưa nghiệm thu deploy):** đã mở GET/HEAD của `period-members`, `guest-attendances`, `badminton-sessions` cho admin theo nhóm; mở POST/PUT buổi cầu. Middleware xác minh kỳ/entity thực tế trước replay và kiểm tra membership active khi thêm người. Các mutation thành viên/khách và DELETE buổi cầu vẫn trả `GROUP_FINANCE_SCOPE_NOT_READY` cho admin. UI tương ứng có danh sách chỉ xem, nút theo quyền, loading/error/retry; không tải các API tài chính bị khóa. Các mô tả khóa toàn module bên dưới là trạng thái đợt 2.1 trước cập nhật này.
+
+`session-planning` được mở cho admin theo nhóm và user tự khai báo. Kỳ được kiểm tra ở service; RPC kiểm tra lại trusted Auth role, managed_group_ids, trạng thái và fixed membership. Panel mới chỉ chuẩn bị lịch bận, không mở các quyền ghi khách/công nợ. Ordinary user không nhận lịch bận của người khác. Xem `SESSION_PLANNING_STAGE1.md` cho migration và kiểm thử.
+
 Các module còn lại (`period-members`, sessions/guests, debts, balances/offsets, fund/shuttle, payments, dashboard, PK, tournaments, notifications) **tạm trả 403 cho admin**, với code `GROUP_SCOPE_NOT_READY`. Owner tiếp tục dùng quy tắc sẵn có; user không được mở rộng quyền. Giao diện admin hiện thông báo rõ, không trình bày quỹ/công nợ bằng 0 và không tải các API đang khóa. Kỳ quỹ hiện chỉ mở quản lý thông tin kỳ cho admin, chưa mở thành viên trong kỳ.
 
 Lý do: các truy vấn/ID của những module này chưa được nghiệm thu cách ly. Chỉ bỏ từng module khỏi guard sau khi có cả kiểm tra list, ID, liên kết con và test hai nhóm. **Không bật lại multi-group UI hoặc đánh dấu toàn bộ ứng dụng an toàn đa nhóm ở đợt này.**

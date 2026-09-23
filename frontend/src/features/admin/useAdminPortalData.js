@@ -18,6 +18,7 @@ export function useAdminPortalData(role) {
   const [submitting, setSubmitting] = useState(false)
   const [checkout, setCheckout] = useState(null)
   const submitLockRef = useRef(false)
+  const periodRequestRef = useRef(0)
 
   const activePeriod = periods.find((period) => period.id === selectedPeriodId)
   const summary = useMemo(() => {
@@ -42,11 +43,17 @@ export function useAdminPortalData(role) {
   useAutoDismissToast(toast, setToast)
 
   const loadPeriodData = useCallback(async (periodId) => {
-    if (role === 'admin') {
-      setData(defaultData())
-      return
-    }
+    const request = ++periodRequestRef.current
+    setData({ ...defaultData(), periodLoading: true })
     try {
+      if (role === 'admin') {
+        const [members, sessions] = await Promise.all([
+          api.periodMembers.byPeriod(periodId), api.sessions.byPeriod(periodId),
+        ])
+        if (request !== periodRequestRef.current) return
+        setData({ ...defaultData(), members: asArray(members), sessions: asArray(sessions), loadedPeriodId: periodId })
+        return
+      }
       const [
         dashboard,
         members,
@@ -57,17 +64,20 @@ export function useAdminPortalData(role) {
         shuttleExpenses,
         settlementPreview,
       ] = await Promise.all([
-        api.dashboard.byPeriod(periodId).catch(() => null),
-        api.periodMembers.byPeriod(periodId).catch(() => []),
-        api.sessions.byPeriod(periodId).catch(() => []),
-        api.debts.ledgerByPeriod(periodId).catch(() => []),
-        api.balances.list().catch(() => []),
-        api.fund.byPeriod(periodId).catch(() => []),
-        api.shuttleExpenses.byPeriod(periodId).catch(() => []),
+        api.dashboard.byPeriod(periodId),
+        api.periodMembers.byPeriod(periodId),
+        api.sessions.byPeriod(periodId),
+        api.debts.ledgerByPeriod(periodId),
+        api.balances.list(),
+        api.fund.byPeriod(periodId),
+        api.shuttleExpenses.byPeriod(periodId),
         api.shuttleSettlements.preview(periodId).catch((error) => ({ error: errorText(error) })),
       ])
+      if (request !== periodRequestRef.current) return
       setData((current) => ({
         ...current,
+        periodLoading: false,
+        loadedPeriodId: periodId,
         dashboard,
         members: asArray(members),
         sessions: asArray(sessions),
@@ -78,7 +88,9 @@ export function useAdminPortalData(role) {
         settlementPreview,
       }))
     } catch (error) {
-      setToast(errorText(error))
+      if (request !== periodRequestRef.current) return
+      setData({ ...defaultData(), periodError: errorText(error) })
+      setToastType('error'); setToast(errorText(error))
     }
   }, [role])
 
@@ -124,7 +136,7 @@ export function useAdminPortalData(role) {
     const timer = window.setTimeout(() => {
       void loadPeriodData(selectedPeriodId)
     }, 120)
-    return () => window.clearTimeout(timer)
+    return () => { window.clearTimeout(timer); periodRequestRef.current += 1 }
   }, [loadPeriodData, selectedPeriodId])
 
   function setForm(name, patch) {
@@ -175,7 +187,7 @@ export function useAdminPortalData(role) {
     boot,
     checkout,
     createPayment,
-    data,
+    data: { ...data, retryPeriod: () => loadPeriodData(selectedPeriodId) },
     forms,
     loading,
     submitting,

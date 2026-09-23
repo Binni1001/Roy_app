@@ -1,16 +1,32 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { api } from '../../../api/client'
 import { ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
 import { SessionCalendar } from '../../../components/SessionCalendar'
-import { formatDate, formatMoney } from '../../../utils/appUtils'
+import { errorText, formatDate, formatMoney } from '../../../utils/appUtils'
 
-export function SessionsPanel({ people, sessions, sessionForm, guestForm, selectedPeriodId, setForm, submit }) {
+export function SessionsPanel({ people, sessions, sessionForm, guestForm, selectedPeriodId, setForm, submit, canManageGuests = true, canDeleteSessions = true, canWriteSessions = true }) {
   const [showAddSession, setShowAddSession] = useState(false)
   const [showAddGuest, setShowAddGuest] = useState(false)
   const [editingSession, setEditingSession] = useState(null)
   const [deletingSession, setDeletingSession] = useState(null)
   const [viewingGuests, setViewingGuests] = useState(null)
   const [guests, setGuests] = useState([])
+  const [guestError, setGuestError] = useState('')
+  const [guestsLoading, setGuestsLoading] = useState(false)
+  const guestRequest = useRef(0)
+
+  async function viewGuests(session) {
+    const request = ++guestRequest.current
+    setViewingGuests(session); setGuests([]); setGuestError(''); setGuestsLoading(true)
+    try {
+      const result = await api.guests.bySession(session.id)
+      if (request === guestRequest.current) setGuests(Array.isArray(result) ? result : [])
+    } catch (error) {
+      if (request === guestRequest.current) setGuestError(errorText(error))
+    } finally {
+      if (request === guestRequest.current) setGuestsLoading(false)
+    }
+  }
 
   return (
     <>
@@ -19,33 +35,26 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
           title="Lịch buổi cầu"
           action={
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => setShowAddGuest(true)}>+ Ghi khách</button>
-              <button onClick={() => setShowAddSession(true)}>+ Tạo buổi</button>
+              {canManageGuests && <button disabled={!canWriteSessions} onClick={() => setShowAddGuest(true)}>+ Ghi khách</button>}
+              <button disabled={!canWriteSessions} onClick={() => setShowAddSession(true)}>+ Tạo buổi</button>
             </div>
           }
         >
           <SessionCalendar
             sessions={sessions}
-            onEdit={(session) => setEditingSession(session)}
-            onDelete={(session) => setDeletingSession(session)}
-            onViewGuests={(session) => {
-              api.guests.bySession(session.id).then((result) => {
-                setGuests(Array.isArray(result) ? result : [])
-                setViewingGuests(session)
-              }).catch(() => {
-                setGuests([])
-                setViewingGuests(session)
-              })
-            }}
+            onEdit={canWriteSessions ? setEditingSession : undefined}
+            onDelete={canDeleteSessions ? setDeletingSession : undefined}
+            onViewGuests={viewGuests}
           />
+          {!canManageGuests && <p className="muted">Bạn có thể xem khách; ghi khách hoặc xóa buổi có liên quan công nợ hiện cần owner xử lý.</p>}
         </Panel>
       </section>
 
       {showAddSession && (
         <Modal title="Tạo buổi cầu" onClose={() => setShowAddSession(false)}>
-          <form className="form" onSubmit={(e) => {
+          <form className="form" onSubmit={async (e) => {
             e.preventDefault()
-            submit(
+            const result = await submit(
               () => api.sessions.create({
                 ...sessionForm,
                 period_id: selectedPeriodId,
@@ -53,7 +62,7 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
               }),
               'Đã tạo buổi cầu.',
             )
-            setShowAddSession(false)
+            if (result) setShowAddSession(false)
           }}>
             <Input label="Ngày chơi" type="date" value={sessionForm.play_date} onChange={(v) => setForm('session', { play_date: v })} required />
             <label>Số cầu đã dùng<input type="number" min="0" value={sessionForm.shuttle_used_count || ''} onChange={(e) => setForm('session', { shuttle_used_count: e.target.value })} /></label>
@@ -68,10 +77,10 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
 
       {showAddGuest && (
         <Modal title="Ghi nhận khách" onClose={() => setShowAddGuest(false)}>
-          <form className="form" onSubmit={(e) => {
+          <form className="form" onSubmit={async (e) => {
             e.preventDefault()
-            submit(() => api.guests.create({ ...guestForm, amount: Number(guestForm.amount || 0) }), 'Đã ghi nhận khách.')
-            setShowAddGuest(false)
+            const result = await submit(() => api.guests.create({ ...guestForm, amount: Number(guestForm.amount || 0) }), 'Đã ghi nhận khách.')
+            if (result) setShowAddGuest(false)
           }}>
             <label>Buổi cầu
               <select value={guestForm.session_id} onChange={(e) => setForm('guest', { session_id: e.target.value })}>
@@ -91,7 +100,7 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
 
       {viewingGuests && (
         <Modal title={`Khách vãng lai — ${formatDate(viewingGuests.play_date)}`} onClose={() => setViewingGuests(null)}>
-          {guests.length === 0 ? (
+          {guestsLoading ? <p role="status">Đang tải khách…</p> : guestError ? <div role="alert"><p>{guestError}</p><button onClick={() => viewGuests(viewingGuests)}>Thử lại</button></div> : guests.length === 0 ? (
             <p>Buổi này không có khách vãng lai.</p>
           ) : (
             <SimpleTable
@@ -113,9 +122,9 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
         <SessionEditModal
           session={editingSession}
           onClose={() => setEditingSession(null)}
-          onSubmit={(payload) => {
-            submit(() => api.sessions.update(editingSession.id, payload), 'Đã cập nhật buổi cầu.')
-            setEditingSession(null)
+          onSubmit={async (payload) => {
+            const result = await submit(() => api.sessions.update(editingSession.id, payload), 'Đã cập nhật buổi cầu.')
+            if (result) setEditingSession(null)
           }}
         />
       )}
@@ -127,9 +136,9 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
           confirmText="Xóa"
           danger
           onClose={() => setDeletingSession(null)}
-          onConfirm={() => {
-            submit(() => api.sessions.remove(deletingSession.id), 'Đã xóa buổi cầu.')
-            setDeletingSession(null)
+          onConfirm={async () => {
+            const result = await submit(() => api.sessions.remove(deletingSession.id), 'Đã xóa buổi cầu.')
+            if (result) setDeletingSession(null)
           }}
         />
       )}

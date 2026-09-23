@@ -142,6 +142,7 @@ export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
             />
             <UserContent
               activeTab={activeTab}
+              selectedPeriodId={selectedPeriodId}
               debts={data.debts}
               unpaidDebts={unpaidDebts}
               transactions={data.transactions}

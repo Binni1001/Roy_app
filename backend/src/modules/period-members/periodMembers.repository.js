@@ -14,10 +14,7 @@ export const periodMembersRepository = {
           id,
           full_name,
           nickname,
-          phone,
-          email,
           avatar_url,
-          bio,
           status
         ),
         period:periods (
@@ -43,10 +40,7 @@ export const periodMembersRepository = {
           id,
           full_name,
           nickname,
-          phone,
-          email,
           avatar_url,
-          bio,
           status
         ),
         period:periods (

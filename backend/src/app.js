@@ -13,6 +13,7 @@ import { requireAuth } from "./middleware/auth.js";
 import { activityStatusGuard } from "./middleware/activityStatusDb.js";
 import { adminScopeRollout } from "./middleware/adminScopeRollout.js";
 import { adminResourceScope } from "./middleware/adminResourceScope.js";
+import { attendanceGroupScope } from "./middleware/attendanceGroupScope.js";
 
 import peopleRoutes from "./modules/people/people.routes.js";
 import periodsRoutes from "./modules/periods/periods.routes.js";
@@ -32,6 +33,7 @@ import pkMatchesRoutes from "./modules/pk-matches/pkMatches.routes.js";
 import notificationsRoutes from "./modules/notifications/notifications.routes.js";
 import groupsRoutes from "./modules/groups/groups.routes.js";
 import tournamentsRoutes from "./modules/tournaments/tournaments.routes.js";
+import sessionPlanningRoutes from "./modules/session-planning/sessionPlanning.routes.js";
 
 const app = express();
 
@@ -68,7 +70,11 @@ app.use("/api", (req, res, next) => {
 });
 app.use("/api", adminScopeRollout);
 app.use("/api", adminResourceScope);
+app.use("/api", attendanceGroupScope);
 app.use("/api", activityStatusGuard);
+// Planning rechecks group/self eligibility on every request and uses DB revisions,
+// not the generic replay cache (a cached response could outlive authorization).
+app.use("/api/session-planning", sessionPlanningRoutes);
 app.use("/api", idempotencyMiddleware);
 
 app.use("/api/people", peopleRoutes);

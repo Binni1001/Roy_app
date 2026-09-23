@@ -37,9 +37,9 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
           />
         </Panel>
 
-        {canManageMembers ? <Panel
+        <Panel
           title="Thành viên trong kỳ"
-          action={<button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId || members.some((member) => member.shuttle_settled)}>+ Thêm vào kỳ</button>}
+          action={canManageMembers && <button onClick={() => setShowAddMember(true)} disabled={!selectedPeriodId || members.some((member) => member.shuttle_settled)}>+ Thêm vào kỳ</button>}
         >
           <SimpleTable
             rows={members}
@@ -49,14 +49,15 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
               ['shuttle_discount_percent', 'Miễn cầu', (v) => v ? `Miễn ${v}%` : 'Không miễn'],
               ['period.fixed_member_fee', 'Phí cố định kỳ', formatMoney],
             ]}
-            actions={(member) => (
+            actions={canManageMembers ? (member) => (
               <ActionGroup>
                 <button onClick={() => setEditingMember(member)}>Sửa</button>
                 <button className="danger" disabled={member.shuttle_settled} onClick={() => setDeletingMember(member)}>Xóa</button>
               </ActionGroup>
-            )}
+            ) : undefined}
           />
-        </Panel> : <p className="muted">Quản lý thành viên trong kỳ đang chờ hoàn tất kiểm tra cách ly nhóm; hiện chỉ owner được thao tác.</p>}
+          {!canManageMembers && <p className="muted">Bạn có thể xem thành viên. Thao tác thay đổi có liên quan công nợ hiện cần owner xử lý.</p>}
+        </Panel>
       </section>
 
       {showAddPeriod && (

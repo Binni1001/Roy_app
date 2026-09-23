@@ -15,7 +15,7 @@ test('owner can assign groups and forms do not close before a successful save', 
 test('scoped admin sees explicit rollout notice instead of a fake zero financial dashboard', () => {
   const content = readFileSync('src/features/admin/AdminContent.jsx', 'utf8')
   const people = readFileSync('src/features/admin/panels/PeoplePanel.jsx', 'utf8')
-  assert.match(content, /role === 'admin' && !\['people', 'periods'\]\.includes\(activeTab\)/)
+  assert.match(content, /role === 'admin' && !\['people', 'periods', 'sessions'\]\.includes\(activeTab\)/)
   assert.match(content, /canManageMembers=\{role === 'owner'\}/)
   assert.match(people, /person\.can_manage_profile === true/)
   assert.match(people, /chỉ owner được đổi/)
