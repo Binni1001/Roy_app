@@ -102,6 +102,14 @@ export const api = {
   },
 
   sessionPlanning: {
+    draftInputs: (periodId, weekStart) => request({ url: `/api/session-planning/period/${periodId}/draft-inputs`,
+      params: { week_start: weekStart } }),
+    saveProfile: (periodId, personId, payload) => request({
+      url: `/api/session-planning/period/${periodId}/people/${personId}/profile`, method: 'PUT', data: payload,
+    }),
+    preview: (periodId, payload) => request({
+      url: `/api/session-planning/period/${periodId}/draft-preview`, method: 'POST', data: payload,
+    }),
     get: (periodId, weekStart) => request({ url: `/api/session-planning/period/${periodId}`,
       params: weekStart ? { week_start: weekStart } : undefined }),
     save: (periodId, personId, payload) => request({

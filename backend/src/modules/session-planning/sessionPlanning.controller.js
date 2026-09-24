@@ -6,6 +6,18 @@ function failed(res, error) {
 }
 
 export const sessionPlanningController = {
+  async draftInputs(req, res) {
+    try { res.json(await sessionPlanningService.draftInputs(req.params.periodId, req.authUser, req.query.week_start)); }
+    catch (error) { failed(res, error); }
+  },
+  async saveProfile(req, res) {
+    try { res.json(await sessionPlanningService.saveProfile(req.params.periodId, req.params.personId, req.body, req.authUser)); }
+    catch (error) { failed(res, error); }
+  },
+  async preview(req, res) {
+    try { res.json(await sessionPlanningService.preview(req.params.periodId, req.body, req.authUser)); }
+    catch (error) { failed(res, error); }
+  },
   async get(req, res) {
     try { res.json(await sessionPlanningService.get(req.params.periodId, req.authUser, req.query.week_start)); }
     catch (error) { failed(res, error); }

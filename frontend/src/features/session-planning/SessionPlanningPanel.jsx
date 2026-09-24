@@ -3,17 +3,18 @@ import { api } from '../../api/client'
 import { Panel } from '../../components/common'
 import { errorText } from '../../utils/appUtils'
 import { formatPlanningDate as formatDate, preferencePayload, WEEKDAYS, weekStartFor } from './planningUtils'
+import DraftPlanningPanel from './DraftPlanningPanel'
 import './sessionPlanning.css'
 
 export default function SessionPlanningPanel({ periodId }) {
   const [opened, setOpened] = useState(false)
-  return <Panel title="Chuẩn bị xếp lịch — bước 1" action={
+  return <Panel title="Chuẩn bị xếp lịch buổi cầu" action={
     <button type="button" disabled={!periodId} onClick={() => setOpened((value) => !value)}>
       {opened ? 'Thu gọn' : 'Lịch bận và sức chứa'}
     </button>
   }>
     <p>8 người/buổi · 17:30–19:30 · Nghỉ thứ Năm · 4 buổi cố định/người/tuần.</p>
-    <p className="muted">Bước này chỉ lưu lịch bận và kiểm tra khả năng xếp. Chưa phân buổi, giữ chỗ, gửi thông báo hoặc tạo công nợ.</p>
+    <p className="muted">Lưu lịch bận, kiểm tra sức chứa; admin có thể nhập level, cặp ưu tiên và xếp thử. Chưa công bố lịch, giữ chỗ, gửi thông báo hoặc tạo công nợ.</p>
     {!periodId && <p>Chọn một kỳ để khai báo lịch bận.</p>}
     {opened && periodId && <PlanningWorkspace key={periodId} periodId={periodId} />}
   </Panel>
@@ -83,6 +84,7 @@ function PlanningWorkspace({ periodId }) {
         period={data.period} member={selected} canEdit={data.can_edit}
         onSaved={() => { setMessage('Đã lưu lịch bận. Chưa tạo hay thay đổi suất tham gia.'); setReload((value) => value + 1) }} />
     </>}
+    {data.can_manage && <DraftPlanningPanel key={requestKey} periodId={periodId} weekStart={analysis.week_start} />}
   </div>
 }
 

@@ -4,7 +4,7 @@ Ngày: 23/09/2026. Phạm vi: lịch bận và kiểm tra sức chứa; chưa t�
 
 ## Đã có trong source
 
-- Panel “Chuẩn bị xếp lịch — bước 1” ở tab Buổi cầu của admin và Lịch buổi đánh của thành viên.
+- Panel “Chuẩn bị xếp lịch buổi cầu” ở tab Buổi cầu của admin và Lịch buổi đánh của thành viên.
 - Quy tắc nền: 8 người, 4 buổi/người, thứ Hai/Ba/Tư/Sáu/Bảy/Chủ nhật, 17:30–19:30, giờ Việt Nam. Không có điều kiện tuyển khách theo chẵn/lẻ.
 - Lịch bận thường lệ trong kỳ và ngoại lệ theo ngày Bận/Rảnh; không khai báo mới thì giữ dữ liệu đã lưu.
 - Admin theo CLB, user chỉ sửa chính mình; chỉ người cố định trong kỳ, active ở cả hồ sơ và membership, không phải quản trị mới đủ điều kiện.
@@ -30,7 +30,9 @@ Ngày: 23/09/2026. Phạm vi: lịch bận và kiểm tra sức chứa; chưa t�
 - User không nhận lịch bận/email của người khác. Frontend không đọc trực tiếp bảng mới bằng Supabase anon key.
 - Thiếu migration trả 503 `PLANNING_SCHEMA_NOT_READY`, không tự tạo bảng hoặc fallback ghi nơi khác.
 
-## Migration — cần chạy riêng, chưa chạy trên Supabase thật
+## Migration — người dùng đã chạy; chưa nghiệm thu toàn luồng
+
+Cập nhật 24/09/2026: người dùng đã gửi ảnh SQL Editor báo thành công. Kiểm tra REST chỉ đọc xác nhận có `session_planning_preferences`, `session_planning_preference_audits` và `/rpc/save_session_planning_preferences`. Đây chưa xác nhận nội dung hàm đang chạy, quyền thực tế hoặc thao tác ghi qua web; các bước nghiệm thu bên dưới vẫn cần thực hiện.
 
 File: `supabase/20260923_session_planning_preferences.sql`.
 
@@ -47,7 +49,7 @@ Chỉ tạo hai bảng `session_planning_preferences`, `session_planning_prefere
 
 Nếu dừng rollout: tắt/gỡ panel và endpoint mới trong bản code kế tiếp; giữ nguyên hai bảng và audit đã có người dùng. Không DROP để “rollback”, không xóa lịch bận hoặc lịch sử. Không thay đổi kỳ/quỹ để sửa lỗi lịch.
 
-## Bằng chứng kiểm thử và giới hạn
+## Bằng chứng kiểm thử đợt 1 (commit 40e1998) và giới hạn
 
 - Đã xuất riêng đúng bản Git được stage (không mang `.env` hay thay đổi tài chính dang dở) và chạy lại: **108 test backend**, **30 test frontend**, backend syntax check, frontend lint/build đều đạt. Đây là kiểm thử local trên bản sẽ commit, chưa phải kết quả CI/deploy.
 - `backend/tests/session-planning.test.js`: 12 test cấu hình, ngày, max-flow, privacy, nhóm/self, trạng thái, lỗi schema và revision.
@@ -61,3 +63,5 @@ Tài liệu kỹ thuật tham chiếu: [PGlite — chạy PostgreSQL trong bộ 
 ## Bước tiếp theo
 
 Nhập level và cặp ưu tiên, sau đó dựng bộ xếp nháp tuần và màn hình admin duyệt. Cần chốt thang level, thời điểm nhận lịch bận/mở đăng ký, giữ ngày cố định trong kỳ và chính sách tuần giao hai kỳ. Không cần tự giảm 4 buổi hoặc tăng sức chứa để vượt qua báo thiếu chỗ.
+
+Cập nhật: hồ sơ level/cặp và nháp thử đã được triển khai tiếp trong [SESSION_PLANNING_STAGE2A.md](SESSION_PLANNING_STAGE2A.md); phần lưu phiên bản, duyệt/công bố vẫn chưa hoàn tất.

@@ -15,6 +15,18 @@ export const sessionPlanningRepository = {
       .select("person_id, busy_weekdays, date_overrides, revision, updated_at")
       .eq("period_id", periodId).order("person_id");
   },
+  profiles(periodId) {
+    return supabase.from("session_planning_profiles")
+      .select("person_id, level, preferred_partner_id, revision, updated_at")
+      .eq("period_id", periodId).order("person_id");
+  },
+  saveProfile(periodId, personId, actorId, payload) {
+    return supabase.rpc("save_session_planning_profile", {
+      p_period_id: periodId, p_person_id: personId, p_actor_id: actorId,
+      p_expected_revision: payload.expected_revision, p_level: payload.level,
+      p_preferred_partner_id: payload.preferred_partner_id
+    }).single();
+  },
   save(periodId, personId, actorId, payload) {
     return supabase.rpc("save_session_planning_preferences", {
       p_period_id: periodId, p_person_id: personId, p_actor_id: actorId,

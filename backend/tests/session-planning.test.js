@@ -94,6 +94,8 @@ function fixture(t, changes = {}) {
       { person_id: V, busy_weekdays: [1], date_overrides: { "2026-09-07": "busy" }, revision: 1 }
     ] }; },
     async save(...args) { calls.push(["save", ...args]); return { data: { person_id: args[1], ...args[3], revision: 1 } }; },
+    async profiles(id) { calls.push(["profiles", id]); return { data: [{ person_id: U, level: 2, preferred_partner_id: V, revision: 1 }] }; },
+    async saveProfile(...args) { calls.push(["saveProfile", ...args]); return { data: { person_id: args[1], ...args[3], revision: 2 } }; },
     ...changes
   };
   const service = createSessionPlanningService({ repo, annotate: async (rows) => rows,
@@ -161,4 +163,56 @@ test("scoped admins can reach planning without enabling any financial module", (
   let next = false;
   adminScopeRollout({ authRole: "admin", path: "/session-planning/period/test", method: "PUT" }, {}, () => { next = true; });
   assert.equal(next, true);
+});
+
+test("draft inputs, profile saves and previews are manager-only and scoped before roster reads", async (t) => {
+  const { service, calls } = fixture(t);
+  const input = { expected_revision: 1, level: 2, preferred_partner_id: V };
+  for (const actor of [user, { ...user, user_metadata: { role: "owner" } }]) {
+    await assert.rejects(service.draftInputs(P, actor, "2026-09-07"), { statusCode: 403 });
+    await assert.rejects(service.preview(P, {}, actor), { statusCode: 403 });
+    await assert.rejects(service.saveProfile(P, U, input, actor), { statusCode: 403 });
+  }
+  await assert.rejects(service.draftInputs(Q, admin, "2026-09-07"), { statusCode: 403 });
+  await assert.rejects(service.saveProfile(Q, U, input, admin), { statusCode: 403 });
+  assert.deepEqual(calls, []);
+  const inputs = await service.draftInputs(P, admin, "2026-09-07");
+  assert.equal(inputs.members.length, 2);
+  assert.equal(JSON.stringify(inputs).includes("@example"), false);
+  const draft = await service.preview(P, { week_start: "2026-09-07", input_version: inputs.input_version }, admin);
+  assert.equal(draft.assignments.length, 8);
+  assert.equal(calls.some(([name]) => name === "save" || name === "saveProfile"), false);
+  await service.saveProfile(P, U, input, admin);
+  assert.deepEqual(calls.at(-1).slice(1, 4), [P, U, U]);
+});
+
+test("changed membership, level or availability invalidates old previews, even manual ones", async (t) => {
+  const { service, people, repo } = fixture(t);
+  const inputs = await service.draftInputs(P, owner, "2026-09-07");
+  const request = { week_start: "2026-09-07", input_version: inputs.input_version, assignments: [] };
+  const originalProfiles = repo.profiles, originalPreferences = repo.preferences;
+  repo.profiles = async () => ({ data: [{ person_id: U, level: 3, preferred_partner_id: V, revision: 2 }] });
+  await assert.rejects(service.preview(P, request, owner), { code: "PLANNING_STALE_INPUT", statusCode: 409 });
+  repo.profiles = originalProfiles;
+  repo.preferences = async () => ({ data: [] });
+  await assert.rejects(service.preview(P, request, owner), { code: "PLANNING_STALE_INPUT" });
+  repo.preferences = originalPreferences;
+  people[1].activity_eligible = false;
+  await assert.rejects(service.preview(P, request, owner), { code: "PLANNING_STALE_INPUT" });
+  const fresh = await service.draftInputs(P, owner, "2026-09-07");
+  assert.equal(fresh.members[0].profile.partner_unavailable, true);
+  assert.equal(fresh.members[0].profile.preferred_partner_id, null);
+  await assert.rejects(service.saveProfile(P, U, { expected_revision: 1, level: 2, preferred_partner_id: V }, owner), { statusCode: 400 });
+});
+
+test("missing profile schema does not break stage one; closed periods reject new drafts and profile writes", async (t) => {
+  const { service, repo } = fixture(t, { profiles: async () => ({ error: { code: "42P01" } }) });
+  assert.equal((await service.get(P, owner, "2026-09-07")).members.length, 2);
+  await assert.rejects(service.draftInputs(P, owner, "2026-09-07"), { code: "PLANNING_SCHEMA_NOT_READY" });
+  repo.profiles = async () => ({ data: [] });
+  const closed = createSessionPlanningService({ repo, annotate: async (rows) => rows, getPeriod: async () => ({ ...period, status: "closed" }) });
+  const inputs = await closed.draftInputs(P, owner, "2026-09-07");
+  assert.equal(inputs.can_edit, false);
+  await assert.rejects(closed.preview(P, { week_start: "2026-09-07", input_version: inputs.input_version }, owner), { code: "PLANNING_PERIOD_CLOSED" });
+  await assert.rejects(closed.saveProfile(P, U, { expected_revision: 0, level: null, preferred_partner_id: null }, owner), { code: "PLANNING_PERIOD_CLOSED" });
 });

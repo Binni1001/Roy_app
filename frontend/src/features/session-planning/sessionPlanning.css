@@ -1,6 +1,12 @@
 .session-planning { display: grid; gap: 14px; min-width: 0; }
 .session-planning p { margin: 0; }
 .session-planning label { display: grid; gap: 6px; min-width: 0; }
+.session-planning button { min-height: 44px; padding: 8px 14px; border: 1px solid rgba(239,231,210,.18); border-radius: 8px; color: #efe7d2; background: #161c26; white-space: normal; }
+.session-planning button:hover:not(:disabled) { border-color: #d8ae52; background: #202733; }
+.session-planning button:disabled { opacity: .5; cursor: not-allowed; }
+.session-planning button[type="submit"], .session-planning button.planning-primary { background: linear-gradient(135deg, #d8ae52, #b88b2d); color: #161616; font-weight: 600; }
+.session-planning input:not([type="checkbox"]), .session-planning select { width: 100%; min-width: 0; min-height: 44px; padding: 8px 10px; border: 1px solid rgba(216,174,82,.25); border-radius: 8px; color: #efe7d2; background: #10141b; color-scheme: dark; }
+.session-planning :is(button, input, select, summary):focus-visible { outline: 2px solid #d8ae52; outline-offset: 3px; }
 .planning-toolbar { display: flex; align-items: end; flex-wrap: wrap; gap: 12px; }
 .planning-toolbar > label { flex: 1 1 180px; }
 .planning-editor fieldset { display: grid; gap: 14px; min-width: 0; border: 1px solid rgba(216,174,82,.3); border-radius: 12px; padding: 16px; }
@@ -11,6 +17,16 @@
 .planning-overrides { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .planning-overrides li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .session-planning [role="alert"] { color: #f5c584; }
+.planning-draft-section, .planning-draft-workspace { display: grid; gap: 14px; min-width: 0; }
+.planning-draft-section { border-top: 1px solid rgba(216,174,82,.3); padding-top: 18px; }
+.planning-draft-days { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 290px), 1fr)); gap: 14px; }
+.planning-day { background: rgba(16,20,27,.7); border: 1px solid rgba(216,174,82,.3); border-radius: 12px; padding: 14px; min-width: 0; overflow-wrap: anywhere; }
+.planning-day h4 { margin: 0 0 10px; }
+.planning-day summary { cursor: pointer; padding: 12px 0; }
+.planning-day ul { padding-left: 18px; }
+.planning-day-choices { display: grid; gap: 6px; margin-top: 10px; }
+.planning-day-choices label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
+.planning-day-choices input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; margin: 0; accent-color: #d8ae52; }
 @media (max-width: 480px) {
   .planning-toolbar > label, .planning-toolbar > button { flex: 1 1 100%; }
   .planning-editor fieldset { padding: 12px; }

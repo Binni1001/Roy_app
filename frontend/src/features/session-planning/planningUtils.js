@@ -20,3 +20,27 @@ export function preferencePayload(preferences, busyDays, overrides) {
   return { expected_revision: preferences.revision,
     busy_weekdays: [...busyDays].sort((a, b) => a - b), date_overrides: { ...overrides } }
 }
+
+export function profilePayload(profile, level, partnerId) {
+  return { expected_revision: profile.revision, level: level === '' ? null : Number(level),
+    preferred_partner_id: partnerId || null }
+}
+
+export function previewPayload(inputs, assignments) {
+  return { week_start: inputs.analysis.week_start, input_version: inputs.input_version,
+    ...(assignments === undefined ? {} : { assignments: assignments.map(({ person_id, date }) => ({ person_id, date })) }) }
+}
+
+export function toggleDraftAssignment(assignments, personId, date, selected) {
+  const remaining = assignments.filter((row) => row.person_id !== personId || row.date !== date)
+  return selected ? [...remaining, { person_id: personId, date }] : remaining
+}
+
+// The shared API wraps Axios errors in Error.cause; don't lose stale-input codes.
+export function planningErrorCode(error) {
+  for (let depth = 0; error && depth < 5; depth++, error = error.cause) {
+    const code = error.response?.data?.code || error.code
+    if (typeof code === 'string') return code
+  }
+  return ''
+}

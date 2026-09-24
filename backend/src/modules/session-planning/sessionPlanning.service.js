@@ -4,16 +4,17 @@ import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 import { getUserRole } from "../../utils/roles.js";
 import { isGroupId } from "../../utils/groupAuthorization.js";
 import { SCHEDULE_RULES, analyzeWeek, defaultWeek, planningError, validatePreferences } from "./sessionPlanning.rules.js";
+import { buildDraft, inputVersion, PLANNING_LEVELS, validatePreviewRequest, validateProfile } from "./sessionPlanning.draft.js";
 
 export function checkPlanningResult(result) {
   if (!result.error) return result.data;
   const { code } = result.error;
   if (["42P01", "PGRST205", "PGRST202", "42883"].includes(code)) {
-    throw planningError("Chức năng lịch bận chưa được cài đặt đầy đủ. Admin cần chạy migration lịch buổi cầu.", 503, "PLANNING_SCHEMA_NOT_READY");
+    throw planningError("Chức năng xếp lịch chưa được cài đặt đầy đủ. Admin cần chạy migration tương ứng với bước đang dùng.", 503, "PLANNING_SCHEMA_NOT_READY");
   }
-  if (code === "40001") throw planningError("Lịch bận đã thay đổi ở nơi khác. Hãy tải lại trước khi lưu.", 409, "PLANNING_REVISION_CONFLICT");
-  if (code === "42501") throw planningError("Bạn không còn quyền sửa lịch bận này hoặc người chơi không còn đủ điều kiện.", 403, "PLANNING_FORBIDDEN");
-  if (code === "22023" || code === "23514") throw planningError("Lịch bận không hợp lệ hoặc kỳ đã đóng.");
+  if (code === "40001") throw planningError("Dữ liệu xếp lịch đã thay đổi ở nơi khác. Hãy tải lại trước khi lưu.", 409, "PLANNING_REVISION_CONFLICT");
+  if (code === "42501") throw planningError("Bạn không còn quyền thao tác hoặc người chơi không còn đủ điều kiện.", 403, "PLANNING_FORBIDDEN");
+  if (code === "22023" || code === "23514") throw planningError("Dữ liệu xếp lịch không hợp lệ hoặc kỳ đã đóng.");
   // Never return SQL, Auth metadata or internal database details to the client.
   throw planningError("Không thể tải hoặc lưu dữ liệu xếp lịch. Vui lòng thử lại.", 503, "PLANNING_UNAVAILABLE");
 }
@@ -37,7 +38,61 @@ export function createSessionPlanningService({ repo = repository, getPeriod = (.
     if (!manager && !self) throw planningError("Chỉ thành viên cố định đang hoạt động trong kỳ được khai báo lịch bận.", 403, "PLANNING_FORBIDDEN");
     return { period, members, manager, self };
   }
+  function requireManager(user) {
+    if (!["owner", "admin"].includes(getUserRole(user))) throw planningError("Chỉ quản trị viên được xem hồ sơ và xếp lịch nháp.", 403, "PLANNING_FORBIDDEN");
+  }
+  function requireEditable(period) {
+    if (!["draft", "open"].includes(period.status)) throw planningError("Kỳ đã đóng, chỉ được xem dữ liệu đã lưu.", 409, "PLANNING_PERIOD_CLOSED");
+  }
+  async function draftContext(periodId, user, weekStart) {
+    requireManager(user);
+    const value = await context(periodId, user);
+    const [preferences, profiles] = await Promise.all([
+      repo.preferences(periodId).then(checkPlanningResult), repo.profiles(periodId).then(checkPlanningResult)
+    ]);
+    if (preferences.length >= 500 || profiles.length >= 500) throw planningError("Dữ liệu đầu vào quá lớn; cần phân trang trước khi xếp lịch.", 503);
+    const week = weekStart === undefined ? defaultWeek(value.period) : weekStart;
+    const analysis = analyzeWeek(value.period, value.members, preferences, week);
+    return { ...value, preferences, profiles, analysis, week,
+      version: inputVersion(value.period, value.members, preferences, profiles, week) };
+  }
   return {
+    async draftInputs(periodId, user, weekStart) {
+      const { period, members, profiles, analysis, version } = await draftContext(periodId, user, weekStart);
+      const byId = new Map(profiles.map((row) => [row.person_id, row]));
+      const eligible = new Set(members.map((person) => person.id));
+      return {
+        stage: "draft_preview", input_version: version, levels: PLANNING_LEVELS,
+        can_edit: ["draft", "open"].includes(period.status), analysis,
+        members: members.map((person) => {
+          const profile = byId.get(person.id);
+          return { id: person.id, full_name: person.full_name, profile: {
+            level: profile?.level ?? null, revision: profile?.revision || 0,
+            preferred_partner_id: eligible.has(profile?.preferred_partner_id) ? profile.preferred_partner_id : null,
+            partner_unavailable: Boolean(profile?.preferred_partner_id && !eligible.has(profile.preferred_partner_id))
+          } };
+        })
+      };
+    },
+    async saveProfile(periodId, personId, payload, user) {
+      requireManager(user);
+      if (!isGroupId(personId) || !isGroupId(user?.id)) throw planningError("Mã người chơi hoặc tài khoản không hợp lệ.");
+      const { period, members } = await context(periodId, user);
+      requireEditable(period);
+      if (!members.some((person) => person.id === personId)) throw planningError("Người chơi không còn đủ điều kiện trong kỳ.", 403, "PLANNING_FORBIDDEN");
+      const validated = validateProfile(payload, personId, members);
+      const saved = checkPlanningResult(await repo.saveProfile(periodId, personId, user.id, validated));
+      return { person_id: saved.person_id, level: saved.level, preferred_partner_id: saved.preferred_partner_id,
+        revision: saved.revision, updated_at: saved.updated_at };
+    },
+    async preview(periodId, payload, user) {
+      requireManager(user);
+      validatePreviewRequest(payload);
+      const { period, members, preferences, profiles, week, version } = await draftContext(periodId, user, payload.week_start);
+      requireEditable(period);
+      if (payload.input_version !== version) throw planningError("Lịch bận, thành viên hoặc hồ sơ đã thay đổi. Tải lại đầu vào và xếp thử lại; nháp cũ chưa được lưu hay công bố.", 409, "PLANNING_STALE_INPUT");
+      return { ...buildDraft(period, members, preferences, profiles, week, payload.assignments), input_version: version };
+    },
     async get(periodId, user, weekStart) {
       const { period, members, manager, self } = await context(periodId, user);
       const preferences = checkPlanningResult(await repo.preferences(periodId));

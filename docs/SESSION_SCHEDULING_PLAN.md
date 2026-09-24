@@ -2,7 +2,7 @@
 
 Ngày soạn: 23/09/2026.
 
-Trạng thái: ĐÃ ĐƯỢC CHO PHÉP TRIỂN KHAI TỪNG BƯỚC. Bước 1 đã có code và kiểm thử local cho lịch bận, phân quyền, kiểm tra sức chứa; chưa chạy migration trên Supabase thật, chưa nghiệm thu deploy. Các quyết định chưa chốt bên dưới vẫn giữ nguyên trạng thái chờ.
+Trạng thái (24/09/2026): ĐÃ ĐƯỢC CHO PHÉP TRIỂN KHAI TỪNG BƯỚC. Bước 1 có code/test; người dùng đã gửi ảnh SQL thành công và kiểm tra REST chỉ đọc xác nhận bảng/RPC lịch bận tồn tại. Bước 1B/2A đã có hồ sơ level/cặp và xếp thử/chỉnh nháp; chưa chạy migration hồ sơ trên Supabase thật, chưa lưu/duyệt/công bố lịch hoặc nghiệm thu deploy. Các quyết định chưa chốt bên dưới vẫn giữ nguyên trạng thái chờ.
 
 Tài liệu này thay thế đề xuất “6 suất cố định + 2 suất linh hoạt”. Không bao gồm việc xây lại toàn bộ database V2.
 
@@ -239,7 +239,8 @@ Chỉ đánh dấu hoàn thành khi đã có sản phẩm và bằng chứng ki�
 
 ### Giai đoạn 1 — Dữ liệu và phân quyền
 
-- [x] Bước 1A: code khai báo lịch bận thường lệ/ngoại lệ theo ngày, admin theo CLB và user tự sửa; revision + audit nguyên tử; migration đã chạy trên PostgreSQL nhúng với dữ liệu giả, chưa chạy production. Xem `docs/SESSION_PLANNING_STAGE1.md`.
+- [x] Bước 1A: code khai báo lịch bận thường lệ/ngoại lệ theo ngày, admin theo CLB và user tự sửa; revision + audit nguyên tử; migration đã thử trên PostgreSQL nhúng. Người dùng gửi ảnh SQL thành công, REST chỉ đọc xác nhận bảng/RPC; chưa nghiệm thu ghi dữ liệu production. Xem `docs/SESSION_PLANNING_STAGE1.md`.
+- [x] Bước 1B: hồ sơ level thủ công/cặp ưu tiên theo kỳ, admin đúng CLB, revision/audit/kiểm tra tư cách cả hai người. Migration mới chỉ chạy local với dữ liệu giả; thang 3 mức là giả định tạm cần nghiệm thu. Xem `docs/SESSION_PLANNING_STAGE2A.md`.
 - [x] Kiểm tra sức chứa 8 người × 6 ngày và khả năng đáp ứng 4 buổi dựa trên lịch rảnh thực tế; không xếp/duyệt lịch ở bước này.
 - [x] Đối chiếu tên cột public liên quan qua Supabase REST chỉ đọc. Không đọc/in hồ sơ cá nhân hay khóa, không thay đổi dữ liệu.
 - [x] Kiểm tra riêng bản Git sẽ commit: 108 test backend + 30 test frontend, syntax check, lint và build đạt local. Không bao gồm các thay đổi tài chính dang dở ngoài phạm vi.
@@ -251,8 +252,9 @@ Chỉ đánh dấu hoàn thành khi đã có sản phẩm và bằng chứng ki�
 
 ### Giai đoạn 2 — Xếp nháp và duyệt lịch
 
+- [x] Bước 2A: tự xếp thử theo lịch rảnh, 8 người/ngày, chỉ tiêu 4 buổi, ưu tiên level/cặp; UI chỉnh và kiểm tra lại với token đầu vào, báo thiếu lượt rõ ràng. Nháp chưa lưu, chưa duyệt/công bố; đã thử tương tác bằng dữ liệu giả.
 - [ ] Tạo buổi tương lai và kế hoạch tuần, gắn đúng kỳ.
-- [ ] Kiểm tra sức chứa/chỉ tiêu trước khi xếp.
+- [x] Kiểm tra sức chứa/chỉ tiêu trước khi xếp thử; chặn vượt giới hạn và trùng người khi kiểm tra nháp chỉnh tay. Cần kiểm tra lại nguyên tử khi duyệt ở bước 2B.
 - [ ] Xếp lịch 4 ngày với lịch bận, level, cặp ưu tiên và tính ổn định.
 - [ ] UI chỉnh nháp, cảnh báo không đáp ứng, duyệt/công bố có kiểm tra phiên bản.
 - [ ] Thông báo lịch đã duyệt, thay đổi và chống gửi trùng.

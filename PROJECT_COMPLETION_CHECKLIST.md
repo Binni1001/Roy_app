@@ -523,8 +523,12 @@ Kế hoạch chi tiết: [SESSION_SCHEDULING_PLAN.md](docs/SESSION_SCHEDULING_PL
 - [x] Bước 1A — code/test local: lịch bận thường lệ và ngoại lệ theo kỳ, admin đúng CLB/user tự sửa, revision và audit nguyên tử; migration thử trên PostgreSQL nhúng với dữ liệu giả.
 - [x] Kiểm tra khả năng đáp ứng 4 buổi/người theo ngày rảnh và giới hạn 8 người/buổi; thông báo thiếu chỗ thay vì tự giảm chỉ tiêu. Không còn điều kiện chẵn/lẻ trong quy tắc mới.
 - [ ] Chạy migration trên schema staging thực, nghiệm thu giao diện và áp dụng Supabase production; code/test local chưa đồng nghĩa đã dùng được trên web thật.
-- [ ] Bước 1B/2 — level, cặp ưu tiên, tự xếp nháp và admin duyệt/công bố.
+- [x] Bước 1A — người dùng gửi ảnh SQL thành công; kiểm tra REST chỉ đọc xác nhận bảng lịch bận/audit/RPC tồn tại. Chưa nghiệm thu thao tác ghi qua web production.
+- [x] Bước 1B/2A — code/test: level thủ công, cặp ưu tiên theo kỳ, tự xếp thử/chỉnh nháp và kiểm tra đầu vào cũ; chưa lưu hay công bố nháp. Đã thử giao diện bằng dữ liệu giả. Xem [SESSION_PLANNING_STAGE2A.md](docs/SESSION_PLANNING_STAGE2A.md).
+- [x] Kiểm tra riêng bản stage ngày 24/09/2026 (không `.env`, không gộp thay đổi tài chính dang dở): 125 test backend, 35 test frontend, backend syntax check và frontend lint/build đều đạt. Đã thử tương tác giao diện trên harness cục bộ; chưa phải nghiệm thu production/CI.
+- [ ] Chạy migration `20260923_session_planning_profiles.sql` trên staging/schema thực và Supabase production, nghiệm thu frontend/backend/database cùng phiên bản. Thang level 3 mức đang là giả định tạm.
+- [ ] Bước 2B — lưu phiên bản nháp, ổn định lịch qua tuần, kiểm tra trùng giờ nhiều CLB, admin duyệt/công bố và thông báo.
 - [ ] Bước 3 — đăng ký thêm, ưu tiên cố định trước khách, hàng chờ và cảnh cáo báo nghỉ muộn.
 - [ ] Bước 4/5 — điểm danh, tích hợp tài chính an toàn và nghiệm thu toàn luồng.
 
-Bước 1 chưa thay đổi lịch buổi cũ, chưa tạo booking, chưa gửi thông báo hoặc phát sinh công nợ. Không tự chạy SQL production. Các phần chưa hoàn tất giữ trạng thái In progress/In review.
+Bước 1–2A chưa thay đổi lịch buổi cũ, chưa tạo booking, chưa gửi thông báo hoặc phát sinh công nợ. Không tự chạy SQL production. Các phần chưa hoàn tất giữ trạng thái In progress/In review.
