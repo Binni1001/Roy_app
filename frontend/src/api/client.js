@@ -1,19 +1,25 @@
 import axios from 'axios'
 import { supabase } from '../lib/supabase'
 import { mutationCoordinator } from './mutationGuard'
+import { withTimeout } from '../utils/withTimeout'
 
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL || import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const http = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000,
   headers: {
     'Content-Type': 'application/json',
   },
 })
 
 http.interceptors.request.use(async (config) => {
-  const { data } = await supabase.auth.getSession()
+  const { data } = await withTimeout(
+    supabase.auth.getSession(),
+    15000,
+    'Không thể đọc phiên đăng nhập. Vui lòng thử lại.',
+  )
   const token = data.session?.access_token
 
   if (token) {
@@ -49,7 +55,7 @@ export const api = {
 
   people: {
     list: () => request({ url: '/api/people' }),
-    me: () => request({ url: '/api/people/me' }),
+    me: () => request({ url: '/api/people/me', timeout: 15000 }),
     createMe: (payload) => request({ url: '/api/people/me', method: 'POST', data: payload }),
     updateMe: (payload) => request({ url: '/api/people/me', method: 'PUT', data: payload }),
     create: (payload) => request({ url: '/api/people', method: 'POST', data: payload }),

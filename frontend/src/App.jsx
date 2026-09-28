@@ -9,6 +9,7 @@ import PendingApproval from './pages/PendingApproval'
 import RejectedScreen from './pages/RejectedScreen'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
 import { GROUPS_ENABLED } from './config/features'
+import { withTimeout } from './utils/withTimeout'
 import './App.css'
 
 const AdminPortal = lazy(() => import('./features/admin/AdminPortal'))
@@ -29,9 +30,12 @@ function AppLoading() {
 
 function App() {
   const [session, setSession] = useState(undefined)
+  const [sessionError, setSessionError] = useState(false)
+  const [sessionAttempt, setSessionAttempt] = useState(0)
   const [recoveringPassword, setRecoveringPassword] = useState(false)
   // undefined = loading, null = no record, object = person data
   const [person, setPerson] = useState(undefined)
+  const [personError, setPersonError] = useState('')
   // tick tăng lên mỗi lần cần re-fetch person (dùng để trigger useEffect)
   const [personTick, setPersonTick] = useState(0)
   // admin/owner: true khi đang mở màn hình thêm nhóm
@@ -46,6 +50,7 @@ function App() {
     // object session mới → remount portal → màn hình loading nhấp nháy.
     const applySession = (nextSession) => {
       if (!mounted) return
+      setSessionError(false)
       setSession((prev) => {
         if (prev === undefined) return nextSession ?? null
         const prevId = prev?.user?.id ?? null
@@ -55,9 +60,9 @@ function App() {
       })
     }
 
-    supabase.auth.getSession()
+    withTimeout(supabase.auth.getSession(), 15000, 'Session timeout')
       .then(({ data }) => applySession(data.session))
-      .catch(() => applySession(null))
+      .catch(() => { if (mounted) setSessionError(true) })
 
     const { data: listener } = supabase.auth.onAuthStateChange((event, nextSession) => {
       if (!mounted) return
@@ -69,7 +74,7 @@ function App() {
       mounted = false
       listener.subscription.unsubscribe()
     }
-  }, [])
+  }, [sessionAttempt])
 
   // Fetch person record khi user id thay đổi hoặc khi cần refresh (personTick).
   // Dùng userId (chuỗi) thay vì object session để token refresh không trigger.
@@ -94,17 +99,30 @@ function App() {
     if (!userId) return
     // eslint-disable-next-line react-hooks/set-state-in-effect
     setPerson(undefined)
+    setPersonError('')
     let mounted = true
     api.people.me().then((data) => {
       if (mounted) setPerson(data ?? null)
     }).catch((error) => {
-      if (mounted) setPerson(error.cause?.response?.data?.code === 'ACCOUNT_INACTIVE'
-        ? { status: 'inactive' } : null)
+      if (!mounted) return
+      if (error.cause?.response?.data?.code === 'ACCOUNT_INACTIVE') {
+        setPerson({ status: 'inactive' })
+      } else if (error.cause?.response?.status === 404) {
+        setPerson(null)
+      } else {
+        setPersonError('Không tải được hồ sơ từ máy chủ. Kiểm tra kết nối rồi thử lại.')
+      }
     })
     return () => { mounted = false }
   }, [userId, personTick])
 
-  if (session === undefined) return <AppLoading />
+  if (session === undefined) return sessionError ? (
+    <div className="error-boundary-screen" role="alert">
+      <h2>Không thể kiểm tra phiên đăng nhập</h2>
+      <p>Kiểm tra kết nối rồi thử lại.</p>
+      <button onClick={() => { setSessionError(false); setSessionAttempt((n) => n + 1) }}>Thử lại</button>
+    </div>
+  ) : <AppLoading />
 
   if (recoveringPassword || window.location.pathname.startsWith('/reset-password')) {
     return <ResetPassword />
@@ -113,7 +131,13 @@ function App() {
   if (!session) return <Login />
 
   // Still loading person record
-  if (person === undefined) return <AppLoading />
+  if (person === undefined) return personError ? (
+    <div className="error-boundary-screen" role="alert">
+      <h2>Không thể tải hồ sơ</h2>
+      <p>{personError}</p>
+      <button onClick={() => setPersonTick((n) => n + 1)}>Thử lại</button>
+    </div>
+  ) : <AppLoading />
 
   const refresh = () => { setAddingGroup(false); setPersonTick(t => t + 1) }
   const role = getSessionRole(session)

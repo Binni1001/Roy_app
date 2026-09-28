@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react'
 import logoUrl from '../assets/logo.png'
 import { supabase } from '../lib/supabase'
+import { withTimeout } from '../utils/withTimeout'
 import '../App.css'
 
 const emptyForm = {
@@ -49,16 +50,18 @@ export default function Login() {
   async function loginWithGoogle() {
     if (loading) return
     setLoading(true)
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: {
-        redirectTo: window.location.href,
-      },
-    })
-
-    if (error) {
+    try {
+      const { error } = await withTimeout(supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: { redirectTo: window.location.href },
+      }), 15000, 'Google sign-in timeout')
+      if (!error) return
       console.error(error)
       setMessage('Đăng nhập Google thất bại. Vui lòng thử lại.')
+    } catch (error) {
+      console.error(error)
+      setMessage('Không kết nối được dịch vụ đăng nhập. Vui lòng thử lại.')
+    } finally {
       setLoading(false)
     }
   }
@@ -76,20 +79,23 @@ export default function Login() {
       return
     }
 
-    const { error } = await supabase.auth.signInWithPassword({
-      email: identifier,
-      password: form.password,
-    })
-
-    if (error) {
+    try {
+      const { error } = await withTimeout(supabase.auth.signInWithPassword({
+        email: identifier,
+        password: form.password,
+      }), 15000, 'Password sign-in timeout')
+      if (error) {
+        console.error(error)
+        setMessage('Thông tin đăng nhập chưa đúng. Vui lòng kiểm tra lại.')
+        return
+      }
+      setMessage('Đăng nhập thành công.')
+    } catch (error) {
       console.error(error)
-      setMessage('Thông tin đăng nhập chưa đúng. Vui lòng kiểm tra lại.')
+      setMessage('Không kết nối được dịch vụ đăng nhập. Vui lòng thử lại.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setMessage('Đăng nhập thành công.')
-    setLoading(false)
   }
 
   async function registerWithPassword(event) {
@@ -98,26 +104,27 @@ export default function Login() {
     setMessage('')
     setLoading(true)
 
-    const { error } = await supabase.auth.signUp({
-      email: form.email.trim(),
-      password: form.password,
-      options: {
-        data: {
-          username: form.username.trim(),
+    try {
+      const { error } = await withTimeout(supabase.auth.signUp({
+        email: form.email.trim(),
+        password: form.password,
+        options: {
+          data: { username: form.username.trim() },
+          emailRedirectTo: window.location.href,
         },
-        emailRedirectTo: window.location.href,
-      },
-    })
-
-    if (error) {
+      }), 15000, 'Registration timeout')
+      if (error) {
+        console.error(error)
+        setMessage('Đăng ký thất bại. Vui lòng kiểm tra email và mật khẩu.')
+        return
+      }
+      setMessage('Đã tạo tài khoản. Nếu Supabase yêu cầu xác nhận email, vui lòng kiểm tra hộp thư.')
+    } catch (error) {
       console.error(error)
-      setMessage('Đăng ký thất bại. Vui lòng kiểm tra email và mật khẩu.')
+      setMessage('Không kết nối được dịch vụ đăng ký. Vui lòng thử lại.')
+    } finally {
       setLoading(false)
-      return
     }
-
-    setMessage('Đã tạo tài khoản. Nếu Supabase yêu cầu xác nhận email, vui lòng kiểm tra hộp thư.')
-    setLoading(false)
   }
 
   async function sendResetEmail() {
