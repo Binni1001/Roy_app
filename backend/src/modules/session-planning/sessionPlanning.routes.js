@@ -1,8 +1,11 @@
 import express from "express";
 import { requireAuth } from "../../middleware/auth.js";
 import { sessionPlanningController } from "./sessionPlanning.controller.js";
+import { openDaysController } from "./openDays.controller.js";
 
 const router = express.Router();
+router.get("/period/:periodId/open-days", requireAuth, openDaysController.list);
+router.put("/period/:periodId/open-days/:date", requireAuth, openDaysController.mutate);
 router.get("/period/:periodId/draft-inputs", requireAuth, sessionPlanningController.draftInputs);
 router.put("/period/:periodId/people/:personId/profile", requireAuth, sessionPlanningController.saveProfile);
 router.post("/period/:periodId/draft-preview", requireAuth, sessionPlanningController.preview);

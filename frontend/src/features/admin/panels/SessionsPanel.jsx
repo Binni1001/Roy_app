@@ -32,26 +32,28 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
     <>
       <section className="grid one">
         <Panel
-          title="Lịch buổi cầu"
+          title="Buổi đánh đã ghi nhận"
           action={
-            <div style={{ display: 'flex', gap: 8 }}>
-              {canManageGuests && <button disabled={!canWriteSessions} onClick={() => setShowAddGuest(true)}>+ Ghi khách</button>}
-              <button disabled={!canWriteSessions} onClick={() => setShowAddSession(true)}>+ Tạo buổi</button>
+            <div className="sessions-actions">
+              {canManageGuests && <button disabled={!canWriteSessions || !sessions.length} onClick={() => setShowAddGuest(true)}>Thêm khách</button>}
+              <button disabled={!canWriteSessions} onClick={() => setShowAddSession(true)}>+ Ghi nhận buổi đánh</button>
             </div>
           }
         >
-          <SessionCalendar
+          <p className="sessions-intro">Lưu lại ngày chơi, số cầu đã dùng và khách tham gia.</p>
+          {!canWriteSessions && <p className="sessions-intro">Kỳ này chưa mở hoặc đã đóng. Bạn vẫn có thể xem các buổi đã ghi nhận.</p>}
+          <SessionCalendar key={selectedPeriodId}
             sessions={sessions}
             onEdit={canWriteSessions ? setEditingSession : undefined}
             onDelete={canDeleteSessions ? setDeletingSession : undefined}
             onViewGuests={viewGuests}
           />
-          {!canManageGuests && <p className="muted">Bạn có thể xem khách; ghi khách hoặc xóa buổi có liên quan công nợ hiện cần owner xử lý.</p>}
+          {!canManageGuests && <p className="muted">Cần thêm khách hoặc xóa buổi? Hãy liên hệ chủ CLB.</p>}
         </Panel>
       </section>
 
       {showAddSession && (
-        <Modal title="Tạo buổi cầu" onClose={() => setShowAddSession(false)}>
+        <Modal title="Ghi nhận buổi đánh" onClose={() => setShowAddSession(false)}>
           <form className="form" onSubmit={async (e) => {
             e.preventDefault()
             const result = await submit(
@@ -69,7 +71,7 @@ export function SessionsPanel({ people, sessions, sessionForm, guestForm, select
             <Input label="Ghi chú" value={sessionForm.note} onChange={(v) => setForm('session', { note: v })} />
             <footer className="modal-actions">
               <button type="button" onClick={() => setShowAddSession(false)}>Hủy</button>
-              <button type="submit">Tạo buổi</button>
+              <button type="submit">Lưu buổi đánh</button>
             </footer>
           </form>
         </Modal>

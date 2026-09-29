@@ -108,6 +108,12 @@ export const api = {
   },
 
   sessionPlanning: {
+    openDays: (periodId) => request({ url: `/api/session-planning/period/${periodId}/open-days` }),
+    // Do not replay a recent join after leave (or close after reopen).
+    // The panel locks in-flight writes; the database serializes and deduplicates them.
+    changeOpenDay: (periodId, date, payload) => executeRequest({
+      url: `/api/session-planning/period/${periodId}/open-days/${date}`, method: 'PUT', data: payload,
+    }),
     draftInputs: (periodId, weekStart) => request({ url: `/api/session-planning/period/${periodId}/draft-inputs`,
       params: { week_start: weekStart } }),
     saveProfile: (periodId, personId, payload) => request({

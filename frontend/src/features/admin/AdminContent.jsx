@@ -15,6 +15,7 @@ const ShuttlePanel    = lazy(() => import('./panels/ShuttlePanel'))
 const MembersPanel    = lazy(() => import('./panels/MembersPanel'))
 const TournamentPanel = lazy(() => import('./panels/TournamentPanel'))
 const SessionPlanningPanel = lazy(() => import('../session-planning/SessionPlanningPanel'))
+const OpenDaysPanel = lazy(() => import('../session-planning/OpenDaysPanel'))
 
 function PanelSuspense({ children }) {
   return (
@@ -133,7 +134,8 @@ export function AdminContent(props) {
     if (data.periodLoading || (data.loadedPeriodId !== selectedPeriodId && selectedPeriodId)) return <SkeletonTable rows={5} cols={4} />
     return (
       <PanelSuspense>
-        <SessionPlanningPanel key={selectedPeriodId} periodId={selectedPeriodId} />
+        <OpenDaysPanel periodId={selectedPeriodId} />
+        <SessionPlanningPanel key={selectedPeriodId} periodId={selectedPeriodId} manager />
         <SessionsPanel
           canManageGuests={role === 'owner'}
           canDeleteSessions={role === 'owner'}

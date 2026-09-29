@@ -3,15 +3,18 @@ import { CheckoutBox, DebtTable } from '../../components/finance'
 import { SessionCalendar } from '../../components/SessionCalendar'
 import { formatDate, formatMoney } from '../../utils/appUtils'
 import SessionPlanningPanel from '../session-planning/SessionPlanningPanel'
+import OpenDaysPanel from '../session-planning/OpenDaysPanel'
 
 export function UserContent({ activeTab, debts, unpaidDebts, transactions, sessions, checkout, selectedPeriodId }) {
   if (activeTab === 'schedule') {
     return (
       <div className="tab-scene" style={{ '--tab-img': 'url(/images/court.jpg)' }}>
         <section className="grid one">
+          <OpenDaysPanel periodId={selectedPeriodId} />
           <SessionPlanningPanel key={selectedPeriodId} periodId={selectedPeriodId} />
-          <Panel title="📅 Lịch buổi đánh">
-            <SessionCalendar sessions={sessions} />
+          <Panel title="Các buổi CLB đã chơi">
+            <p className="sessions-intro">Xem lại ngày chơi và ghi chú từ CLB.</p>
+            <SessionCalendar key={selectedPeriodId} sessions={sessions} />
           </Panel>
         </section>
       </div>

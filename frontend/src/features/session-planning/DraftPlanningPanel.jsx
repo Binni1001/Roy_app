@@ -8,9 +8,10 @@ export default function DraftPlanningPanel({ periodId, weekStart }) {
   const [reload, setReload] = useState(0)
   const [message, setMessage] = useState('')
   return <section className="planning-draft-section">
-    <h3>Level, cặp ưu tiên và xếp thử</h3>
-    <p>Chỉ admin xem nháp này. Level và cặp được lưu theo kỳ; nháp chỉnh tay chưa được lưu, sẽ mất khi tải lại, đổi tuần hoặc cập nhật đầu vào.</p>
-    <button type="button" onClick={() => setOpened((value) => !value)}>{opened ? 'Đóng phần xếp thử' : 'Mở hồ sơ và xếp thử'}</button>
+    <div><span className="planning-eyebrow">Dành cho quản trị</span><h3>Xếp thử lịch tuần</h3></div>
+    <p>Chọn trình độ, người muốn đi cùng và tạo một lịch gợi ý.</p>
+    <p className="planning-notice">Nháp chỉ để xem thử, chưa lưu hay công bố. Đổi tuần hoặc làm mới sẽ bỏ nháp.</p>
+    <button type="button" aria-expanded={opened} onClick={() => setOpened((value) => !value)}>{opened ? 'Thu gọn phần xếp thử' : 'Bắt đầu xếp thử'}</button>
     {message && <p role="status">{message}</p>}
     {opened && <DraftInputs key={`${periodId}:${weekStart}:${reload}`} periodId={periodId} weekStart={weekStart}
       onReload={(notice = '') => { setMessage(notice); setReload((value) => value + 1) }} />}
@@ -29,8 +30,8 @@ function DraftInputs({ periodId, weekStart, onReload }) {
   }, [periodId, weekStart])
   if (!result) return <p role="status">Đang tải hồ sơ xếp lịch…</p>
   if (result.error) return <div role="alert"><p>{result.error}</p>
-    {result.code === 'PLANNING_SCHEMA_NOT_READY' && <p>Chạy file 20260923_session_planning_profiles.sql. Phần lịch bận bên trên vẫn dùng độc lập.</p>}
-    <button type="button" onClick={() => onReload()}>Tải lại đầu vào</button></div>
+    {result.code === 'PLANNING_SCHEMA_NOT_READY' && <p>Phần xếp thử chưa sẵn sàng. Bạn vẫn có thể lưu lịch bận ở bên trên.</p>}
+    <button type="button" onClick={() => onReload()}>Thử lại</button></div>
   return <DraftWorkspace inputs={result.data} periodId={periodId} onReload={onReload} />
 }
 
@@ -67,7 +68,7 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
 
   return <div className="planning-draft-workspace">
     {!inputs.can_edit && <p role="alert">Kỳ đã đóng: chỉ xem hồ sơ, không lưu hoặc xếp nháp mới.</p>}
-    <p>Thang level đang dùng: {inputs.levels.map((level) => level.label).join(' / ')}. Chưa nhập được giữ là “Chưa có level”, không coi là người mới.</p>
+    <h4 className="planning-step"><span>1</span> Chuẩn bị thông tin người chơi</h4>
     {member && <>
       <label>Hồ sơ của thành viên<select value={selectedId} disabled={busy}
         onChange={(event) => setSelectedId(event.target.value)}>
@@ -75,31 +76,32 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
       </select></label>
       <ProfileEditor key={member.id} member={member} inputs={inputs} periodId={periodId} disabled={disabled} onSaved={onReload} />
     </>}
-    <div className="table-wrap"><table>
-      <thead><tr><th>Thành viên</th><th>Level</th><th>Người đi cùng ưu tiên</th></tr></thead>
+    <details className="planning-help"><summary>Xem thông tin cả nhóm</summary><div className="table-wrap"><table>
+      <thead><tr><th>Thành viên</th><th>Trình độ</th><th>Người đi cùng ưu tiên</th></tr></thead>
       <tbody>{inputs.members.map((person) => <tr key={person.id}><td>{person.full_name}</td>
-        <td>{levels.get(person.profile.level) || 'Chưa có level'}</td>
+        <td>{levels.get(person.profile.level) || 'Chưa chọn trình độ'}</td>
         <td>{person.profile.partner_unavailable ? 'Lựa chọn cũ không còn đủ điều kiện — cần cập nhật'
           : names.get(person.profile.preferred_partner_id) || 'Chưa chọn'}</td></tr>)}</tbody>
-    </table></div>
+    </table></div></details>
     {!inputs.members.length && <p>Chưa có thành viên cố định hợp lệ để xếp thử.</p>}
+    <h4 className="planning-step"><span>2</span> Tạo lịch gợi ý</h4>
     <div className="planning-toolbar">
       <button type="button" className="planning-primary" disabled={disabled || !inputs.members.length} onClick={() => preview(false)}>
-        {busy ? 'Đang kiểm tra…' : draft ? 'Xếp thử lại (bỏ chỉnh tay)' : 'Tạo bản nháp thử'}
+        {busy ? 'Đang xếp lịch…' : draft ? 'Xếp lại từ đầu' : 'Xếp thử cho cả nhóm'}
       </button>
-      <button type="button" disabled={busy} onClick={() => onReload()}>Tải lại đầu vào (bỏ nháp)</button>
+      <button type="button" disabled={busy} onClick={() => onReload()}>Làm mới & bỏ nháp</button>
       {draft && <button type="button" disabled={disabled} onClick={() => preview(true)}>Kiểm tra nháp đã chỉnh</button>}
     </div>
     {error && <p role="alert">{error}</p>}
-    <p className="muted">Ưu tiên đủ lượt, phân bố số người, trộn level rồi ghép cặp. Đây là xếp thử, không bảo đảm cặp luôn đi cùng; chưa giữ lịch ổn định giữa các tuần hoặc kiểm tra trùng giờ CLB khác.</p>
+    <details className="planning-help"><summary>Cách lịch được gợi ý</summary><p>Ưu tiên đủ lượt, chia đều số người, cân bằng trình độ rồi xét người đi cùng. Cặp ưu tiên không bắt buộc luôn cùng buổi. Chưa kiểm tra trùng giờ với CLB khác hoặc giữ lịch cố định qua các tuần.</p></details>
     {draft && <>
-      <h4>Bản nháp thử — CHƯA LƯU / CHƯA CÔNG BỐ</h4>
+      <div className="planning-draft-heading"><h4>Lịch gợi ý của tuần</h4><span>CHƯA LƯU / CHƯA CÔNG BỐ</span></div>
       {dirty ? <p role="alert">Bạn đã chỉnh tay. Bấm “Kiểm tra nháp đã chỉnh” để kiểm tra lại với dữ liệu mới nhất trên máy chủ.</p>
         : <>
           <p role={draft.complete ? 'status' : 'alert'}>{draft.complete ? 'Đủ 4 buổi cho mỗi người theo đầu vào vừa kiểm tra.'
             : `Nháp thiếu ${draft.shortfall} lượt so với chỉ tiêu 4 buổi/người. Chưa đáp ứng yêu cầu.`}</p>
           {draft.partial_week && <p role="alert">Tuần không trọn kỳ: vẫn giữ chỉ tiêu 4, chưa được phép coi đây là lịch đã duyệt.</p>}
-          {draft.missing_level_ids.length > 0 && <p role="alert">Chưa có level: {draft.missing_level_ids.map((id) => names.get(id)).join(', ')}.</p>}
+          {draft.missing_level_ids.length > 0 && <p role="alert">Chưa chọn trình độ: {draft.missing_level_ids.map((id) => names.get(id)).join(', ')}.</p>}
           {draft.pairs.map((pair) => <p key={pair.person_ids.join(':')}>
             Cặp {pair.person_ids.map((id) => names.get(id)).join(' + ')}: cùng {pair.shared_dates.length}/4 buổi.
           </p>)}
@@ -110,7 +112,7 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
         return <article className="planning-day" key={date}>
           <h4>{WEEKDAYS.find(([day]) => day === dayNumber)?.[1]} · {formatDate(date)}</h4>
           <p>{assignments.length}/8 người · 17:30–19:30 · 1 sân</p>
-          <ul>{assignments.map((row) => <li key={row.person_id}>{names.get(row.person_id)} — {levels.get(inputs.members.find((person) => person.id === row.person_id)?.profile.level) || 'Chưa có level'}</li>)}</ul>
+          <ul>{assignments.map((row) => <li key={row.person_id}>{names.get(row.person_id)} — {levels.get(inputs.members.find((person) => person.id === row.person_id)?.profile.level) || 'Chưa chọn trình độ'}</li>)}</ul>
           {!assignments.length && <p>Chưa xếp người.</p>}
           <details><summary>Chỉnh người trong ngày</summary>
             <p>Bỏ chọn ngày cũ trước khi chuyển người đã đủ 4 buổi sang ngày mới.</p>
@@ -132,7 +134,7 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
           const count = draft.assignments.filter((row) => row.person_id === person.id).length
           return <tr key={person.id}><td>{person.full_name}</td><td>{count}/4</td><td>{4 - count}</td></tr>
         })}</tbody></table></div>
-      <p>Nháp chưa tạo buổi thật, suất đăng ký, thông báo hoặc công nợ. Lưu phiên bản, duyệt và công bố sẽ có ở bước tiếp theo.</p>
+      <p className="planning-note">Đây chưa phải lịch tham gia chính thức. Đóng trang sẽ mất bản nháp.</p>
     </>}
   </div>
 }
@@ -149,15 +151,15 @@ function ProfileEditor({ member, inputs, periodId, disabled, onSaved }) {
     lock.current = true; setSaving(true); setError('')
     try {
       await api.sessionPlanning.saveProfile(periodId, member.id, profilePayload(member.profile, level, partner))
-      if (mounted.current) onSaved('Đã lưu hồ sơ. Đầu vào đã được tải lại; nháp cũ đã bỏ.')
+      if (mounted.current) onSaved('Đã lưu thông tin người chơi. Bạn có thể xếp thử lại.')
     } catch (failure) { if (mounted.current) setError(errorText(failure)) }
     finally { lock.current = false; if (mounted.current) setSaving(false) }
   }
   return <form className="planning-editor" onSubmit={save}><fieldset disabled={disabled || saving}>
-    <legend>Level và cặp ưu tiên — {member.full_name}</legend>
+    <legend>Thông tin của {member.full_name}</legend>
     <div className="planning-toolbar">
-      <label>Level<select value={level} onChange={(event) => setLevel(event.target.value)}>
-        <option value="">Chưa có level</option>
+      <label>Trình độ<select value={level} onChange={(event) => setLevel(event.target.value)}>
+        <option value="">Chưa chọn trình độ</option>
         {inputs.levels.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
       </select></label>
       <label>Người đi cùng ưu tiên<select value={partner} onChange={(event) => setPartner(event.target.value)}>
@@ -165,10 +167,10 @@ function ProfileEditor({ member, inputs, periodId, disabled, onSaved }) {
         {inputs.members.filter((person) => person.id !== member.id).map((person) => <option key={person.id} value={person.id}>{person.full_name}</option>)}
       </select></label>
     </div>
-    <p>Chọn một người để ưu tiên cùng buổi, không bắt buộc đánh đôi. Không tự sửa hồ sơ của người kia hoặc buộc cả nhóm đi cùng.</p>
+    <p>Người đi cùng là một mong muốn, không bắt buộc đánh đôi hoặc luôn cùng buổi.</p>
     {member.profile.partner_unavailable && <p role="alert">Người đi cùng cũ không còn đủ điều kiện. Khi lưu, hãy chọn người mới hoặc để “Không chọn”.</p>}
     {error && <p role="alert">{error}</p>}
-    <button type="submit">{saving ? 'Đang lưu…' : 'Lưu hồ sơ và làm mới đầu vào'}</button>
-    <p className="muted">Phiên bản {member.profile.revision}. Lưu sẽ bỏ nháp đang xem để tránh dùng đầu vào cũ.</p>
+    <button type="submit">{saving ? 'Đang lưu…' : 'Lưu thông tin người chơi'}</button>
+    <p className="planning-note">Lưu thông tin sẽ bỏ bản nháp đang xem.</p>
   </fieldset></form>
 }

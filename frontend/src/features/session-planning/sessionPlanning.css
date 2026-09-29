@@ -1,4 +1,15 @@
 .session-planning { display: grid; gap: 14px; min-width: 0; }
+.open-day-list { display: grid; gap: 12px; }
+.open-day-card { display: grid; gap: 12px; padding: 18px; border: 1px solid #efe7d222; border-radius: 16px; background: linear-gradient(120deg, #202630, #171d26); min-width: 0; }
+.open-day-card.is-joined { border-color: #d8ae5280; }
+.open-day-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }
+.open-day-heading h3 { margin: 0; font-size: 1.05rem; }
+.open-day-heading > span { color: #efd080; background: #d8ae5215; border-radius: 8px; padding: 6px 10px; font-size: .8rem; }
+.open-day-note { overflow-wrap: anywhere; line-height: 1.6; }
+.open-day-joined { color: #efd080; }
+.open-day-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.open-day-empty { padding: 24px 16px; border: 1px dashed #d8ae5240; border-radius: 12px; color: #b7bdc8; line-height: 1.6; }
+@media (max-width: 480px) { .open-day-card { padding: 14px; } .open-day-actions button { width: 100%; } }
 .session-planning p { margin: 0; }
 .session-planning label { display: grid; gap: 6px; min-width: 0; }
 .session-planning button { min-height: 44px; padding: 8px 14px; border: 1px solid rgba(239,231,210,.18); border-radius: 8px; color: #efe7d2; background: #161c26; white-space: normal; }
@@ -14,6 +25,36 @@
 .planning-weekdays { display: flex; flex-wrap: wrap; gap: 12px; }
 .planning-weekdays label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .planning-weekdays input[type="checkbox"] { width: 20px; height: 20px; margin: 0; accent-color: #d8ae52; }
+.planning-intro { display: grid; gap: 12px; margin-bottom: 18px; }
+.planning-intro p { margin: 0; line-height: 1.65; color: #b7bdc8; }
+.planning-facts { display: flex; gap: 8px; flex-wrap: wrap; }
+.planning-facts span { padding: 6px 10px; border: 1px solid #d8ae5228; background: #d8ae520c; border-radius: 8px; color: #dfc88f; font-size: .78rem; }
+.planning-note, .planning-intro .planning-note { font-size: .8rem; color: #a6adba; line-height: 1.6; }
+.planning-help { border: 1px solid #efe7d21a; border-radius: 12px; padding: 0 14px; min-width: 0; }
+.planning-help summary { cursor: pointer; padding: 14px 0; color: #dfc88f; font-size: .88rem; }
+.planning-help[open] { padding-bottom: 14px; }
+.planning-help[open] > p { margin-bottom: 14px; }
+.planning-help .planning-toolbar { margin: 14px 0; }
+.planning-metrics { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+.planning-metrics > div { display: grid; gap: 5px; border-radius: 12px; padding: 16px 10px; background: #d8ae520d; border: 1px solid #d8ae5225; }
+.planning-metrics strong { color: #efd080; font-size: 1.5rem; }
+.planning-metrics span { color: #b7bdc8; font-size: .75rem; }
+.session-planning .planning-notice, .planning-notice { padding: 14px 16px; border-radius: 12px; background: #d8ae5210; border-left: 3px solid #d8ae52; line-height: 1.65; font-size: .87rem; }
+.session-planning .planning-weekdays { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 8px; }
+.session-planning .planning-weekdays label { display: grid; position: relative; justify-items: center; gap: 7px; padding: 12px 4px; background: #10141b; border: 1px solid #efe7d220; border-radius: 12px; cursor: pointer; }
+.planning-weekdays label span { font-weight: 600; font-size: .84rem; }
+.planning-weekdays label small { color: #a8b5ac; font-size: .7rem; }
+.session-planning .planning-weekdays label.planning-busy { border-color: #d8ae52; background: #d8ae5220; color: #f2d78e; }
+.planning-weekdays .planning-busy small { color: #f2d78e; }
+.session-planning .planning-weekdays label.planning-day-off { opacity: .5; cursor: default; }
+.planning-weekdays label:focus-within { outline: 2px solid #d8ae52; outline-offset: 3px; }
+.planning-eyebrow { color: #bda672; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase; }
+.planning-draft-section h3 { margin: 6px 0 0; }
+.planning-step { display: flex; align-items: center; gap: 10px; margin: 10px 0 0; }
+.planning-step span { display: grid; place-items: center; width: 28px; height: 28px; border-radius: 50%; background: #d8ae5225; color: #efd080; }
+.planning-draft-heading { display: grid; gap: 8px; padding: 16px 0 0; }
+.planning-draft-heading h4 { margin: 0; font-size: 1.1rem; }
+.planning-draft-heading span { color: #d8ae52; font-size: .7rem; letter-spacing: .06em; }
 .planning-overrides { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
 .planning-overrides li { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px; }
 .session-planning [role="alert"] { color: #f5c584; }
@@ -28,6 +69,10 @@
 .planning-day-choices label { display: flex; align-items: center; gap: 8px; min-height: 44px; }
 .planning-day-choices input[type="checkbox"] { width: 20px; height: 20px; flex-shrink: 0; margin: 0; accent-color: #d8ae52; }
 @media (max-width: 480px) {
+  .session-planning .planning-weekdays { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .session-planning { gap: 18px; }
+  .planning-overrides li { padding: 10px 0; border-bottom: 1px solid #efe7d215; }
+  .planning-editor button[type="submit"] { width: 100%; }
   .planning-toolbar > label, .planning-toolbar > button { flex: 1 1 100%; }
   .planning-editor fieldset { padding: 12px; }
 }
