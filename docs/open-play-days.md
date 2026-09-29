@@ -11,6 +11,11 @@ Migration có thể chạy lại mà không mất đăng ký. Không phụ thu�
 
 ## Quy tắc đã thống nhất
 
+- Admin có ba mục: Lịch tuần, Xếp lịch cố định, Buổi đã chơi. Lịch cố định hiện vẫn là bản nháp, chưa công bố.
+- Mọi ngày tự đăng ký (kể cả đã đóng đăng ký) bị loại khỏi xếp nháp cố định và chỉnh người thủ công. Mở thêm ngày làm bản nháp cũ hết hiệu lực khi kiểm tra lại.
+- Chỉ tiêu cố định vẫn 4 buổi/người; nếu không đủ ngày/chỗ, hệ thống báo thiếu, không tự điền vào ngày tự đăng ký.
+- Phần xếp cố định cần đọc được bảng ngày tự đăng ký. Nếu chưa chạy migration hoặc truy vấn lỗi, hệ thống dừng xếp thử để tránh xếp nhầm ngày.
+
 - Admin chỉ mở/đóng ngày của CLB được phân công; owner quản lý mọi CLB.
 - Ngày nằm trong kỳ đang mở; admin được chọn cả thứ Năm.
 - Thành viên đang hoạt động trong CLB được tự đăng ký; không bắt buộc là thành viên cố định của kỳ. Admin/owner hiện không phải người chơi theo mô hình sẵn có.

@@ -60,6 +60,7 @@ function PlanningWorkspace({ periodId }) {
       <button type="button" onClick={() => { setMessage(''); setReload((value) => value + 1) }}>Làm mới</button>
     </div>
     <p>Tuần {formatDate(analysis.week_start)} – {formatDate(analysis.week_end)} · Kỳ {data.period.name}</p>
+    {analysis.open_dates?.length > 0 && <p className="planning-note">Đã loại ngày tự đăng ký khỏi lịch cố định: {analysis.open_dates.map(formatDate).join(', ')}.</p>}
     {message && <p role="status">{message}</p>}
     {!data.can_edit && <p role="alert">Kỳ đã đóng. Chỉ được xem, không sửa lịch bận.</p>}
     {analysis.partial_week && <p role="alert">Tuần chỉ nằm một phần trong kỳ. Hệ thống vẫn kiểm tra đủ 4 buổi, không tự giảm chỉ tiêu.</p>}

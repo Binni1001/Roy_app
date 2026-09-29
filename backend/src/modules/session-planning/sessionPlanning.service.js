@@ -20,6 +20,11 @@ export function checkPlanningResult(result) {
 }
 
 export function createSessionPlanningService({ repo = repository, getPeriod = (...args) => periodsService.getAccessiblePeriod(...args), annotate = annotateActivityPeople } = {}) {
+  async function loadOpenDates(periodId) {
+    const rows = checkPlanningResult(await repo.openDates(periodId));
+    if (rows.length >= 500) throw planningError("Danh sách ngày quá lớn để xếp lịch an toàn.", 503);
+    return rows.map(row => row.play_date);
+  }
   async function context(periodId, user) {
     if (!isGroupId(periodId)) throw planningError("Mã kỳ không hợp lệ.");
     const period = await getPeriod(periodId, user);
@@ -47,14 +52,14 @@ export function createSessionPlanningService({ repo = repository, getPeriod = (.
   async function draftContext(periodId, user, weekStart) {
     requireManager(user);
     const value = await context(periodId, user);
-    const [preferences, profiles] = await Promise.all([
-      repo.preferences(periodId).then(checkPlanningResult), repo.profiles(periodId).then(checkPlanningResult)
+    const [preferences, profiles, openDates] = await Promise.all([
+      repo.preferences(periodId).then(checkPlanningResult), repo.profiles(periodId).then(checkPlanningResult), loadOpenDates(periodId)
     ]);
     if (preferences.length >= 500 || profiles.length >= 500) throw planningError("Dữ liệu đầu vào quá lớn; cần phân trang trước khi xếp lịch.", 503);
     const week = weekStart === undefined ? defaultWeek(value.period) : weekStart;
-    const analysis = analyzeWeek(value.period, value.members, preferences, week);
-    return { ...value, preferences, profiles, analysis, week,
-      version: inputVersion(value.period, value.members, preferences, profiles, week) };
+    const analysis = analyzeWeek(value.period, value.members, preferences, week, openDates);
+    return { ...value, preferences, profiles, analysis, week, openDates,
+      version: inputVersion(value.period, value.members, preferences, profiles, week, openDates) };
   }
   return {
     async draftInputs(periodId, user, weekStart) {
@@ -88,16 +93,16 @@ export function createSessionPlanningService({ repo = repository, getPeriod = (.
     async preview(periodId, payload, user) {
       requireManager(user);
       validatePreviewRequest(payload);
-      const { period, members, preferences, profiles, week, version } = await draftContext(periodId, user, payload.week_start);
+      const { period, members, preferences, profiles, week, version, openDates } = await draftContext(periodId, user, payload.week_start);
       requireEditable(period);
-      if (payload.input_version !== version) throw planningError("Lịch bận, thành viên hoặc hồ sơ đã thay đổi. Tải lại đầu vào và xếp thử lại; nháp cũ chưa được lưu hay công bố.", 409, "PLANNING_STALE_INPUT");
-      return { ...buildDraft(period, members, preferences, profiles, week, payload.assignments), input_version: version };
+      if (payload.input_version !== version) throw planningError("Ngày tự đăng ký, lịch bận, thành viên hoặc hồ sơ đã thay đổi. Tải lại đầu vào và xếp thử lại; nháp cũ chưa được lưu hay công bố.", 409, "PLANNING_STALE_INPUT");
+      return { ...buildDraft(period, members, preferences, profiles, week, payload.assignments, openDates), input_version: version };
     },
     async get(periodId, user, weekStart) {
       const { period, members, manager, self } = await context(periodId, user);
-      const preferences = checkPlanningResult(await repo.preferences(periodId));
+      const [preferences, openDates] = await Promise.all([repo.preferences(periodId).then(checkPlanningResult), loadOpenDates(periodId)]);
       const week = weekStart === undefined ? defaultWeek(period) : weekStart;
-      const analysis = analyzeWeek(period, members, preferences, week);
+      const analysis = analyzeWeek(period, members, preferences, week, openDates);
       const visible = manager ? members : [self];
       const byPerson = new Map(preferences.map((row) => [row.person_id, row]));
       return {
@@ -108,7 +113,7 @@ export function createSessionPlanningService({ repo = repository, getPeriod = (.
           preferences: byPerson.get(person.id) || { person_id: person.id, busy_weekdays: [], date_overrides: {}, revision: 0, updated_at: null } })),
         // Ordinary members see their own availability, never other people's calendars.
         analysis: manager ? analysis : { week_start: analysis.week_start, week_end: analysis.week_end,
-          dates: analysis.dates, partial_week: analysis.partial_week,
+          dates: analysis.dates, open_dates: analysis.open_dates, partial_week: analysis.partial_week,
           availability: analysis.availability.filter((row) => row.person_id === self.id) }
       };
     },

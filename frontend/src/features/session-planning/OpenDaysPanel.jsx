@@ -1,17 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { api } from '../../api/client'
 import { Panel } from '../../components/common'
-import { formatPlanningDate } from './planningUtils'
+import { formatPlanningDate, weekStartFor, WEEKDAYS } from './planningUtils'
 import './sessionPlanning.css'
 
-export default function OpenDaysPanel({ periodId }) {
+export default function OpenDaysPanel({ periodId, weekly = false, onFixed }) {
   // Remount the workspace on scope change; pending responses cannot affect another CLB/kỳ.
-  return <Panel title="Buổi tự đăng ký">
-    {periodId ? <OpenDaysWorkspace key={periodId} periodId={periodId} /> : <p>Chọn một kỳ để xem các ngày mở đăng ký.</p>}
+  return <Panel title={weekly ? 'Lịch tuần & đăng ký' : 'Buổi tự đăng ký'}>
+    {periodId ? <OpenDaysWorkspace key={periodId} periodId={periodId} weekly={weekly} onFixed={onFixed} /> : <p>Chọn một kỳ để xem các ngày mở đăng ký.</p>}
   </Panel>
 }
 
-function OpenDaysWorkspace({ periodId }) {
+function OpenDaysWorkspace({ periodId, weekly, onFixed }) {
+  const [chosenDay, setChosenDay] = useState('')
   const [data, setData] = useState(null)
   const [error, setError] = useState('')
   const [message, setMessage] = useState('')
@@ -39,7 +40,7 @@ function OpenDaysWorkspace({ periodId }) {
       await api.sessionPlanning.changeOpenDay(periodId, playDate, { action, ...(action === 'open' ? { note } : {}) })
       if (!mounted.current) return
       setMessage({ open: 'Ngày đã có trong danh sách đăng ký.', close: 'Đã đóng đăng ký. Danh sách người chơi được giữ nguyên.', reopen: 'Đã mở lại đăng ký.', join: 'Đã giữ chỗ cho bạn!', leave: 'Đã hủy đăng ký của bạn.' }[action])
-      if (action === 'open') { setDate(''); setNote('') }
+      if (action === 'open') { setChosenDay(playDate); setDate(''); setNote('') }
       // Keep write controls locked until the authoritative roster is refreshed.
       const fresh = await api.sessionPlanning.openDays(periodId)
       if (mounted.current) setData(fresh)
@@ -50,7 +51,13 @@ function OpenDaysWorkspace({ periodId }) {
       if (mounted.current) setPending('')
     }
   }
-  return <div className="session-planning open-days">
+  const [today] = useState(() => new Date(Date.now() + 7 * 3600000).toISOString().slice(0, 10))
+  const anchor = data ? (today < data.period.start_date ? data.period.start_date : today > data.period.end_date ? data.period.end_date : today) : today
+  const week = weekStartFor(chosenDay || anchor)
+  const dates = Array.from({ length: 7 }, (_, i) => { const d = new Date(`${week}T00:00:00Z`); d.setUTCDate(d.getUTCDate() + i); return d.toISOString().slice(0, 10) })
+    .filter(value => data && value >= data.period.start_date && value <= data.period.end_date)
+  const rows = weekly ? dates.map(play_date => data.days.find(day => day.play_date === play_date) || { play_date, fixed: true }) : data?.days || []
+  return <div className={`session-planning open-days${weekly ? ' open-days-weekly' : ''}`}>
     <p className="planning-note">Admin chọn ngày mở. Thành viên trong CLB tự đăng ký, tối đa 8 người/buổi; ai đăng ký trước giữ chỗ trước.</p>
     <div className="planning-facts"><span>17:30–19:30</span><span>Hủy trước 17:30 ngày chơi</span><span>Tách khỏi 4 buổi cố định</span></div>
     <div className="planning-toolbar"><button type="button" disabled={loading || Boolean(pending)} onClick={() => { setLoading(true); setReload(n => n + 1) }}>Làm mới chỗ trống</button></div>
@@ -58,6 +65,7 @@ function OpenDaysWorkspace({ periodId }) {
     {error && <p role="alert">{error}</p>}
     {message && <p className="planning-notice" role="status">{message}</p>}
     {data && <>
+      {weekly && <label>Tuần chứa ngày<input type="date" value={chosenDay || anchor} min={data.period.start_date} max={data.period.end_date} onChange={event => setChosenDay(event.target.value)} /></label>}
       {!data.can_edit && <p>Kỳ này chưa mở hoặc đã đóng. Bạn chỉ có thể xem danh sách.</p>}
       {data.can_manage && <details className="planning-help"><summary>+ Mở ngày tự đăng ký</summary>
         <form className="planning-editor" onSubmit={event => { event.preventDefault(); change(date, 'open') }}>
@@ -70,8 +78,12 @@ function OpenDaysWorkspace({ periodId }) {
           </fieldset>
         </form>
       </details>}
-      {!data.days.length && <div className="open-day-empty">Chưa có ngày mở đăng ký. {data.can_manage ? 'Chọn “Mở ngày tự đăng ký” để bắt đầu.' : 'Các ngày admin mở sẽ xuất hiện tại đây.'}</div>}
-      <div className="open-day-list">{data.days.map(day => <article className={`open-day-card${day.joined ? ' is-joined' : ''}`} key={day.play_date}>
+      {!rows.length && <div className="open-day-empty">Chưa có ngày mở đăng ký. {data.can_manage ? 'Chọn “Mở ngày tự đăng ký” để bắt đầu.' : 'Các ngày admin mở sẽ xuất hiện tại đây.'}</div>}
+      <div className="open-day-list">{rows.map(day => day.fixed ? <article className="open-day-card" key={day.play_date}>
+        <div className="open-day-heading"><h3>{formatPlanningDate(day.play_date)}</h3><span>{new Date(`${day.play_date}T00:00:00Z`).getUTCDay() === 4 ? 'Ngày nghỉ' : 'Có thể xếp cố định'}</span></div>
+        <p className="planning-note">{new Date(`${day.play_date}T00:00:00Z`).getUTCDay() === 4 ? 'CLB nghỉ, trừ khi admin mở tự đăng ký.' : '17:30–19:30 · Chưa công bố danh sách'}</p>
+      </article> : <article className={`open-day-card${day.joined ? ' is-joined' : ''}`} key={day.play_date}>
+        <p className="planning-eyebrow">Tự đăng ký · {WEEKDAYS.find(([n]) => n === (new Date(`${day.play_date}T00:00:00Z`).getUTCDay() || 7))?.[1]}</p>
         <div className="open-day-heading"><h3>{formatPlanningDate(day.play_date)}</h3><span>{day.started ? 'Đã đến giờ chơi' : day.status === 'closed' ? 'Đã đóng đăng ký' : `${Math.max(0, day.capacity - day.count)} chỗ trống`}</span></div>
         <p className="planning-note">17:30–19:30 · {day.count}/{day.capacity} người đã đăng ký</p>
         {day.note && <p className="open-day-note">{day.note}</p>}
@@ -83,6 +95,7 @@ function OpenDaysWorkspace({ periodId }) {
         </div>
         {data.can_manage && <details className="planning-help"><summary>Người đã đăng ký ({day.count})</summary>{day.names.length ? <ul>{day.names.map((name, i) => <li key={i}>{name}</li>)}</ul> : <p>Chưa có người đăng ký.</p>}</details>}
       </article>)}</div>
+      {weekly && onFixed && <button type="button" onClick={onFixed}>Đến phần xếp lịch cố định</button>}
     </>}
     <p className="planning-note">Đăng ký chỉ giữ chỗ. Công nợ được xử lý theo quy trình ghi nhận buổi đánh của CLB.</p>
   </div>

@@ -14,7 +14,8 @@ let profiles = members.map((person, i) => ({ person_id: person.id, level: i === 
 let preferences = []
 let schemaMissing = false
 const openDays = []
-const version = () => inputVersion(period, members, preferences, profiles, week)
+const openDates = () => openDays.map(day => day.play_date)
+const version = () => inputVersion(period, members, preferences, profiles, week, openDates())
 
 const entry = `
 import React from 'react';
@@ -22,7 +23,7 @@ import { createRoot } from 'react-dom/client';
 import { api } from '/src/api/client.js';
 import DraftPlanningPanel from '/src/features/session-planning/DraftPlanningPanel.jsx';
 import SessionPlanningPanel from '/src/features/session-planning/SessionPlanningPanel.jsx';
-import OpenDaysPanel from '/src/features/session-planning/OpenDaysPanel.jsx';
+import AdminSessionsLayout from '/src/features/session-planning/AdminSessionsLayout.jsx';
 import SessionsPanel from '/src/features/admin/panels/SessionsPanel.jsx';
 import { UserContent } from '/src/features/user/UserContent.jsx';
 import '/src/index.css';
@@ -60,11 +61,10 @@ function Screens() {
   api.sessions.remove = async (id) => {setSessions((rows)=>rows.filter((row)=>row.id!==id)); return {id};};
   return h(React.Fragment, null,
     h('div', {className:'planning-toolbar',style:{marginBottom:20}}, ...['admin','user','scoped'].map((value)=>h('button',{key:value,onClick:()=>setMode(value)},value === 'admin' ? 'Xem Owner' : value === 'user' ? 'Xem User' : 'Xem Admin theo nhóm'))),
-    h('div',{key:mode}, manager ? h(React.Fragment,null,
-      h(OpenDaysPanel,{periodId:'qa-period'}),
-      h(SessionPlanningPanel,{periodId:'qa-period',manager:true}),
-      h(SessionsPanel,{people:${JSON.stringify(members)}, sessions, sessionForm:forms.session,guestForm:forms.guest,selectedPeriodId:'qa-period',
-        setForm:(name,patch)=>setForms((value)=>({...value,[name]:{...value[name],...patch}})),submit:async(action)=>action(),canManageGuests:mode==='admin',canDeleteSessions:mode==='admin'}))
+    h('div',{key:mode}, manager ? h(AdminSessionsLayout,{periodId:'qa-period',
+      fixed:h(SessionPlanningPanel,{periodId:'qa-period',manager:true}),
+      history:h(SessionsPanel,{people:${JSON.stringify(members)}, sessions, sessionForm:forms.session,guestForm:forms.guest,selectedPeriodId:'qa-period',
+        setForm:(name,patch)=>setForms((value)=>({...value,[name]:{...value[name],...patch}})),submit:async(action)=>action(),canManageGuests:mode==='admin',canDeleteSessions:mode==='admin'})})
       : h(UserContent,{activeTab:'schedule',sessions,selectedPeriodId:'qa-period'}))
   );
 }
@@ -116,7 +116,7 @@ const server = await createServer({
           if (action === 'availability') {
             const rows = body.manager ? members : members.slice(0, 1)
             res.end(JSON.stringify({period, can_manage:body.manager, can_edit:true,
-              analysis:analyzeWeek(period,members,preferences,week),
+              analysis:analyzeWeek(period,members,preferences,week,openDates()),
               members:rows.map((person)=>({...person,preferences:preferences.find((row)=>row.person_id===person.id)||{busy_weekdays:[],date_overrides:{},revision:0}}))})); return
           }
           if (action === 'availability-save') {
@@ -126,7 +126,7 @@ const server = await createServer({
           if (schemaMissing) throw Object.assign(new Error('Chức năng xếp lịch chưa được cài đặt đầy đủ.'), { code: 'PLANNING_SCHEMA_NOT_READY', statusCode: 503 })
           if (action === 'inputs') {
             res.end(JSON.stringify({ stage: 'draft_preview', input_version: version(), levels: PLANNING_LEVELS, can_edit: true,
-              analysis: analyzeWeek(period, members, preferences, week),
+              analysis: analyzeWeek(period, members, preferences, week, openDates()),
               members: members.map((person) => ({ ...person, profile: profiles.find((row) => row.person_id === person.id) })) })); return
           }
           if (action === 'profile') {
@@ -139,7 +139,7 @@ const server = await createServer({
           }
           if (action === 'preview') {
             if (body.input_version !== version()) throw Object.assign(new Error('Đầu vào đã thay đổi. Tải lại đầu vào và xếp thử lại.'), { code: 'PLANNING_STALE_INPUT', statusCode: 409 })
-            res.end(JSON.stringify({ ...buildDraft(period, members, preferences, profiles, week, body.assignments), input_version: version() })); return
+            res.end(JSON.stringify({ ...buildDraft(period, members, preferences, profiles, week, body.assignments, openDates()), input_version: version() })); return
           }
           res.statusCode = 404; res.end('{}')
         } catch (error) { res.statusCode = error.statusCode || 400; res.end(JSON.stringify({ code: error.code || 'QA_ERROR', message: error.message })) }

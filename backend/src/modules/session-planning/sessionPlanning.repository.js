@@ -1,6 +1,10 @@
 import { supabase } from "../../config/supabase.js";
 
 export const sessionPlanningRepository = {
+  openDates(periodId) {
+    // Closed registration remains a self-registration day, never a fixed day.
+    return supabase.from("open_play_days").select("play_date").eq("period_id", periodId).order("play_date").limit(500);
+  },
   members(periodId) {
     return supabase.from("period_members")
       .select("person_id, person:people!inner(id, full_name, email, status)")

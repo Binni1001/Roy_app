@@ -74,12 +74,12 @@ export function isAvailable(date, preferences) {
 
 // Exact bipartite max-flow feasibility check. It does NOT choose or publish a roster.
 // Total capacity alone misses cases where many members are only free on the same days.
-export function analyzeWeek(period, members, preferences, weekStart) {
+export function analyzeWeek(period, members, preferences, weekStart, openDates = []) {
   if (!isDate(weekStart) || weekday(weekStart) !== 1) throw planningError("Ngày đầu tuần phải là thứ Hai hợp lệ.");
   const weekEnd = addDays(weekStart, 6);
   if (weekEnd < period.start_date || weekStart > period.end_date) throw planningError("Tuần được chọn không giao với kỳ này.");
   const dates = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i))
-    .filter((date) => date >= period.start_date && date <= period.end_date && SCHEDULE_RULES.playing_weekdays.includes(weekday(date)));
+    .filter((date) => date >= period.start_date && date <= period.end_date && SCHEDULE_RULES.playing_weekdays.includes(weekday(date)) && !openDates.includes(date));
   const byPerson = new Map(preferences.map((row) => [row.person_id, row]));
   const source = 0;
   const sink = 1 + members.length + dates.length;
@@ -129,6 +129,7 @@ export function analyzeWeek(period, members, preferences, weekStart) {
   const capacity = dates.length * SCHEDULE_RULES.capacity;
   return {
     week_start: weekStart, week_end: weekEnd, dates,
+    open_dates: [...new Set(openDates)].filter(date => date >= weekStart && date <= weekEnd).sort(),
     member_count: members.length, required_slots: required, capacity_slots: capacity,
     max_assignable_slots: maxAssignable, shortfall: required - maxAssignable,
     possible: required === maxAssignable,

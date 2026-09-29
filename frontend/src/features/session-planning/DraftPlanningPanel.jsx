@@ -68,6 +68,7 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
 
   return <div className="planning-draft-workspace">
     {!inputs.can_edit && <p role="alert">Kỳ đã đóng: chỉ xem hồ sơ, không lưu hoặc xếp nháp mới.</p>}
+    {inputs.analysis.open_dates?.length > 0 && <p className="planning-notice">Ngày tự đăng ký: {inputs.analysis.open_dates.map(formatDate).join(', ')}. Không xếp người vào các ngày này, kể cả khi đã đóng đăng ký.</p>}
     <h4 className="planning-step"><span>1</span> Chuẩn bị thông tin người chơi</h4>
     {member && <>
       <label>Hồ sơ của thành viên<select value={selectedId} disabled={busy}
@@ -112,7 +113,8 @@ function DraftWorkspace({ inputs, periodId, onReload }) {
         return <article className="planning-day" key={date}>
           <h4>{WEEKDAYS.find(([day]) => day === dayNumber)?.[1]} · {formatDate(date)}</h4>
           <p>{assignments.length}/8 người · 17:30–19:30 · 1 sân</p>
-          <ul>{assignments.map((row) => <li key={row.person_id}>{names.get(row.person_id)} — {levels.get(inputs.members.find((person) => person.id === row.person_id)?.profile.level) || 'Chưa chọn trình độ'}</li>)}</ul>
+          <details className="planning-roster"><summary>Xem {assignments.length} người được gợi ý</summary>
+          <ul>{assignments.map((row) => <li key={row.person_id}>{names.get(row.person_id)} — {levels.get(inputs.members.find((person) => person.id === row.person_id)?.profile.level) || 'Chưa chọn trình độ'}</li>)}</ul></details>
           {!assignments.length && <p>Chưa xếp người.</p>}
           <details><summary>Chỉnh người trong ngày</summary>
             <p>Bỏ chọn ngày cũ trước khi chuyển người đã đủ 4 buổi sang ngày mới.</p>

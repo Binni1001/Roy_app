@@ -1,5 +1,12 @@
 .session-planning { display: grid; gap: 14px; min-width: 0; }
+.admin-sessions-layout { display: grid; gap: 18px; min-width: 0; }
+.sessions-sections { display: flex; gap: 8px; padding: 6px; background: #10141b; border: 1px solid #efe7d222; border-radius: 14px; }
+.sessions-sections button { flex: 1; min-height: 48px; border-radius: 10px; background: transparent; color: #b7bdc8; border: 1px solid transparent; padding: 10px; white-space: normal; }
+.sessions-sections button[aria-pressed="true"] { background: #d8ae5225; border-color: #d8ae5250; color: #efd080; }
+.sessions-sections button:focus-visible { outline: 2px solid #d8ae52; outline-offset: 2px; }
+.planning-roster { border-top: 1px solid #efe7d21a; margin-top: 12px; }
 .open-day-list { display: grid; gap: 12px; }
+.open-days-weekly .open-day-list { grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr)); align-items: start; }
 .open-day-card { display: grid; gap: 12px; padding: 18px; border: 1px solid #efe7d222; border-radius: 16px; background: linear-gradient(120deg, #202630, #171d26); min-width: 0; }
 .open-day-card.is-joined { border-color: #d8ae5280; }
 .open-day-heading { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 10px; }

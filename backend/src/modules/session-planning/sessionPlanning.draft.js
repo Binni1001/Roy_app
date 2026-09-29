@@ -23,12 +23,12 @@ export function validateProfile(payload, personId, members) {
 }
 
 // A diagnostic preview uses a snapshot token, never as authorization to reserve a seat.
-export function inputVersion(period, members, preferences, profiles, weekStart) {
+export function inputVersion(period, members, preferences, profiles, weekStart, openDates = []) {
   const prefs = new Map(preferences.map((row) => [row.person_id, row]));
   const skills = new Map(profiles.map((row) => [row.person_id, row]));
   const value = {
     algorithm: "draft-preview-v1", period: [period.id, period.group_id, period.status, period.start_date, period.end_date],
-    week_start: weekStart, rules: SCHEDULE_RULES,
+    week_start: weekStart, rules: SCHEDULE_RULES, open_dates: [...new Set(openDates)].sort(),
     members: [...members].sort((a, b) => a.id.localeCompare(b.id)).map((person) => {
       const preference = prefs.get(person.id), profile = skills.get(person.id);
       return [person.id, person.full_name, preference?.revision || 0,
@@ -196,8 +196,8 @@ export function inspectAssignments(assignments, analysis, members, profiles) {
   };
 }
 
-export function buildDraft(period, members, preferences, profiles, weekStart, suppliedAssignments) {
-  const analysis = analyzeWeek(period, members, preferences, weekStart);
+export function buildDraft(period, members, preferences, profiles, weekStart, suppliedAssignments, openDates = []) {
+  const analysis = analyzeWeek(period, members, preferences, weekStart, openDates);
   const assignments = suppliedAssignments === undefined
     ? optimize(initialAssignments(analysis), analysis, profiles, preferredPairs(members, profiles)) : suppliedAssignments;
   return inspectAssignments(assignments, analysis, members, profiles);

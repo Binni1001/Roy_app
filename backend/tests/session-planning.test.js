@@ -87,6 +87,7 @@ function fixture(t, changes = {}) {
   ];
   const calls = [];
   const repo = {
+    async openDates() { return { data: [] }; },
     async members(id) { calls.push(["members", id]); return { data: people.map((person) => ({ person_id: person.id, person })) }; },
     async memberships(id) { calls.push(["memberships", id]); return { data: people.map((person) => ({ person_id: person.id })) }; },
     async preferences(id) { calls.push(["preferences", id]); return { data: [
@@ -107,6 +108,28 @@ function fixture(t, changes = {}) {
   });
   return { service, calls, people, repo };
 }
+
+test("self-registration dates are excluded from auto/manual drafts and invalidate old previews", async (t) => {
+  let dates = [];
+  const { service } = fixture(t, { openDates: async () => ({ data: dates.map(play_date => ({ play_date })) }) });
+  const before = await service.draftInputs(P, owner, "2026-09-07");
+  dates = ["2026-09-07", "2026-09-08", "2026-09-09"];
+  await assert.rejects(service.preview(P, { week_start: "2026-09-07", input_version: before.input_version }, owner), { code: "PLANNING_STALE_INPUT" });
+  const after = await service.draftInputs(P, owner, "2026-09-07");
+  assert.deepEqual(after.analysis.open_dates, dates);
+  assert.equal(after.analysis.capacity_slots, 24);
+  assert.equal(after.analysis.possible, false);
+  const draft = await service.preview(P, { week_start: "2026-09-07", input_version: after.input_version }, owner);
+  assert.ok(draft.assignments.every(row => !dates.includes(row.date)));
+  assert.ok(draft.shortfall > 0);
+  await assert.rejects(service.preview(P, { week_start: "2026-09-07", input_version: after.input_version,
+    assignments: [{ person_id: U, date: "2026-09-07" }] }, owner));
+});
+
+test("failed open-day lookup must not silently allocate self-registration dates", async (t) => {
+  const { service } = fixture(t, { openDates: async () => ({ error: { code: "42P01" } }) });
+  await assert.rejects(service.draftInputs(P, owner, "2026-09-07"), { code: "PLANNING_SCHEMA_NOT_READY" });
+});
 
 test("foreign period scope denied before preferences/roster reads; owner remains global", async (t) => {
   const { service, calls } = fixture(t);
