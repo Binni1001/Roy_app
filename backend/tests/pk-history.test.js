@@ -28,18 +28,42 @@ test("June archives exactly replay the original UI from preserved evidence, not 
 });
 
 test("June reads need no Elo ledger and other periods retain the same Elo calculation", async (t) => {
+  const images = t.mock.method(pkMatchesRepository, "getArchivedPlayerAvatars", async () => ({ data: [] }));
   const call = t.mock.method(pkMatchesRepository, "getSeasonRatings", async () => ({ data: [
     { person_id: "a", person: { full_name: "An" }, rating: 1012.3, matches: 5, wins: 3, losses: 2, opponent_ids: ["b", "c", "d"] },
   ] }));
   assert.equal((await pkMatchesService.getLeaderboard(june, "doubles")).ranked.length, 12);
   assert.equal(call.mock.callCount(), 0);
+  assert.equal(images.mock.callCount(), 1);
   const active = await pkMatchesService.getLeaderboard("current-period", "singles");
   assert.equal(call.mock.callCount(), 1);
+  assert.equal(images.mock.callCount(), 1);
   assert.equal(active.ranked[0].points, 1012);
   assert.equal(active.ranked[0].rank, 1);
   assert.equal(active.archived, undefined);
   assert.equal(archivedPkLeaderboard("current-period", "singles"), null);
   assert.doesNotThrow(() => assertPkPeriodWritable("current-period"));
+});
+
+test("June avatar enrichment preserves every historical ranking field and never mutates the archive", async (t) => {
+  const saved = archivedPkLeaderboard(june, "doubles");
+  const first = saved.ranked[0];
+  t.mock.method(pkMatchesRepository, "getArchivedPlayerAvatars", async (ids) => {
+    assert.deepEqual(ids, saved.ranked.map((row) => row.id));
+    return { data: [{ id: first.id, avatar_url: "https://example.test/avatar.jpg", rank: 999, points: 0, full_name: "Changed" }] };
+  });
+  const result = await pkMatchesService.getLeaderboard(june, "doubles");
+  assert.deepEqual(result.ranked[0], { ...first, avatar_url: "https://example.test/avatar.jpg" });
+  assert.deepEqual(result.ranked.slice(1), saved.ranked.slice(1));
+  assert.deepEqual(archivedPkLeaderboard(june, "doubles"), saved);
+});
+
+test("a failed avatar lookup keeps the whole June table available with initials", async (t) => {
+  const saved = archivedPkLeaderboard(june, "singles");
+  const images = t.mock.method(pkMatchesRepository, "getArchivedPlayerAvatars", async () => ({ data: null, error: { message: "Unavailable" } }));
+  assert.deepEqual(await pkMatchesService.getLeaderboard(june, "singles"), saved);
+  images.mock.mockImplementation(async () => { throw new Error("Network unavailable"); });
+  assert.deepEqual(await pkMatchesService.getLeaderboard(june, "singles"), saved);
 });
 
 test("all API mutations of June history fail before repository writes", async (t) => {

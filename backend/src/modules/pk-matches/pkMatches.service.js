@@ -337,7 +337,22 @@ export const pkMatchesService = {
     if (!periodId) throw new Error("Vui l\u00f2ng ch\u1ecdn k\u1ef3 thi \u0111\u1ea5u.");
     if (!MATCH_TYPES.has(matchType)) throw new Error("Lo\u1ea1i b\u1ea3ng x\u1ebfp h\u1ea1ng kh\u00f4ng h\u1ee3p l\u1ec7.");
     const archive = archivedPkLeaderboard(periodId, matchType);
-    if (archive) return archive;
+    if (archive) {
+      try {
+        const { data: avatars, error: avatarError } = await pkMatchesRepository.getArchivedPlayerAvatars(
+          archive.ranked.map((row) => row.id)
+        );
+        if (!avatarError) {
+          const byId = new Map((avatars || []).map((person) => [person.id, person.avatar_url]));
+          archive.ranked = archive.ranked.map((row) => ({
+            ...row, avatar_url: byId.has(row.id) ? byId.get(row.id) || null : row.avatar_url,
+          }));
+        }
+      } catch {
+        // An image lookup failure must not hide the recovered ranking.
+      }
+      return archive;
+    }
 
     const { data = [], error } = await pkMatchesRepository.getSeasonRatings(periodId, matchType);
     if (error) throw databaseError(error);

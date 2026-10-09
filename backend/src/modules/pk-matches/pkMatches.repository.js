@@ -113,6 +113,11 @@ export const pkMatchesRepository = {
       .eq("match_type", matchType);
   },
 
+  async getArchivedPlayerAvatars(personIds) {
+    // Historical players still need their image even if they are now inactive.
+    return supabase.from("people").select("id, avatar_url").in("id", personIds);
+  },
+
   async getPublicPeople() {
     return supabase
       .from("people")
