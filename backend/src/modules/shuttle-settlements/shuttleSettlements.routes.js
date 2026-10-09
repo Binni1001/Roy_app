@@ -6,5 +6,6 @@ const router = express.Router();
 
 router.get("/period/:periodId/preview", requireAuth, requireAdmin, shuttleSettlementsController.preview);
 router.post("/period/:periodId/settle", requireAuth, requireAdmin, shuttleSettlementsController.settle);
+router.post("/period/:periodId/apply-fund", requireAuth, requireAdmin, shuttleSettlementsController.applyFund);
 
 export default router;

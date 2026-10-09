@@ -5,11 +5,10 @@ import { ActionGroup, ConfirmModal, Input, Modal, Panel, SearchBox, SimpleTable,
 import { FundTable } from '../../../components/finance'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
 
-export function FundPanel({ balances, fund, debts = [], people = [], periods = [], fundForm, selectedPeriodId, setForm, submit }) {
+export function FundPanel({ balances, fund, debts = [], people = [], fundForm, selectedPeriodId, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showDeposit, setShowDeposit] = useState(false)
   const [showRefund, setShowRefund] = useState(false)
-  const [showCarry, setShowCarry] = useState(false)
   const [offsetBalance, setOffsetBalance] = useState(null)
   const [offsetAllConfirm, setOffsetAllConfirm] = useState(false)
   const [fundQuery, setFundQuery] = useState('')
@@ -86,7 +85,6 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
             <ActionGroup>
               <button onClick={() => setShowDeposit(true)}>+ Nộp quỹ</button>
               <button onClick={() => setShowRefund(true)}>💸 Hoàn tiền</button>
-              <button onClick={() => setShowCarry(true)}>➡ Kết chuyển quỹ</button>
               <button onClick={() => setShowAdd(true)}>+ Ghi thu/chi</button>
             </ActionGroup>
           )}
@@ -105,19 +103,6 @@ export function FundPanel({ balances, fund, debts = [], people = [], periods = [
           onSubmit={(payload) => {
             submit(() => api.fund.deposit(payload), 'Đã nộp quỹ.')
             setShowDeposit(false)
-          }}
-        />
-      )}
-
-      {showCarry && (
-        <CarryOverModal
-          fund={fund}
-          periods={periods}
-          fromPeriodId={selectedPeriodId}
-          onClose={() => setShowCarry(false)}
-          onSubmit={(payload) => {
-            submit(() => api.fund.carryOver(payload), 'Đã kết chuyển quỹ sang kỳ sau.')
-            setShowCarry(false)
           }}
         />
       )}
@@ -267,53 +252,6 @@ function DepositModal({ people, debts, periodId, onClose, onSubmit }) {
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
         <button type="submit" disabled={!canDeposit}>Nộp quỹ</button>
-        </footer>
-      </form>
-    </Modal>
-  )
-}
-
-function CarryOverModal({ fund = [], periods = [], fromPeriodId, onClose, onSubmit }) {
-  const [toPeriodId, setToPeriodId] = useState('')
-
-  // Số dư quỹ kỳ hiện tại = thu + điều chỉnh − chi − hoàn
-  const balance = useMemo(() => fund.reduce((sum, t) => {
-    const amt = Number(t.amount) || 0
-    if (t.transaction_type === 'income' || t.transaction_type === 'adjustment') return sum + amt
-    if (t.transaction_type === 'expense' || t.transaction_type === 'refund') return sum - amt
-    return sum
-  }, 0), [fund])
-
-  const fromPeriod = periods.find((p) => p.id === fromPeriodId)
-  const targetOptions = periods.filter((p) => p.id !== fromPeriodId)
-
-  return (
-    <Modal title="➡ Kết chuyển quỹ sang kỳ sau" onClose={onClose}>
-      <form className="form" onSubmit={(e) => {
-        e.preventDefault()
-        if (!toPeriodId || balance <= 0) return
-        onSubmit({ from_period_id: fromPeriodId, to_period_id: toPeriodId })
-      }}>
-        <div className="stack">
-          <p>Kỳ nguồn: <strong>{fromPeriod?.name || '—'}</strong></p>
-          <p>Số dư mang sang: <strong>{formatMoney(balance)}</strong></p>
-          {balance <= 0 && <p className="empty">Kỳ này không còn số dư dương để kết chuyển.</p>}
-        </div>
-
-        <label>Chuyển sang kỳ
-          <select value={toPeriodId} onChange={(e) => setToPeriodId(e.target.value)} required>
-            <option value="">-- Chọn kỳ đích --</option>
-            {targetOptions.map((p) => (
-              <option key={p.id} value={p.id}>{p.name}</option>
-            ))}
-          </select>
-        </label>
-
-        <p className="hint">Sẽ ghi 1 khoản <strong>chi</strong> ở kỳ nguồn (quỹ về 0) và 1 khoản <strong>thu</strong> tương ứng ở kỳ đích. Nợ chưa trả không bị ảnh hưởng.</p>
-
-        <footer className="modal-actions">
-          <button type="button" onClick={onClose}>Hủy</button>
-          <button type="submit" disabled={balance <= 0}>Kết chuyển</button>
         </footer>
       </form>
     </Modal>

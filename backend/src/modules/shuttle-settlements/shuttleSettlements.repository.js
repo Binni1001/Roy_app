@@ -4,6 +4,9 @@ export const shuttleSettlementsRepository = {
   async previewPeriod(periodId) {
     return supabase.rpc("preview_shuttle_period", { p_period_id: periodId });
   },
+  applyFund(periodId, buyerId, amount) {
+    return supabase.rpc("apply_fund_to_shuttles", { p_period_id: periodId, p_buyer_id: buyerId, p_amount: amount });
+  },
   async settlePeriod(periodId) {
     return await supabase.rpc("settle_shuttle_period", {
       p_period_id: periodId

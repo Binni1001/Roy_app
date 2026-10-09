@@ -11,6 +11,20 @@ export const shuttleSettlementsService = {
     if (error) throw new Error(isMissingRpc(error)
       ? "Cần chạy migration 20260913_shuttle_discount_percent.sql trước khi chia cầu."
       : error.message);
+    if (!data?.settled && typeof data?.can_settle !== "boolean") {
+      throw new Error("Cần chạy migration 20261006_shuttle_closeout_and_loans.sql trước khi chia cầu.");
+    }
+    return data;
+  },
+
+  async applyFund(periodId, payload) {
+    const amount = Number(payload.amount);
+    if (!payload.buyer_id || !Number.isSafeInteger(amount) || amount <= 0) {
+      throw new Error("Chọn người mua và số tiền nguyên lớn hơn 0.");
+    }
+    const { data, error } = await shuttleSettlementsRepository.applyFund(periodId, payload.buyer_id, amount);
+    if (error) throw new Error(isMissingRpc(error)
+      ? "Cần chạy migration 20261006_shuttle_closeout_and_loans.sql trước khi dùng quỹ dư." : error.message);
     return data;
   },
 
@@ -20,7 +34,9 @@ export const shuttleSettlementsService = {
     }
 
     // Require the percentage migration even if an older settlement RPC still exists.
-    await this.preview(periodId);
+    const preview = await this.preview(periodId);
+    if (preview.settled) throw new Error("Kỳ này đã chốt chia cầu.");
+    if (!preview.can_settle) throw new Error("Cần thu hết công nợ và tiền mượn cầu, đưa quỹ về 0 trước khi chia cầu.");
     // RPC performs the final calculation and writes atomically under the period lock.
     const rpcResult = await shuttleSettlementsRepository.settlePeriod(periodId);
 

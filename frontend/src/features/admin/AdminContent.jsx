@@ -167,6 +167,8 @@ export function AdminContent(props) {
             if (t.transaction_type === 'expense' || t.transaction_type === 'refund') return s - a
             return s
           }, 0)}
+          periodOpen={props.activePeriod?.status === 'open'}
+          submitting={submitting}
           setForm={setForm}
           submit={submit}
         />

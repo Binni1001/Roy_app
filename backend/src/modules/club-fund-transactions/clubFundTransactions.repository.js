@@ -1,6 +1,10 @@
 import { supabase } from "../../config/supabase.js";
 
 export const clubFundTransactionsRepository = {
+  depositAtomic: (payload) => supabase.rpc("deposit_fund_atomic", {
+    p_period_id: payload.period_id, p_person_id: payload.person_id,
+    p_amount: Number(payload.amount), p_debt_ids: payload.debt_ids || [], p_description: payload.description || null,
+  }),
   async getAll() {
     return await supabase
       .from("club_fund_transactions")

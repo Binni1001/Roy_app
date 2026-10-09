@@ -186,6 +186,9 @@ export const api = {
   },
 
   shuttleSettlements: {
+    applyFund: (periodId, payload) => request({
+      url: `/api/shuttle-settlements/period/${periodId}/apply-fund`, method: 'POST', data: payload,
+    }),
     preview: (periodId) =>
       request({ url: `/api/shuttle-settlements/period/${periodId}/preview` }),
     settle: (periodId) =>
@@ -193,6 +196,15 @@ export const api = {
         url: `/api/shuttle-settlements/period/${periodId}/settle`,
         method: 'POST',
       }),
+  },
+
+  shuttleLoans: {
+    candidates: (periodId) => request({ url: `/api/shuttle-loans/period/${periodId}/people` }),
+    byPeriod: (periodId) => request({ url: `/api/shuttle-loans/period/${periodId}` }),
+    mine: () => request({ url: '/api/shuttle-loans/me' }),
+    create: (payload) => request({ url: '/api/shuttle-loans', method: 'POST', data: payload }),
+    repay: (id) => request({ url: `/api/shuttle-loans/${id}/repay`, method: 'POST' }),
+    cancel: (id) => request({ url: `/api/shuttle-loans/${id}/cancel`, method: 'POST' }),
   },
 
   fund: {

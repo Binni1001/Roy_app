@@ -1,5 +1,8 @@
 # Miễn tiền cầu theo kỳ: 0%, 50%, 100%
 
+Đây là quy tắc của phiên bản 20260913. Phiên bản mới dùng số suất
+(50% = nửa suất) và điều kiện quỹ về 0; xem [SHUTTLE_CLOSEOUT_SETUP.md](SHUTTLE_CLOSEOUT_SETUP.md).
+
 ## Quy tắc
 
 - Tổng tiền chia là tổng tiền cá nhân đã ứng trong shuttle_expenses.total_amount; phần quỹ đã chi không được cộng vào khoản này.

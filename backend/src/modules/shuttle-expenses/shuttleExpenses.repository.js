@@ -1,6 +1,7 @@
 import { supabase } from "../../config/supabase.js";
 
 export const shuttleExpensesRepository = {
+  createWithFund: (payload) => supabase.rpc("create_shuttle_expense_with_fund", { p_payload: payload }),
   async getAll() {
     return await supabase
       .from("shuttle_expenses")

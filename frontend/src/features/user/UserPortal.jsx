@@ -4,6 +4,7 @@ import { NotificationBell } from '../../components/NotificationBell'
 import { Topbar } from '../../components/shell'
 import { useNotificationCenter } from '../../hooks/useNotificationCenter'
 import { MemberHero } from './MemberHero'
+import { ShuttleLoans } from '../../components/ShuttleLoans'
 import { ProfileEdit } from './ProfileEdit'
 import { ProfileSetup } from './ProfileSetup'
 import { UserBottomNav } from './UserBottomNav'
@@ -149,6 +150,7 @@ export function UserPortal({ session, role, onSignOut, onSwitchGroup }) {
               sessions={data.sessions}
               checkout={checkout}
             />
+            {activeTab === 'home' && <ShuttleLoans key={activePerson.id} />}
           </>
         )}
       </main>

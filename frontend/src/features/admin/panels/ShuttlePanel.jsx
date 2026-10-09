@@ -2,12 +2,19 @@ import { useState } from 'react'
 import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SelectPeople, SimpleTable } from '../../../components/common'
 import { formatMoney } from '../../../utils/appUtils'
+import { ShuttleLoans } from '../../../components/ShuttleLoans'
 
-export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm, selectedPeriodId, fundBalance = 0, setForm, submit }) {
+export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm, selectedPeriodId, fundBalance = 0, periodOpen = false, submitting = false, setForm, submit }) {
   const [showAdd, setShowAdd] = useState(false)
   const [showFundSplit, setShowFundSplit] = useState(false)
   const [editingExpense, setEditingExpense] = useState(null)
   const [deletingExpense, setDeletingExpense] = useState(null)
+  const [showFundAllocation, setShowFundAllocation] = useState(false)
+  const [confirmSettlement, setConfirmSettlement] = useState(false)
+  const settled = Boolean(settlementPreview?.settled)
+  const canWrite = periodOpen && !settled
+  const unpaid = settlementPreview?.unpaid_before_settlement || []
+  const canSettle = canWrite && settlementPreview?.can_settle === true && !submitting
 
   return (
     <>
@@ -16,10 +23,20 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
           <div className="stack">
             <p>Tiền tạm tính: {formatMoney(settlementPreview?.total_shuttle_amount || 0)}</p>
             {settlementPreview?.error && <p className="form-error">{settlementPreview.error}</p>}
-            <button disabled={!settlementPreview || Boolean(settlementPreview.error) || settlementPreview.settled} onClick={() => submit(() => api.shuttleSettlements.settle(selectedPeriodId), 'Đã chốt chia cầu.')}>
+            {!settled && <>
+              <p>Quỹ còn: <strong>{formatMoney(fundBalance)}</strong> · {unpaid.length} khoản cần thu trước khi chia cầu</p>
+              {unpaid.length > 0 && <SimpleTable rows={unpaid} columns={[
+                ['person_name', 'Cần thu của'], ['period_name', 'Kỳ'], ['amount', 'Còn nợ', formatMoney],
+                ['kind', 'Khoản', (v) => v === 'shuttle_loan' ? 'Mượn cầu quỹ' : 'Công nợ'],
+              ]} />}
+              {fundBalance > 0 && <button disabled={!canWrite || unpaid.length > 0 || submitting} onClick={() => setShowFundAllocation(true)}>Dùng quỹ dư bù tiền cầu</button>}
+              {fundBalance < 0 && <p className="form-error">Quỹ đang âm. Đối soát và ghi nhận tiền thực thu trước khi chia cầu.</p>}
+              <p className="hint">Thu hết công nợ và tiền mượn cầu trước, dùng quỹ dư bù khoản mua cầu rồi mới chia. Sau chia, thành viên được giữ nợ tiền cầu sang kỳ mới.</p>
+            </>}
+            <button disabled={!canSettle} onClick={() => setConfirmSettlement(true)}>
               {settlementPreview?.settled ? 'Đã chốt chia cầu' : 'Chốt chia cầu'}
             </button>
-            <p className="hint">Chia đều trước, giảm theo mức miễn rồi phân bổ phần giảm cho người không miễn. Chênh lệch làm tròn được phân bổ từng đồng để khớp tổng tiền.</p>
+            <p className="hint">{settled ? 'Đây là kết quả đã lưu tại thời điểm chốt kỳ.' : 'Không miễn = 1 suất; miễn 50% = nửa suất; miễn 100% = 0 suất. Chia tổng tiền theo tổng số suất, phân bổ đồng lẻ để khớp tổng tiền.'}</p>
             <SimpleTable rows={settlementPreview?.details || []} columns={[
               ['person.full_name', 'Thành viên'],
               ['shuttle_discount_percent', 'Miễn', (v) => `${v ?? 0}%`],
@@ -33,8 +50,8 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
           title="Chi phí cầu"
           action={(
             <ActionGroup>
-              <button onClick={() => setShowFundSplit(true)}>+ Mua cầu (quỹ thiếu)</button>
-              <button onClick={() => setShowAdd(true)}>+ Thêm chi phí</button>
+              <button disabled={!canWrite || submitting} onClick={() => setShowFundSplit(true)}>+ Mua cầu (quỹ thiếu)</button>
+              <button disabled={!canWrite || submitting} onClick={() => setShowAdd(true)}>+ Thêm chi phí</button>
             </ActionGroup>
           )}
         >
@@ -45,18 +62,31 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
               ['buy_type', 'Loại'],
               ['tube_count', 'Số ống'],
               ['single_count', 'Cầu lẻ'],
-              ['total_amount', 'Tổng tiền', formatMoney],
+              ['total_amount', 'Cá nhân ứng đem chia', formatMoney],
               ['note', 'Ghi chú'],
             ]}
             actions={(expense) => (
               <ActionGroup>
-                <button onClick={() => setEditingExpense(expense)}>Sửa</button>
-                <button className="danger" onClick={() => setDeletingExpense(expense)}>Xóa</button>
+                <button disabled={!canWrite || submitting} onClick={() => setEditingExpense(expense)}>Sửa</button>
+                <button disabled={!canWrite || submitting} className="danger" onClick={() => setDeletingExpense(expense)}>Xóa</button>
               </ActionGroup>
             )}
           />
         </Panel>
+        <ShuttleLoans key={selectedPeriodId} manager periodId={selectedPeriodId} canCreate={canWrite} people={people} submit={submit} />
       </section>
+
+      {showFundAllocation && <FundAllocationModal expenses={expenses} fundBalance={fundBalance} busy={submitting}
+        onClose={() => setShowFundAllocation(false)} onSubmit={async (payload) => {
+          const result = await submit(() => api.shuttleSettlements.applyFund(selectedPeriodId, payload), 'Đã ghi chi quỹ bù khoản ứng mua cầu.')
+          if (result) setShowFundAllocation(false)
+        }} />}
+      {confirmSettlement && <ConfirmModal title="Chốt chia tiền cầu" loading={submitting}
+        message="Quỹ đã về 0 và đã thu hết các khoản nợ trước chia. Xác nhận ghi số dư/nợ tiền cầu theo bảng phân bổ? Kết quả sẽ được lưu và khóa."
+        onClose={() => setConfirmSettlement(false)} onConfirm={async () => {
+          const result = await submit(() => api.shuttleSettlements.settle(selectedPeriodId), 'Đã chốt chia cầu. Vào Kỳ quỹ để đóng kỳ rồi mở kỳ mới.')
+          if (result) setConfirmSettlement(false)
+        }} />}
 
       {showAdd && (
         <Modal title="Thêm chi phí cầu" onClose={() => setShowAdd(false)}>
@@ -136,6 +166,37 @@ export function ShuttlePanel({ people, expenses, settlementPreview, shuttleForm,
       )}
     </>
   )
+}
+
+function FundAllocationModal({ expenses, fundBalance, busy, onClose, onSubmit }) {
+  const buyers = [...expenses.reduce((map, e) => {
+    if (Number(e.total_amount) > 0) {
+      const old = map.get(e.buyer_id) || { id: e.buyer_id, name: e.buyer?.full_name, amount: 0 }
+      map.set(e.buyer_id, { ...old, amount: old.amount + Number(e.total_amount) })
+    }
+    return map
+  }, new Map()).values()]
+  const [buyerId, setBuyerId] = useState('')
+  const [amount, setAmount] = useState('')
+  const [paid, setPaid] = useState(false)
+  const buyer = buyers.find((b) => b.id === buyerId)
+  const valid = buyer && Number.isSafeInteger(Number(amount)) && Number(amount) > 0 && Number(amount) <= Math.min(fundBalance, buyer.amount)
+  return <Modal title="Dùng quỹ dư bù tiền cầu" onClose={onClose}>
+    <form className="form" onSubmit={(e) => { e.preventDefault(); if (valid && paid && !busy) onSubmit({ buyer_id: buyerId, amount: Number(amount) }) }}>
+      <p>Quỹ còn {formatMoney(fundBalance)}. Chọn người đã ứng mua cầu để quỹ trả lại một phần khoản ứng trước khi chia.</p>
+      <label>Người nhận tiền quỹ<select required value={buyerId} onChange={(e) => {
+        setBuyerId(e.target.value); setPaid(false)
+        setAmount(String(Math.min(fundBalance, buyers.find((b) => b.id === e.target.value)?.amount || 0)))
+      }}><option value="">Chọn người mua cầu</option>{buyers.map((b) => <option key={b.id} value={b.id}>{b.name} — đã ứng {formatMoney(b.amount)}</option>)}</select></label>
+      <label>Quỹ trả (đ)<input required type="number" min="1" step="1" max={buyer ? Math.min(fundBalance, buyer.amount) : fundBalance}
+        value={amount} onChange={(e) => { setAmount(e.target.value); setPaid(false) }} /></label>
+      {buyer && <p>Khoản ứng còn lại của {buyer.name}: <strong>{formatMoney(buyer.amount - Number(amount || 0))}</strong>. Phần này được dùng để chia cầu cuối kỳ.</p>}
+      <label><input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} /> Tôi đã trả số tiền trên cho người mua cầu.</label>
+      <p className="hint">Xác nhận sẽ ghi chi quỹ và giảm khoản ứng đem chia trong cùng một lần. Nếu cần, có thể bù cho nhiều người đến khi quỹ về 0.</p>
+      <footer className="modal-actions"><button type="button" disabled={busy} onClick={onClose}>Đóng</button>
+        <button disabled={!valid || !paid || busy} type="submit">Ghi chi quỹ và cập nhật khoản ứng</button></footer>
+    </form>
+  </Modal>
 }
 
 function ShuttleExpenseEditModal({ expense, onClose, onSubmit }) {

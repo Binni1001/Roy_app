@@ -86,6 +86,13 @@ export const periodsService = {
     if (!groupId) throw new Error("Tai khoan chua co nhom dang hoat dong");
     await groupAccess.assertGroup(authUser, groupId, true);
 
+    if (status === "closed") throw new Error("Tạo kỳ nháp trước khi chốt.");
+    if (status === "open") {
+      const { error } = await periodsRepository.checkOpen(groupId);
+      if (error) throw new Error(error.code === "PGRST202"
+        ? "Cần chạy migration 20261006_shuttle_closeout_and_loans.sql trước khi mở kỳ." : error.message);
+    }
+
     const { data, error } = await periodsRepository.create({
       name: payload.name.trim(),
       start_date: payload.start_date,
@@ -106,6 +113,20 @@ export const periodsService = {
 
   async updatePeriod(id, payload) {
     if (!id) throw new Error("Period ID khong duoc de trong");
+
+    if (payload.status === "open" || payload.status === "closed") {
+      const existing = await this.getPeriodById(id);
+      if (payload.status !== existing.status) {
+        const check = payload.status === "open"
+          ? await periodsRepository.checkOpen(existing.group_id, id)
+          : await periodsRepository.readiness(id);
+        if (check.error) throw new Error(check.error.code === "PGRST202"
+          ? "Cần chạy migration 20261006_shuttle_closeout_and_loans.sql trước khi chuyển kỳ." : check.error.message);
+        if (payload.status === "closed" && !check.data?.can_close) {
+          throw new Error("Cần chia cầu, trả hết tiền mượn cầu và đưa quỹ về 0 trước khi đóng kỳ. Nợ tiền cầu sau chia được giữ lại.");
+        }
+      }
+    }
 
     // Validate tên nếu có cập nhật
     if (payload.name !== undefined) {

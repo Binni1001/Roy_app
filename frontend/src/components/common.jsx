@@ -63,6 +63,7 @@ export function ConfirmModal({
   confirmText = 'Xác nhận',
   cancelText = 'Hủy',
   danger = false,
+  loading = false,
   onConfirm,
   onClose,
 }) {
@@ -72,8 +73,8 @@ export function ConfirmModal({
         <p>{message}</p>
       </div>
       <footer className="modal-actions">
-        <button type="button" onClick={onClose}>{cancelText}</button>
-        <button type="button" className={danger ? 'danger' : ''} onClick={onConfirm}>{confirmText}</button>
+        <button type="button" disabled={loading} onClick={onClose}>{cancelText}</button>
+        <button type="button" disabled={loading} className={danger ? 'danger' : ''} onClick={onConfirm}>{loading ? 'Đang xử lý…' : confirmText}</button>
       </footer>
     </Modal>
   )

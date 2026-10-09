@@ -1,11 +1,13 @@
 import { shuttleExpensesRepository } from "./shuttleExpenses.repository.js";
-import { clubFundTransactionsRepository } from "../club-fund-transactions/clubFundTransactions.repository.js";
 import { validateDateNotFuture, validateAmount, validateText, assertValid } from "../../utils/validators.js";
 import { assertPeopleActive } from "../../utils/peopleGuard.js";
 
 const allowedBuyTypes = ["tube", "single", "mixed"];
 
 function validateBuyTypeAndCounts(buyType, tubeCount, shuttlePerTube, singleCount) {
+  if (![tubeCount, shuttlePerTube, singleCount].every(Number.isSafeInteger)) {
+    throw new Error("Số ống và số quả cầu phải là số nguyên.");
+  }
   if (!allowedBuyTypes.includes(buyType)) {
     throw new Error("Loai mua cau khong hop le");
   }
@@ -196,6 +198,7 @@ export const shuttleExpensesService = {
 
     const fundAmount = Number(payload.fund_amount || 0);
     assertValid(validateAmount(fundAmount, "So tien quy chi", true));
+    if (![totalPrice, fundAmount].every(Number.isSafeInteger)) throw new Error("Tiền cầu phải là số nguyên đồng.");
 
     if (fundAmount > totalPrice) {
       throw new Error("So tien quy chi khong duoc lon hon tong gia mua cau");
@@ -210,36 +213,14 @@ export const shuttleExpensesService = {
     const buyDate = payload.buy_date || new Date().toISOString().slice(0, 10);
     const note = payload.note || null;
 
-    const { data: shuttleExpense, error: shuttleError } = await shuttleExpensesRepository.create({
-      period_id: payload.period_id,
-      buyer_id: payload.buyer_id,
-      buy_type: buyType,
-      tube_count: tubeCount,
-      shuttle_per_tube: shuttlePerTube,
-      single_count: singleCount,
-      total_amount: personalAmount,
-      buy_date: buyDate,
-      note
+    const { data, error } = await shuttleExpensesRepository.createWithFund({
+      period_id: payload.period_id, buyer_id: payload.buyer_id,
+      buy_type: buyType, tube_count: tubeCount, shuttle_per_tube: shuttlePerTube,
+      single_count: singleCount, personal_amount: personalAmount,
+      fund_amount: fundAmount, buy_date: buyDate, note,
     });
-
-    if (shuttleError) throw new Error(shuttleError.message);
-
-    let fundTransaction = null;
-
-    if (fundAmount > 0) {
-      const { data, error } = await clubFundTransactionsRepository.create({
-        period_id: payload.period_id,
-        person_id: payload.buyer_id,
-        payment_id: null,
-        transaction_type: "expense",
-        amount: fundAmount,
-        description: note ? `Mua cau (quy chi) - ${note}` : "Mua cau (quy chi)"
-      });
-
-      if (error) throw new Error(error.message);
-      fundTransaction = data;
-    }
-
-    return { shuttle_expense: shuttleExpense, fund_transaction: fundTransaction };
+    if (error) throw new Error(error.code === "PGRST202"
+      ? "Cần chạy migration 20261006_shuttle_closeout_and_loans.sql trước khi mua cầu chia nguồn quỹ." : error.message);
+    return data;
   }
 };

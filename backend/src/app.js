@@ -23,6 +23,7 @@ import guestAttendancesRoutes from "./modules/guest-attendances/guestAttendances
 import debtsRoutes from "./modules/debts/debts.routes.js";
 import shuttleExpensesRoutes from "./modules/shuttle-expenses/shuttleExpenses.routes.js";
 import shuttleSettlementsRoutes from "./modules/shuttle-settlements/shuttleSettlements.routes.js";
+import shuttleLoansRoutes from "./modules/shuttle-loans/shuttleLoans.routes.js";
 import personBalancesRoutes from "./modules/person-balances/personBalances.routes.js";
 import balanceOffsetsRoutes from "./modules/balance-offsets/balanceOffsets.routes.js";
 import clubFundTransactionsRoutes from "./modules/club-fund-transactions/clubFundTransactions.routes.js";
@@ -85,6 +86,7 @@ app.use("/api/guest-attendances", guestAttendancesRoutes);
 app.use("/api/debts", debtsRoutes);
 app.use("/api/shuttle-expenses", shuttleExpensesRoutes);
 app.use("/api/shuttle-settlements", shuttleSettlementsRoutes);
+app.use("/api/shuttle-loans", shuttleLoansRoutes);
 app.use("/api/person-balances", personBalancesRoutes);
 app.use("/api/balance-offsets", balanceOffsetsRoutes);
 app.use("/api/club-fund-transactions", clubFundTransactionsRoutes);

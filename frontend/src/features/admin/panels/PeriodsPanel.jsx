@@ -284,6 +284,7 @@ function PeriodEditModal({ period, onClose, onSubmit }) {
             <option value="closed">Đã chốt</option>
           </select>
         </label>
+        <p className="hint">Trước khi chia cầu cần thu hết nợ cũ. Đóng kỳ sau khi đã chia cầu và quỹ về 0; nợ tiền cầu mới phát sinh được giữ lại. Cần đóng kỳ đang mở trước khi mở kỳ tiếp theo.</p>
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>
@@ -319,7 +320,7 @@ function MemberEditModal({ member, onClose, onSubmit }) {
         )}
         <p className="hint">{locked
           ? 'Kỳ đã chốt chia cầu, mức miễn và trạng thái đã được khóa.'
-          : 'Giảm từ phần chia đều ban đầu. Phần được giảm chia cho người không miễn; tiền đã ứng mua cầu vẫn được ghi nhận đầy đủ.'}</p>
+          : 'Không miễn tính 1 suất, miễn 50% tính nửa suất, miễn 100% tính 0 suất. Chia tiền cầu theo tổng số suất; tiền đã ứng được ghi nhận đầy đủ.'}</p>
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit">Lưu thay đổi</button>
