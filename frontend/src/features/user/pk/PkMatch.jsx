@@ -96,13 +96,13 @@ export function UserEditModal({ match, onClose, onSubmit }) {
   )
 }
 
-export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel, onStart, onEdit }) {
+export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel, onStart, onEdit, readOnly = false }) {
   const isVoided = Boolean(m.voided_at)
   const visualStatus = isVoided ? 'cancelled' : m.status
   const amParticipant = isParticipant(m, activePerson)
   const { canRecord, reason } = getResultLock(m)
   const winner = isVoided ? null : getWinnerSide(m)
-  const showActions = amParticipant && (m.status === 'pending' || m.status === 'active')
+  const showActions = !readOnly && amParticipant && (m.status === 'pending' || m.status === 'active')
 
   return (
     <div className={`pk-fight-card pk-fight-${visualStatus}`}>

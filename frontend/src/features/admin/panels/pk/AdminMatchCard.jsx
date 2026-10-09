@@ -51,7 +51,7 @@ function FightCenter({ match, showResult }) {
   )
 }
 
-export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize, onVoid, canVoid }) {
+export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize, onVoid, canVoid, readOnly = false }) {
   const isVoided = Boolean(m.voided_at)
   const showResult = m.status === 'completed' && !isVoided
   const visualStatus = isVoided ? 'cancelled' : m.status
@@ -94,7 +94,7 @@ export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize,
           {m.note && <span className="pk-fight-note muted">{m.note}</span>}
           {isVoided && m.void_reason && <span className="pk-fight-note muted">Lý do: {m.void_reason}</span>}
         </div>
-        <div className="pk-fight-actions">
+        {!readOnly && <div className="pk-fight-actions">
           {(m.status === 'pending' || m.status === 'active') && (
             <button onClick={() => onFinalize(m)}>Ghi kết quả</button>
           )}
@@ -105,7 +105,7 @@ export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize,
           {m.status === 'completed' && !isVoided && canVoid && (
             <button className="danger" onClick={() => onVoid(m)}>Hủy kết quả</button>
           )}
-        </div>
+        </div>}
       </div>
     </div>
   )

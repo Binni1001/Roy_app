@@ -18,7 +18,7 @@ export function PersonCell({ p, achievements }) {
   )
 }
 
-export function AdminLeaderboardRow({ row, achievements }) {
+export function AdminLeaderboardRow({ row, achievements, archived = false }) {
   return (
     <tr className={row.tier_key === 'champion' ? 'lb-row-champion' : ''}>
       <td><span className="lb-rank-num">{row.rank}</span></td>
@@ -26,7 +26,7 @@ export function AdminLeaderboardRow({ row, achievements }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td><SeasonTierBadge tierKey={row.tier_key} showLabel={false} /></td>
+      <td>{archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )

@@ -212,6 +212,7 @@ export function PkPanel({ periodId, role }) {
   const lbSingles = leaderboards.singles.ranked
   const lbDoubles = leaderboards.doubles.ranked
   const activeLeaderboard = leaderboards[lbType]
+  const isArchived = Boolean(activeLeaderboard.archived)
   const activeLb = activeLeaderboard.ranked
   const upcoming = matches.filter((match) => match.status === 'pending' || match.status === 'active')
   const completed = matches.filter((match) => match.status === 'completed' && !match.voided_at)
@@ -259,11 +260,12 @@ export function PkPanel({ periodId, role }) {
               <span className="lb-strip-icon">🏆</span>
               <div>
                 <div className="lb-strip-title">Bảng vinh danh theo mùa</div>
-                <div className="lb-strip-sub">Điểm Elo, sức mạnh đối thủ và thứ tự hoàn tất trận</div>
+                <div className="lb-strip-sub">{isArchived ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : 'Điểm Elo, sức mạnh đối thủ và thứ tự hoàn tất trận'}</div>
               </div>
             </div>
           </div>
-          <SeasonAchievements achievements={achievements} loading={loading} />
+          {isArchived ? <p className="hint">Bản lưu cố định dựng lại từ 57 trận hoàn tất còn lưu. Xếp theo Wilson, sau đó số trận thắng; điểm cũ = max(0, 3 × thắng − thua). Chưa đối chiếu bản cuối mùa nguyên gốc.</p>
+            : <SeasonAchievements achievements={achievements} loading={loading} />}
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               Đôi <span className="pk-count">{lbDoubles.length}</span>
@@ -287,12 +289,12 @@ export function PkPanel({ periodId, role }) {
                     <thead>
                       <tr>
                         <th>#</th><th>Người chơi</th><th>Thắng</th><th>Thua</th>
-                        <th>Tổng</th><th>Bậc</th><th>Điểm</th>
+                        <th>Tổng</th><th>{isArchived ? 'Wilson ★' : 'Bậc'}</th><th>{isArchived ? 'Điểm cũ' : 'Điểm'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {activeLb.map((row) => (
-                        <AdminLeaderboardRow key={row.id} row={row} achievements={achievements} />
+                        <AdminLeaderboardRow key={row.id} row={row} archived={isArchived} achievements={isArchived ? undefined : achievements} />
                       ))}
                     </tbody>
                   </table>
@@ -307,8 +309,8 @@ export function PkPanel({ periodId, role }) {
       {tab === 'matches' && (
         <Panel title="Trận đấu" action={(
           <div className="pk-admin-actions">
-            <button className="pk-create-btn" onClick={() => setShowRandom(true)}>Ghép ngẫu nhiên</button>
-            <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Tạo trận</button>
+            <button className="pk-create-btn" disabled={isArchived} onClick={() => setShowRandom(true)}>Ghép ngẫu nhiên</button>
+            <button className="pk-create-btn" disabled={isArchived} onClick={() => setShowCreate(true)}>+ Tạo trận</button>
           </div>
         )}>
           <div className="pk-filter-tabs">
@@ -377,6 +379,7 @@ export function PkPanel({ periodId, role }) {
                       <AdminMatchCard
                         key={match.id}
                         m={match}
+                        readOnly={isArchived}
                         displayNumber={dayIndex + 1}
                         onEdit={setEditing}
                         onDelete={setDeleting}

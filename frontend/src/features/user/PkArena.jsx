@@ -202,6 +202,7 @@ export function PkArena({ activePerson, periodId }) {
   const lbSingles = leaderboards.singles.ranked
   const lbDoubles = leaderboards.doubles.ranked
   const activeLeaderboard = leaderboards[lbType]
+  const isArchived = Boolean(activeLeaderboard.archived)
   const activeLb = activeLeaderboard.ranked
 
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
@@ -241,7 +242,7 @@ export function PkArena({ activePerson, periodId }) {
               <span className="lb-strip-icon">🏆</span>
               <div>
                 <div className="lb-strip-title">Bảng vinh danh</div>
-                <div className="lb-strip-sub">Xếp hạng theo mùa, sức mạnh đối thủ và thứ tự hoàn tất trận</div>
+                <div className="lb-strip-sub">{isArchived ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : 'Xếp hạng theo mùa, sức mạnh đối thủ và thứ tự hoàn tất trận'}</div>
               </div>
               <button className="lb-strip-guide" onClick={() => setShowGuide(true)} title="Cách xếp hạng">
                 <CircleHelp size={16} aria-hidden="true" />
@@ -249,8 +250,9 @@ export function PkArena({ activePerson, periodId }) {
               </button>
             </div>
           </div>
-          {showGuide && <RankingGuideModal onClose={() => setShowGuide(false)} />}
-          <SeasonAchievements achievements={achievements} loading={loading} />
+          {showGuide && <RankingGuideModal archived={isArchived} onClose={() => setShowGuide(false)} />}
+          {isArchived ? <p className="hint">Bản lưu cố định được dựng lại từ các trận còn tồn tại. Chưa đối chiếu với bảng cuối mùa nguyên gốc; tên lấy từ hồ sơ lúc khôi phục.</p>
+            : <SeasonAchievements achievements={achievements} loading={loading} />}
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
               🤝 Đôi <span className="pk-count">{lbDoubles.length}</span>
@@ -270,7 +272,7 @@ export function PkArena({ activePerson, periodId }) {
                     <thead>
                       <tr>
                         <th>#</th><th>Người chơi</th>
-                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>Bậc</th><th>Điểm</th>
+                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>{isArchived ? 'Wilson ★' : 'Bậc'}</th><th>{isArchived ? 'Điểm cũ' : 'Điểm'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -279,7 +281,8 @@ export function PkArena({ activePerson, periodId }) {
                           key={row.id}
                           row={row}
                           isMe={row.id === activePerson?.id}
-                          achievements={achievements}
+                          achievements={isArchived ? undefined : achievements}
+                          archived={isArchived}
                         />
                       ))}
                     </tbody>
@@ -297,8 +300,8 @@ export function PkArena({ activePerson, periodId }) {
         <Panel title="Kèo đấu"
           action={
             <div style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
-              <button className="pk-create-btn" onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
-              <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
+              <button className="pk-create-btn" disabled={isArchived} onClick={() => setShowRandom(true)}>🎲 Ghép ngẫu nhiên</button>
+              <button className="pk-create-btn" disabled={isArchived} onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
             </div>
           }
         >
@@ -357,7 +360,7 @@ export function PkArena({ activePerson, periodId }) {
                 {matchFilter === 'cancelled' && 'Không có kèo nào bị hủy.'}
               </p>
               {matchFilter === 'upcoming' && (
-                <button className="pk-create-btn" onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
+                <button className="pk-create-btn" disabled={isArchived} onClick={() => setShowCreate(true)}>+ Thách đấu mới</button>
               )}
             </div>
           ) : (
@@ -373,6 +376,7 @@ export function PkArena({ activePerson, periodId }) {
                       <MatchCard
                         key={m.id}
                         m={m}
+                        readOnly={isArchived}
                         matchNumber={dayIndex + 1}
                         activePerson={activePerson}
                         onSetResult={setShowResult}
@@ -411,7 +415,7 @@ export function PkArena({ activePerson, periodId }) {
                   {p.gender   && <small className="muted">{p.gender === 'male' ? 'Nam' : p.gender === 'female' ? 'Nữ' : 'Khác'}</small>}
                   {p.bio      && <p className="pk-player-bio">{p.bio}</p>}
                   {p.id !== activePerson?.id ? (
-                    <button className="pk-challenge-btn" onClick={() => {
+                    <button className="pk-challenge-btn" disabled={isArchived} onClick={() => {
                       setForm((f) => ({ ...f, opponent_id: p.id }))
                       setTab('matches')
                       setShowCreate(true)

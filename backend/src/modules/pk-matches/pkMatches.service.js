@@ -2,6 +2,7 @@ import { pkMatchesRepository } from "./pkMatches.repository.js";
 import { assertPeopleActive } from "../../utils/peopleGuard.js";
 import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 import { buildSeasonAchievements } from "./pkAchievements.js";
+import { archivedPkLeaderboard, assertPkPeriodWritable } from "./pkHistory.js";
 
 const MATCH_TYPES = new Set(["singles", "doubles"]);
 const OPEN_STATUSES = new Set(["pending", "active"]);
@@ -183,6 +184,7 @@ export const pkMatchesService = {
   },
 
   async create(payload, isAdmin = false) {
+    assertPkPeriodWritable(payload.period_id);
     const insert = buildInsert(payload, isAdmin);
     validateEditableMatch(insert);
     await assertPeopleActive(participantIds(insert));
@@ -197,6 +199,7 @@ export const pkMatchesService = {
     }
     if (matches.length > 30) throw new Error("M\u1ed7i l\u1ea7n ch\u1ec9 \u0111\u01b0\u1ee3c t\u1ea1o t\u1ed1i \u0111a 30 tr\u1eadn.");
 
+    matches.forEach((match) => assertPkPeriodWritable(match.period_id || periodId));
     const inserts = matches.map((match) => buildInsert({
       ...match,
       period_id: match.period_id || periodId,
@@ -212,6 +215,7 @@ export const pkMatchesService = {
   async finalize(id, payload, isAdmin = false, authUser = null) {
     if (!id) throw new Error("Thi\u1ebfu m\u00e3 tr\u1eadn \u0111\u1ea5u.");
     const existing = await this.getById(id);
+    assertPkPeriodWritable(existing.period_id);
     await assertParticipant(existing, authUser, isAdmin);
 
     if (!isAdmin && existing.played_at && startOfDay(existing.played_at) > startOfDay(new Date())) {
@@ -231,6 +235,7 @@ export const pkMatchesService = {
   async update(id, payload, isAdmin = false, authUser = null) {
     if (!id) throw new Error("Thi\u1ebfu m\u00e3 tr\u1eadn \u0111\u1ea5u.");
     const existing = await this.getById(id);
+    assertPkPeriodWritable(existing.period_id);
     await assertParticipant(existing, authUser, isAdmin);
 
     if (!existing.rating_locked_at && (payload.winner_side || payload.status === "completed")) {
@@ -312,6 +317,7 @@ export const pkMatchesService = {
 
   async remove(id) {
     const existing = await this.getById(id);
+    assertPkPeriodWritable(existing.period_id);
     if (existing.rating_locked_at || existing.status === "completed") {
       throw new Error("Kh\u00f4ng th\u1ec3 x\u00f3a tr\u1eadn \u0111\u00e3 ho\u00e0n t\u1ea5t. Owner c\u00f3 th\u1ec3 h\u1ee7y k\u1ebft qu\u1ea3.");
     }
@@ -321,6 +327,7 @@ export const pkMatchesService = {
   },
 
   async voidResult(id, reason, authUser) {
+    assertPkPeriodWritable((await this.getById(id)).period_id);
     const { data, error } = await pkMatchesRepository.voidResult(id, reason, authUser?.email);
     if (error) throw databaseError(error);
     return data;
@@ -329,6 +336,8 @@ export const pkMatchesService = {
   async getLeaderboard(periodId, matchType) {
     if (!periodId) throw new Error("Vui l\u00f2ng ch\u1ecdn k\u1ef3 thi \u0111\u1ea5u.");
     if (!MATCH_TYPES.has(matchType)) throw new Error("Lo\u1ea1i b\u1ea3ng x\u1ebfp h\u1ea1ng kh\u00f4ng h\u1ee3p l\u1ec7.");
+    const archive = archivedPkLeaderboard(periodId, matchType);
+    if (archive) return archive;
 
     const { data = [], error } = await pkMatchesRepository.getSeasonRatings(periodId, matchType);
     if (error) throw databaseError(error);

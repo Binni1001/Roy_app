@@ -18,7 +18,7 @@ function PersonIdentity({ row, achievements }) {
   )
 }
 
-export function LeaderboardRow({ row, isMe, achievements }) {
+export function LeaderboardRow({ row, isMe, achievements, archived = false }) {
   const rowClasses = [isMe && 'pk-row-me', row.tier_key === 'champion' && 'lb-row-champion'].filter(Boolean).join(' ')
 
   return (
@@ -28,7 +28,7 @@ export function LeaderboardRow({ row, isMe, achievements }) {
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td><SeasonTierBadge tierKey={row.tier_key} showLabel={false} /></td>
+      <td>{archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -55,7 +55,15 @@ export function QualifyingPlayers({ rows, activePersonId }) {
   )
 }
 
-export function RankingGuideModal({ onClose }) {
+export function RankingGuideModal({ onClose, archived = false }) {
+  if (archived) return <Modal title="Cách xếp hạng kỳ tháng 6" onClose={onClose}>
+    <div className="rg-root">
+      <p>Bảng lịch sử được dựng lại từ 57 trận hoàn tất còn lưu bằng đúng công thức trên giao diện cũ.</p>
+      <p>Xếp theo chỉ số Wilson (★) từ cao xuống thấp, sau đó số trận thắng. Điểm hiển thị = 3 × thắng − thua, tối thiểu 0.</p>
+      <p>Kỳ này dùng luật cũ, không yêu cầu 5 trận / 3 đối thủ. Trường hợp hòa hoàn toàn giữ thứ tự hiển thị của hàm cũ.</p>
+      <p className="muted">Bản dựng lại chưa được đối chiếu với ảnh hoặc backup bảng cuối mùa. Tên lấy từ hồ sơ lúc lưu bản khôi phục.</p>
+    </div>
+  </Modal>
   return (
     <Modal title="Cách xếp hạng đấu trường" onClose={onClose}>
       <div className="rg-root">
