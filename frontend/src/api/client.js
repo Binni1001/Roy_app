@@ -239,6 +239,10 @@ export const api = {
   },
 
   pk: {
+    correctResult: (id, winnerSide, setScores, updatedAt) => request({
+      url: `/api/pk-matches/${id}/correct-result`, method: 'POST',
+      data: { winner_side: winnerSide, set_scores: setScores, expected_updated_at: updatedAt },
+    }),
     matches: (periodId) => request({ url: '/api/pk-matches', params: periodId ? { period_id: periodId } : undefined }),
     arena: (periodId) => request({
       url: '/api/pk-matches',

@@ -8,6 +8,7 @@ const next="373a7ed1-0e18-502d-9120-225b2f3c2179", group="0e25f393-ae0c-5761-973
 const people=["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222","33333333-3333-4333-8333-333333333333","44444444-4444-4444-8444-444444444444"];
 const backup=JSON.parse(await readFile(new URL("../../docs/history/pre-fixed-pk-20261011/backup.json",import.meta.url),"utf8"));
 const migration=await readFile(new URL("../../supabase/20261011_pk_fixed_points.sql",import.meta.url),"utf8");
+const correction=await readFile(new URL("../../supabase/20261011_pk_result_correction.sql",import.meta.url),"utf8");
 
 async function setup() {
   const db=new PGlite();
@@ -126,5 +127,42 @@ test("activation aborts without touching old history if Mùa 5 already has match
     await db.exec("rollback");
     assert.deepEqual(await ledger(db),before);
     assert.equal((await db.query("select to_regclass('public.pk_leaderboard_snapshots') as table_name")).rows[0].table_name,null);
+  }finally{await db.close();}
+});
+
+test("result correction flips points, updates differential, audits before/after, rejects stale/invalid and closed edits",async()=>{
+  const db=await setup();
+  try{
+    await db.exec(migration); await db.exec(correction);
+    const pastLedger=await ledger(db);
+    const id=await makeMatch(db); await finish(db,id);
+    const original=(await db.query("select *,updated_at::text as edit_token from pk_matches where id=$1",[id])).rows[0];
+    const edit=(winner,scores,token=original.edit_token)=>db.query("select correct_pk_match_result($1,$2,$3,$4,'owner@example.test') as result",[id,winner,scores,token]);
+    await assert.rejects(()=>edit("challenger",[{challenger:18,opponent:21}]),/does not match/);
+    await assert.rejects(()=>edit("challenger",[{challenger:21.5,opponent:19}]),/format is invalid/);
+    await assert.rejects(()=>edit("challenger",[{challenger:null,opponent:19}]),/format is invalid/);
+    await assert.rejects(()=>edit("challenger",[{challenger:21,opponent:21}]),/one winner/);
+    const result=(await edit("opponent",[{challenger:18,opponent:21}])).rows[0].result;
+    assert.equal(result.match.winner_side,"opponent");
+    assert.deepEqual(result.match.set_scores,[{challenger:18,opponent:21}]);
+    assert.deepEqual(await ledger(db),pastLedger);
+    const match=(await db.query("select * from pk_matches where id=$1",[id])).rows[0];
+    const standings=buildFixedPkLeaderboard([match],"singles",{min_matches:1,min_opponents:1});
+    assert.equal(standings.ranked.find(r=>r.id===people[0]).points,-2);
+    assert.equal(standings.ranked.find(r=>r.id===people[1]).points,3);
+    assert.equal(standings.ranked.find(r=>r.id===people[0]).score_difference,-3);
+    const audit=(await db.query("select snapshot,actor_email from pk_match_audits where match_id=$1 and action='corrected'",[id])).rows;
+    assert.equal(audit.length,1); assert.equal(audit[0].snapshot.before.winner_side,"challenger");
+    assert.equal(audit[0].snapshot.after.winner_side,"opponent");
+    await assert.rejects(()=>edit("challenger",[{challenger:21,opponent:19}]),/match changed/);
+    assert.equal(Number((await db.query("select count(*) as n from pk_match_audits where match_id=$1 and action='corrected'",[id])).rows[0].n),1);
+    const signature=(await db.query("select pk_ranking_source_signature($1) as value",[next])).rows[0].value;
+    const boards=Object.fromEntries(["singles","doubles"].map(t=>[t,{period_id:next,match_type:t,...buildFixedPkLeaderboard([match],t)}]));
+    await db.query("select close_period_with_pk_history($1,'{}',$2,$3)",[next,signature,boards]);
+    const beforeSnapshots=(await db.query("select * from pk_leaderboard_snapshots order by period_id,match_type")).rows;
+    await assert.rejects(()=>edit("challenger",[{challenger:21,opponent:19}]),/Closed period/);
+    assert.deepEqual((await db.query("select * from pk_leaderboard_snapshots order by period_id,match_type")).rows,beforeSnapshots);
+    await db.exec("set role authenticated");
+    await assert.rejects(()=>edit("challenger",[{challenger:21,opponent:19}]),/permission denied/);
   }finally{await db.close();}
 });

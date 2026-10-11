@@ -2,10 +2,16 @@ import { pkMatchesService } from "./pkMatches.service.js";
 
 function sendError(res, error, fallbackStatus = 400) {
   const conflict = /locked|already completed|earlier PK matches|cannot be deleted|kh[o\u00f3]a|ho\u00e0n t\u1ea5t|tr\u1eadn tr\u01b0\u1edbc|kh[o\u00f4]ng th\u1ec3 x[o\u00f3]a/i.test(error.message);
-  res.status(conflict ? 409 : fallbackStatus).json({ message: error.message });
+  res.status(error.statusCode || (conflict ? 409 : fallbackStatus)).json({ message: error.message });
 }
 
 export const pkMatchesController = {
+  async correctResult(req, res) {
+    try {
+      res.json(await pkMatchesService.correctResult(req.params.id, req.body,
+        req.authRole === "admin" || req.authRole === "owner", req.authUser));
+    } catch (error) { sendError(res, error); }
+  },
   async getAll(req, res) {
     try {
       res.json(await pkMatchesService.getAll(

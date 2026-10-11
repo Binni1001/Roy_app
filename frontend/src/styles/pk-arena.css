@@ -1270,6 +1270,14 @@
 }
 .pk-fight-score span { color: #7d8794; }
 
+.pk-set-scores { position: relative; z-index: 1; display: grid; gap: 5px; width: 100%; margin-top: 8px; }
+.pk-set-score-line { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px; }
+.pk-set-score-line small { color: #a5a9b1; font-size: 0.65rem; }
+.pk-set-score-line strong { color: #efe7d2; font-size: 0.8rem; font-variant-numeric: tabular-nums; white-space: nowrap; background: rgba(13,19,28,0.85); border-radius: 4px; padding: 1px 4px; }
+.pk-set-score-line strong span { padding-inline: 4px; color: #7d8794; }
+.pk-set-missing { margin-top: 7px; color: #a5a9b1; font-size: 0.65rem; text-align: center; }
+.pk-set-total-note { position: relative; z-index: 1; color: #a5a9b1; font-size: 0.6rem; }
+
 /* Footer */
 .pk-fight-foot {
   display: flex; align-items: center; justify-content: space-between;

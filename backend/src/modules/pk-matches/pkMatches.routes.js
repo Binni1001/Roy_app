@@ -14,6 +14,7 @@ router.get("/:id", requireAuth, pkMatchesController.getById);
 router.post("/bulk", requireAuth, pkMatchesController.createBulk);
 router.post("/", requireAuth, pkMatchesController.create);
 router.post("/:id/finalize", requireAuth, pkMatchesController.finalize);
+router.post("/:id/correct-result", requireAuth, requireAdmin, pkMatchesController.correctResult);
 router.post("/:id/void", requireAuth, requireOwner, pkMatchesController.voidResult);
 router.put("/:id", requireAuth, pkMatchesController.update);
 router.delete("/:id", requireAuth, requireAdmin, pkMatchesController.remove);

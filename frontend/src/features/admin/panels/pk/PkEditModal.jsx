@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Modal } from '../../../../components/common'
 import { STATUS_LABEL } from './pkConstants'
 
-/* Admin có thể sửa người của trận đã chốt; backend sẽ dựng lại Elo toàn kỳ. */
+/* Quản trị sửa thông tin trận; kết quả có thao tác Sửa tỷ số riêng. */
 export function PkEditModal({ match, people = [], onClose, onSubmit }) {
   const [draft, setDraft] = useState({
     match_type:             match.match_type             || 'singles',
@@ -44,7 +44,7 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
 
         {isCompleted && (
           <p className="pk-edit-warning">
-            Trận đã hoàn tất. Khi lưu, kết quả và tỷ số được giữ nguyên; điểm Elo của toàn kỳ sẽ được tính lại.
+            Trận đã hoàn tất. Sửa thông tin sẽ cập nhật bảng theo luật của kỳ; tỷ số giữ nguyên. Dùng “Sửa tỷ số” trên thẻ trận để sửa kết quả.
           </p>
         )}
 
@@ -141,7 +141,7 @@ export function PkEditModal({ match, people = [], onClose, onSubmit }) {
         <footer className="modal-actions">
           <button type="button" onClick={onClose}>Hủy</button>
           <button type="submit" className="ck-btn-submit">
-            {isCompleted ? 'Lưu và tính lại Elo' : 'Lưu thay đổi'}
+            {isCompleted ? 'Lưu và cập nhật xếp hạng' : 'Lưu thay đổi'}
           </button>
         </footer>
       </form>

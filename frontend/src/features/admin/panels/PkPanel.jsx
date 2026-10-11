@@ -73,6 +73,7 @@ export function PkPanel({ periodId, role }) {
   const [editing, setEditing] = useState(null)
   const [deleting, setDeleting] = useState(null)
   const [finalizing, setFinalizing] = useState(null)
+  const [correctingResult, setCorrectingResult] = useState(null)
   const [voiding, setVoiding] = useState(null)
   const [showRandom, setShowRandom] = useState(false)
   const [lbType, setLbType] = useState('doubles')
@@ -151,6 +152,21 @@ export function PkPanel({ periodId, role }) {
       setFinalizing(null)
       void loadAll()
     } catch (error) { notify(error.message, 'error') }
+  }
+
+  async function handleCorrectResult(match, winnerSide, setScores) {
+    try {
+      await api.pk.correctResult(match.id, winnerSide, setScores, match.updated_at)
+      notify('Đã sửa tỷ số và cập nhật bảng xếp hạng.')
+      setCorrectingResult(null)
+      void loadAll()
+    } catch (error) {
+      notify(error.message, 'error')
+      if ((error.response?.status || error.cause?.response?.status) === 409) {
+        setCorrectingResult(null)
+        void loadAll()
+      }
+    }
   }
 
   async function handleVoid(id, reason) {
@@ -394,6 +410,7 @@ export function PkPanel({ periodId, role }) {
                         onEdit={setEditing}
                         onDelete={setDeleting}
                         onFinalize={setFinalizing}
+                        onCorrectResult={setCorrectingResult}
                         onVoid={setVoiding}
                         canVoid={role === 'owner'}
                       />
@@ -482,6 +499,9 @@ export function PkPanel({ periodId, role }) {
           onSubmit={(winnerSide, setScores) => handleFinalize(finalizing.id, winnerSide, setScores)}
         />
       )}
+      {correctingResult && <ResultModal editing match={correctingResult}
+        onClose={() => setCorrectingResult(null)}
+        onSubmit={(winner, scores) => handleCorrectResult(correctingResult, winner, scores)} />}
 
       {voiding && (
         <VoidResultModal

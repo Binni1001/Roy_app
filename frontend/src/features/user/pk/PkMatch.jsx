@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Modal } from '../../../components/common'
 import { formatDate, initials } from '../../../utils/appUtils'
 import { STATUS_LABEL, getResultLock, isParticipant, getWinnerSide } from './pkUtils'
+import { MatchSetScores } from './PkScores'
 
 /* Avatar trong fight card — size: xl (đơn) | lg (đội chính) | sm (đồng đội) */
 function FightAvatar({ person, size = 'lg' }) {
@@ -44,11 +45,13 @@ function FightCenter({ m }) {
     <div className="pk-fight-center">
       <div className="pk-fight-net" aria-hidden="true" />
       <div className="pk-fight-vs">ĐẤU</div>
-      {completed && (
+      {completed && m.set_scores?.length > 0 && (
         m.set_scores?.length
           ? <div className="pk-fight-score">{cWon}<span>–</span>{oWon}</div>
-          : <div className="pk-fight-score">{m.winner_side === 'challenger' ? '1–0' : '0–1'}</div>
+          : null
       )}
+      {completed && m.set_scores?.length > 0 && <small className="pk-set-total-note">set thắng</small>}
+      {completed && <MatchSetScores scores={m.set_scores} />}
     </div>
   )
 }
@@ -157,14 +160,16 @@ export function MatchCard({ m, activePerson, matchNumber, onSetResult, onCancel,
   )
 }
 
-export function ResultModal({ match, onClose, onSubmit }) {
+export function ResultModal({ match, onClose, onSubmit, editing = false }) {
   const sets = match.sets || 1
-  const [winner, setWinner] = useState('')
+  const [winner, setWinner] = useState(editing ? match.winner_side || '' : '')
   const [scores, setScores] = useState(
-    Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
+    editing && match.set_scores?.length ? match.set_scores.map((s) => ({ challenger: String(s.challenger), opponent: String(s.opponent) }))
+      : Array.from({ length: sets }, () => ({ challenger: '', opponent: '' }))
   )
   const [confirming, setConfirming] = useState(false)
   const [error, setError] = useState('')
+  const [busy, setBusy] = useState(false)
 
   function updateScore(i, side, val) {
     setScores((prev) => prev.map((s, idx) => idx === i ? { ...s, [side]: val } : s))
@@ -181,6 +186,10 @@ export function ResultModal({ match, onClose, onSubmit }) {
     if (entered.some((score) => score.challenger === '' || score.opponent === '')) {
       setError('Vui lòng nhập đủ tỷ số của cả hai bên trong mỗi set.'); return
     }
+    if (entered.length > sets || entered.some((score) => !Number.isSafeInteger(Number(score.challenger))
+      || !Number.isSafeInteger(Number(score.opponent)) || Number(score.challenger) < 0 || Number(score.opponent) < 0)) {
+      setError('Điểm phải là số nguyên không âm và số set không vượt cấu hình trận.'); return
+    }
     if (entered.some((score) => Number(score.challenger) === Number(score.opponent))) {
       setError('Mỗi set phải có một bên thắng.'); return
     }
@@ -193,12 +202,14 @@ export function ResultModal({ match, onClose, onSubmit }) {
     setConfirming(true)
   }
 
-  function handleConfirm() {
+  async function handleConfirm() {
+    if (busy) return
     const parsed = scores.map((s) => ({
       challenger: Number(s.challenger) || 0,
       opponent: Number(s.opponent) || 0,
     })).filter((s) => s.challenger > 0 || s.opponent > 0)
-    onSubmit(winner, parsed)
+    setBusy(true)
+    try { await onSubmit(winner, parsed) } finally { setBusy(false) }
   }
 
   const cName = `${match.challenger?.full_name || '?'}${match.challenger_partner ? ` & ${match.challenger_partner.full_name}` : ''}`
@@ -207,15 +218,16 @@ export function ResultModal({ match, onClose, onSubmit }) {
 
   if (confirming) {
     return (
-      <Modal title="⚠️ Xác nhận kết quả" onClose={() => setConfirming(false)}>
+      <Modal title={editing ? 'Xác nhận sửa tỷ số' : '⚠️ Xác nhận kết quả'} onClose={() => { if (!busy) setConfirming(false) }}>
         <div className="rs-root">
           <div className="rs-confirm-box">
             <p className="rs-confirm-winner">🏆 <strong>{winnerName}</strong> thắng</p>
-            <p className="rs-confirm-warn">Sau khi xác nhận, người chơi và tỷ số sẽ bị <strong>khóa ngay lập tức</strong> và không thể chỉnh sửa.</p>
+            <MatchSetScores scores={scores.filter((s) => s.challenger !== '' && s.opponent !== '')} />
+            <p className="rs-confirm-warn">{editing ? 'Lưu tỷ số sẽ cập nhật điểm, hiệu số và đối đầu của kỳ đang mở. Thay đổi được lưu cùng kết quả trước đó trong lịch sử thao tác.' : 'Người chơi không thể sửa kết quả đã xác nhận. Quản trị có thể sửa khi kỳ còn mở; kỳ đã đóng giữ nguyên lịch sử.'}</p>
           </div>
           <footer className="modal-actions">
-            <button type="button" onClick={() => setConfirming(false)}>Quay lại</button>
-            <button type="button" className="btn-danger" onClick={handleConfirm}>Xác nhận</button>
+            <button type="button" disabled={busy} onClick={() => setConfirming(false)}>Quay lại</button>
+            <button type="button" disabled={busy} className="btn-danger" onClick={handleConfirm}>{busy ? 'Đang lưu…' : editing ? 'Lưu tỷ số mới' : 'Xác nhận'}</button>
           </footer>
         </div>
       </Modal>
@@ -223,7 +235,7 @@ export function ResultModal({ match, onClose, onSubmit }) {
   }
 
   return (
-    <Modal title="🏆 Ghi nhận kết quả" onClose={onClose}>
+    <Modal title={editing ? 'Sửa tỷ số trận đã ghi' : '🏆 Ghi nhận kết quả'} onClose={onClose}>
       <form className="rs-root" onSubmit={handleSubmit}>
         <p className="rs-hint">Chọn bên thắng</p>
         <div className="rs-winner-row">

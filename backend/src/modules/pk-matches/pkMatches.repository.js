@@ -115,6 +115,10 @@ export const pkMatchesRepository = {
       p_actor_email: actorEmail || null,
     });
   },
+  correctResult: (id, payload, actorEmail) => supabase.rpc("correct_pk_match_result", {
+    p_match_id: id, p_winner_side: payload.winner_side, p_set_scores: payload.set_scores,
+    p_expected_updated_at: payload.expected_updated_at, p_actor_email: actorEmail || null,
+  }),
 
   async getSeasonRatings(periodId, matchType) {
     return supabase

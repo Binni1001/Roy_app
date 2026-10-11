@@ -175,6 +175,28 @@ function buildInsert(payload, isAdmin) {
 }
 
 export const pkMatchesService = {
+  async correctResult(id, payload, isAdmin = false, authUser = null) {
+    if (!isAdmin) throw Object.assign(new Error("Chỉ quản trị mới được sửa tỷ số đã ghi."), { statusCode: 403 });
+    const existing = await this.getById(id);
+    assertPkPeriodWritable(existing.period_id);
+    if (existing.status !== "completed" || existing.voided_at) throw new Error("Chỉ sửa tỷ số trận đã hoàn tất và chưa hủy kết quả.");
+    const maxSets = Number(existing.sets) || 1;
+    const scores = payload.set_scores;
+    if (!Array.isArray(scores) || !scores.length || scores.length > maxSets
+      || scores.some((s) => !s || !Number.isSafeInteger(s.challenger) || !Number.isSafeInteger(s.opponent)
+        || s.challenger < 0 || s.opponent < 0 || s.challenger === s.opponent)) throw new Error("Tỷ số các set không hợp lệ.");
+    const cWins = scores.filter((s) => s.challenger > s.opponent).length;
+    const oWins = scores.length - cWins;
+    if (!["challenger", "opponent"].includes(payload.winner_side)
+      || (payload.winner_side === "challenger" ? cWins <= oWins : oWins <= cWins)) throw new Error("Bên thắng không khớp với tỷ số.");
+    if (!payload.expected_updated_at || !Number.isFinite(Date.parse(payload.expected_updated_at))) throw new Error("Tải lại trận trước khi sửa tỷ số.");
+    const { data, error } = await pkMatchesRepository.correctResult(id, payload, authUser?.email);
+    if (error?.code === "PGRST202") throw new Error("Cần chạy migration 20261011_pk_result_correction.sql trước khi sửa tỷ số.");
+    if (/PK match changed/i.test(error?.message || "")) throw Object.assign(new Error("Trận vừa thay đổi, hãy mở lại trận và kiểm tra trước khi sửa."), { statusCode: 409 });
+    if (/Closed period results/i.test(error?.message || "")) throw Object.assign(new Error("Kỳ đã đóng, giữ nguyên lịch sử tỷ số và xếp hạng."), { statusCode: 409 });
+    if (error) throw databaseError(error);
+    return data?.match || data;
+  },
   async getAll(periodId, includeAchievements = false) {
     const { data, error } = await pkMatchesRepository.getAll(periodId);
     if (error) throw databaseError(error);

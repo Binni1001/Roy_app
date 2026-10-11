@@ -1,5 +1,6 @@
 import { formatDate, initials } from '../../../../utils/appUtils'
 import { STATUS_LABEL } from './pkConstants'
+import { MatchSetScores } from '../../../user/pk/PkScores'
 
 function FightAvatar({ person, size = 'lg' }) {
   const className = `pk-fight-ava pk-fight-ava-${size}`
@@ -40,18 +41,20 @@ function FightCenter({ match, showResult }) {
     <div className="pk-fight-center">
       <div className="pk-fight-net" aria-hidden="true" />
       <div className="pk-fight-vs">ĐẤU</div>
-      {showResult && (
+      {showResult && match.set_scores?.length > 0 && (
         <div className="pk-fight-score">
           {match.set_scores?.length
             ? <>{challengerSets}<span>–</span>{opponentSets}</>
-            : <>{match.winner_side === 'challenger' ? '1–0' : '0–1'}</>}
+            : null}
         </div>
       )}
+      {showResult && match.set_scores?.length > 0 && <small className="pk-set-total-note">set thắng</small>}
+      {showResult && <MatchSetScores scores={match.set_scores} />}
     </div>
   )
 }
 
-export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize, onVoid, canVoid, readOnly = false }) {
+export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize, onVoid, onCorrectResult, canVoid, readOnly = false }) {
   const isVoided = Boolean(m.voided_at)
   const showResult = m.status === 'completed' && !isVoided
   const visualStatus = isVoided ? 'cancelled' : m.status
@@ -95,6 +98,7 @@ export function AdminMatchCard({ m, displayNumber, onEdit, onDelete, onFinalize,
           {isVoided && m.void_reason && <span className="pk-fight-note muted">Lý do: {m.void_reason}</span>}
         </div>
         {!readOnly && <div className="pk-fight-actions">
+          {showResult && <button onClick={() => onCorrectResult(m)}>Sửa tỷ số</button>}
           {(m.status === 'pending' || m.status === 'active') && (
             <button onClick={() => onFinalize(m)}>Ghi kết quả</button>
           )}
