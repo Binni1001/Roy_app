@@ -1,6 +1,9 @@
 import { supabase } from "../../config/supabase.js";
 
 export const periodsRepository = {
+  closeWithHistory: (id, patch, history) => supabase.rpc("close_period_with_pk_history", {
+    p_period_id: id, p_patch: patch, p_expected_signature: history.signature, p_boards: history.boards,
+  }),
   readiness: (id) => supabase.rpc("period_finance_readiness", { p_period_id: id }),
   checkOpen: (groupId, id = null) => supabase.rpc("assert_new_period_open", { p_group_id: groupId, p_exclude_id: id }),
   async getAll(groupIds = null) {

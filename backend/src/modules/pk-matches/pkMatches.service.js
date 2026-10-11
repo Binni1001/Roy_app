@@ -3,11 +3,31 @@ import { assertPeopleActive } from "../../utils/peopleGuard.js";
 import { annotateActivityPeople } from "../../utils/activityEligibilityDb.js";
 import { buildSeasonAchievements } from "./pkAchievements.js";
 import { archivedPkLeaderboard, assertPkPeriodWritable } from "./pkHistory.js";
+import { buildFixedPkLeaderboard } from "./pkPoints.js";
 
 const MATCH_TYPES = new Set(["singles", "doubles"]);
 const OPEN_STATUSES = new Set(["pending", "active"]);
 const MIN_MATCHES = 5;
 const MIN_OPPONENTS = 3;
+
+function scoringMigrationError(error) {
+  if (["PGRST202", "PGRST205", "42P01", "42703"].includes(error?.code)) {
+    return new Error("Cần chạy migration 20261011_pk_fixed_points.sql trước khi dùng luật Đấu trường mới.");
+  }
+  return databaseError(error);
+}
+
+async function enrichHistoryAvatars(archive) {
+  try {
+    const { data, error } = await pkMatchesRepository.getArchivedPlayerAvatars(archive.ranked.map((row) => row.id));
+    if (!error) {
+      const byId = new Map((data || []).map((person) => [person.id, person.avatar_url]));
+      archive.ranked = archive.ranked.map((row) => byId.has(row.id)
+        ? { ...row, avatar_url: byId.get(row.id) || null } : row);
+    }
+  } catch { /* Missing pictures must not hide historical results. */ }
+  return archive;
+}
 
 const DATABASE_ERROR_MESSAGES = [
   [/Could not find the function public\.correct_completed_pk_match|PGRST202/i, "C\u01a1 s\u1edf d\u1eef li\u1ec7u ch\u01b0a \u00e1p d\u1ee5ng b\u1ea3n c\u1eadp nh\u1eadt s\u1eeda k\u00e8o. Vui l\u00f2ng ch\u1ea1y migration 20260803_correct_completed_pk_match.sql trong Supabase."],
@@ -337,22 +357,19 @@ export const pkMatchesService = {
     if (!periodId) throw new Error("Vui l\u00f2ng ch\u1ecdn k\u1ef3 thi \u0111\u1ea5u.");
     if (!MATCH_TYPES.has(matchType)) throw new Error("Lo\u1ea1i b\u1ea3ng x\u1ebfp h\u1ea1ng kh\u00f4ng h\u1ee3p l\u1ec7.");
     const archive = archivedPkLeaderboard(periodId, matchType);
-    if (archive) {
-      try {
-        const { data: avatars, error: avatarError } = await pkMatchesRepository.getArchivedPlayerAvatars(
-          archive.ranked.map((row) => row.id)
-        );
-        if (!avatarError) {
-          const byId = new Map((avatars || []).map((person) => [person.id, person.avatar_url]));
-          archive.ranked = archive.ranked.map((row) => ({
-            ...row, avatar_url: byId.has(row.id) ? byId.get(row.id) || null : row.avatar_url,
-          }));
-        }
-      } catch {
-        // An image lookup failure must not hide the recovered ranking.
-      }
-      return archive;
+    if (archive) return enrichHistoryAvatars(archive);
+    const snapshot = await pkMatchesRepository.getSnapshot(periodId, matchType);
+    if (snapshot.error) throw scoringMigrationError(snapshot.error);
+    if (snapshot.data) return enrichHistoryAvatars(structuredClone(snapshot.data.result));
+    const policy = await pkMatchesRepository.getScoringRule(periodId);
+    if (policy.error) throw scoringMigrationError(policy.error);
+    if (policy.data.status === "closed") throw new Error("Kỳ đã đóng cần có bảng lịch sử đã lưu. Không tự tính lại bằng luật khác.");
+    if (policy.data.pk_scoring_rule === "fixed_3_2_v1") {
+      const matches = await pkMatchesRepository.getRankingMatches(periodId);
+      if (matches.error) throw databaseError(matches.error);
+      return { period_id: periodId, match_type: matchType, ...buildFixedPkLeaderboard(matches.data, matchType) };
     }
+    if (policy.data.pk_scoring_rule !== "elo_v1") throw new Error("Luật Đấu trường của kỳ không hợp lệ.");
 
     const { data = [], error } = await pkMatchesRepository.getSeasonRatings(periodId, matchType);
     if (error) throw databaseError(error);
@@ -419,10 +436,20 @@ export const pkMatchesService = {
     return {
       period_id: periodId,
       match_type: matchType,
+      scoring_rule: "elo_v1", scoring_method: "elo", archived: false,
       requirements: { min_matches: MIN_MATCHES, min_opponents: MIN_OPPONENTS },
       ranked,
       qualifying,
     };
+  },
+
+  async preparePeriodHistory(periodId) {
+    const signature = await pkMatchesRepository.sourceSignature(periodId);
+    if (signature.error) throw scoringMigrationError(signature.error);
+    const [singles, doubles] = await Promise.all([
+      this.getLeaderboard(periodId, "singles"), this.getLeaderboard(periodId, "doubles"),
+    ]);
+    return { signature: signature.data, boards: { singles, doubles } };
   },
 
   async getPublicPeople() {

@@ -18,15 +18,16 @@ export function PersonCell({ p, achievements }) {
   )
 }
 
-export function AdminLeaderboardRow({ row, achievements, archived = false }) {
+export function AdminLeaderboardRow({ row, achievements, archived = false, fixedPoints = false }) {
   return (
     <tr className={row.tier_key === 'champion' ? 'lb-row-champion' : ''}>
-      <td><span className="lb-rank-num">{row.rank}</span></td>
+      <td><span className="lb-rank-num">{row.rank}{row.tied_rank && <small> · cùng hạng</small>}</span></td>
       <td><PersonCell p={row} achievements={achievements} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td>{archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
+      <td>{fixedPoints ? row.score_difference : archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
+      {fixedPoints && <td title="Thắng–thua đối đầu trong nhóm cùng điểm và hiệu số">{row.head_to_head_applied ? `${row.head_to_head_wins}–${row.head_to_head_losses}` : '—'}</td>}
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -45,6 +46,7 @@ export function AdminQualifyingPlayers({ rows }) {
               {row.matches_needed > 0 && `Thiếu ${row.matches_needed} trận`}
               {row.matches_needed > 0 && row.opponents_needed > 0 && ' · '}
               {row.opponents_needed > 0 && `Thiếu ${row.opponents_needed} đối thủ`}
+              {Number.isFinite(row.points) && <small> · {row.points} điểm · Hiệu số {row.score_difference}</small>}
             </span>
           </div>
         ))}

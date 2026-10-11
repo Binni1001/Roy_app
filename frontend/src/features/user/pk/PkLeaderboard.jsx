@@ -18,17 +18,18 @@ function PersonIdentity({ row, achievements }) {
   )
 }
 
-export function LeaderboardRow({ row, isMe, achievements, archived = false }) {
+export function LeaderboardRow({ row, isMe, achievements, archived = false, fixedPoints = false }) {
   const rowClasses = [isMe && 'pk-row-me', row.tier_key === 'champion' && 'lb-row-champion'].filter(Boolean).join(' ')
 
   return (
     <tr className={rowClasses}>
-      <td><span className="lb-rank-num">{row.rank}</span></td>
+      <td><span className="lb-rank-num">{row.rank}{row.tied_rank && <small> · cùng hạng</small>}</span></td>
       <td><PersonIdentity row={row} achievements={achievements} /></td>
       <td className="pk-win">{row.wins}</td>
       <td className="pk-loss">{row.losses}</td>
       <td className="lb-total">{row.total_matches}</td>
-      <td>{archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
+      <td>{fixedPoints ? row.score_difference : archived ? `${(Number(row.wilson_score) * 100).toFixed(2)}%` : <SeasonTierBadge tierKey={row.tier_key} showLabel={false} />}</td>
+      {fixedPoints && <td title="Thắng–thua đối đầu trong nhóm cùng điểm và hiệu số">{row.head_to_head_applied ? `${row.head_to_head_wins}–${row.head_to_head_losses}` : '—'}</td>}
       <td className="lb-points"><strong>{Number(row.points || 0).toLocaleString('vi-VN')}</strong></td>
     </tr>
   )
@@ -47,6 +48,7 @@ export function QualifyingPlayers({ rows, activePersonId }) {
               {row.matches_needed > 0 && `Cần thêm ${row.matches_needed} trận`}
               {row.matches_needed > 0 && row.opponents_needed > 0 && ' · '}
               {row.opponents_needed > 0 && `Cần gặp thêm ${row.opponents_needed} đối thủ`}
+              {Number.isFinite(row.points) && <small> · {row.points} điểm · Hiệu số {row.score_difference}</small>}
             </span>
           </div>
         ))}
@@ -55,13 +57,22 @@ export function QualifyingPlayers({ rows, activePersonId }) {
   )
 }
 
-export function RankingGuideModal({ onClose, archived = false }) {
+export function RankingGuideModal({ onClose, archived = false, fixedPoints = false }) {
   if (archived) return <Modal title="Cách xếp hạng kỳ tháng 6" onClose={onClose}>
     <div className="rg-root">
       <p>Bảng lịch sử được dựng lại từ 57 trận hoàn tất còn lưu bằng đúng công thức trên giao diện cũ.</p>
       <p>Xếp theo chỉ số Wilson (★) từ cao xuống thấp, sau đó số trận thắng. Điểm hiển thị = 3 × thắng − thua, tối thiểu 0.</p>
       <p>Kỳ này dùng luật cũ, không yêu cầu 5 trận / 3 đối thủ. Trường hợp hòa hoàn toàn giữ thứ tự hiển thị của hàm cũ.</p>
       <p className="muted">Bản dựng lại chưa được đối chiếu với ảnh hoặc backup bảng cuối mùa. Tên lấy từ hồ sơ lúc lưu bản khôi phục.</p>
+    </div>
+  </Modal>
+  if (fixedPoints) return <Modal title="Cách xếp hạng +3/−2" onClose={onClose}>
+    <div className="rg-root">
+      <p>Mùa bắt đầu từ 0 điểm: thắng +3, thua −2. Không có hệ số cao ở 5 trận đầu hoặc trừ điểm nghỉ lâu. Điểm có thể âm.</p>
+      <p>Cần hoàn tất 5 trận và gặp 3 đối thủ khác nhau để vào bảng xếp hạng. Đơn và đôi tính riêng.</p>
+      <p>Ưu tiên điểm, rồi hiệu số tổng điểm cầu ghi được trừ bị ghi qua tất cả các set. Điểm và hiệu số đôi lưu riêng từng người, kể cả khi đổi đồng đội.</p>
+      <p>Nếu còn hòa, xét thắng trừ thua trong các trận đối đầu giữa nhóm còn hòa. Đồng đội cùng bên không tính là đối đầu. Chỉ xét khi mọi cặp trong nhóm đã gặp nhau ở hai bên đối diện.</p>
+      <p>Chưa phân được thì cùng hạng; mọi người tự bàn bạc phân hạng bên ngoài. Hệ thống không tự thêm trận phân hạng.</p>
     </div>
   </Modal>
   return (

@@ -1,4 +1,5 @@
 import { periodsRepository } from "./periods.repository.js";
+import { pkMatchesService } from "../pk-matches/pkMatches.service.js";
 import { groupAccess } from "../../services/groupAccess.js";
 import { validateText, validateAmount, requireDate, assertValid } from "../../utils/validators.js";
 
@@ -113,10 +114,12 @@ export const periodsService = {
 
   async updatePeriod(id, payload) {
     if (!id) throw new Error("Period ID khong duoc de trong");
+    let closing = false;
 
     if (payload.status === "open" || payload.status === "closed") {
       const existing = await this.getPeriodById(id);
       if (payload.status !== existing.status) {
+        closing = payload.status === "closed";
         const check = payload.status === "open"
           ? await periodsRepository.checkOpen(existing.group_id, id)
           : await periodsRepository.readiness(id);
@@ -186,7 +189,9 @@ export const periodsService = {
       updateData.guest_fee_per_session = Number(payload.guest_fee_per_session);
     }
 
-    const { data, error } = await periodsRepository.update(id, updateData);
+    const { data, error } = closing
+      ? await periodsRepository.closeWithHistory(id, updateData, await pkMatchesService.preparePeriodHistory(id))
+      : await periodsRepository.update(id, updateData);
 
     if (error) {
       throw new Error(error.message);

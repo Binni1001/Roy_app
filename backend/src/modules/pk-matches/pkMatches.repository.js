@@ -18,6 +18,20 @@ function orderMatches(query) {
 }
 
 export const pkMatchesRepository = {
+  getScoringRule: (periodId) => supabase.from("periods").select("id,status,pk_scoring_rule").eq("id", periodId).single(),
+  getSnapshot: (periodId, matchType) => supabase.from("pk_leaderboard_snapshots").select("result,saved_at")
+    .eq("period_id", periodId).eq("match_type", matchType).maybeSingle(),
+  sourceSignature: (periodId) => supabase.rpc("pk_ranking_source_signature", { p_period_id: periodId }),
+  async getRankingMatches(periodId) {
+    const rows = [];
+    for (let start = 0; ; start += 1000) {
+      const result = await supabase.from("pk_matches").select(MATCH_SELECT).eq("period_id", periodId)
+        .eq("status", "completed").is("voided_at", null).order("id").range(start, start + 999);
+      if (result.error) return result;
+      rows.push(...result.data);
+      if (result.data.length < 1000) return { data: rows, error: null };
+    }
+  },
   async getAll(periodId) {
     let query = supabase.from("pk_matches").select(MATCH_SELECT);
     if (periodId) query = query.eq("period_id", periodId);

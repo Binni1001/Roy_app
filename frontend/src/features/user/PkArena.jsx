@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { CircleHelp } from 'lucide-react'
 import { api } from '../../api/client'
 import { ConfirmModal, Panel, SkeletonMatchCards, SkeletonPlayerGrid, SkeletonTable } from '../../components/common'
@@ -24,6 +24,8 @@ export function PkArena({ activePerson, periodId }) {
     doubles: EMPTY_LEADERBOARD,
   })
   const [loading, setLoading]     = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const loadRevision = useRef(0)
   const [toast, setToast]         = useState('')
   const [toastType, setToastType] = useState('success')
   const [showCreate, setShowCreate] = useState(false)
@@ -51,7 +53,7 @@ export function PkArena({ activePerson, periodId }) {
   })
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { loadAll() }, [periodId])
+  useEffect(() => { void loadAll(); return () => { loadRevision.current++ } }, [periodId])
   useEffect(() => {
     if (!toast) return
     const t = setTimeout(() => setToast(''), 2000)
@@ -59,25 +61,30 @@ export function PkArena({ activePerson, periodId }) {
   }, [toast])
 
   async function loadAll() {
+    const revision = ++loadRevision.current
     if (!periodId) {
       setMatches([])
       setAchievements(EMPTY_SEASON_ACHIEVEMENTS)
       return
     }
     setLoading(true)
+    setLoadError('')
     try {
       const [arena, pp, singles, doubles] = await Promise.all([
-        api.pk.arena(periodId).catch(() => ({ matches: [], achievements: EMPTY_SEASON_ACHIEVEMENTS })),
-        api.pk.people().catch(() => []),
-        api.pk.leaderboard(periodId, 'singles').catch(() => EMPTY_LEADERBOARD),
-        api.pk.leaderboard(periodId, 'doubles').catch(() => EMPTY_LEADERBOARD),
+        api.pk.arena(periodId),
+        api.pk.people(),
+        api.pk.leaderboard(periodId, 'singles'),
+        api.pk.leaderboard(periodId, 'doubles'),
       ])
+      if (revision !== loadRevision.current) return
       setMatches(arena.matches || [])
       setAchievements(arena.achievements || EMPTY_SEASON_ACHIEVEMENTS)
       setPeople(pp)
       setLeaderboards({ singles, doubles })
+    } catch (error) {
+      if (revision === loadRevision.current) setLoadError(error.message || 'Không tải được bảng Đấu trường.')
     } finally {
-      setLoading(false)
+      if (revision === loadRevision.current) setLoading(false)
     }
   }
 
@@ -203,6 +210,8 @@ export function PkArena({ activePerson, periodId }) {
   const lbDoubles = leaderboards.doubles.ranked
   const activeLeaderboard = leaderboards[lbType]
   const isArchived = Boolean(activeLeaderboard.archived)
+  const isLegacyArchive = activeLeaderboard.scoring_method === 'legacy_wilson'
+  const isFixedPoints = activeLeaderboard.scoring_method === 'fixed_points'
   const activeLb = activeLeaderboard.ranked
 
   const upcoming  = sortByDate(matches.filter((m) => m.status === 'pending' || m.status === 'active'))
@@ -211,6 +220,8 @@ export function PkArena({ activePerson, periodId }) {
   const baseList  = matchFilter === 'upcoming' ? upcoming : matchFilter === 'completed' ? completed : cancelled
   const filteredMatches = applyFilters(baseList)
   const otherPeople = people.filter((p) => p.id !== activePerson?.id)
+
+  if (loadError) return <Panel title="Không tải được Đấu trường"><p role="alert">{loadError}</p><button onClick={() => void loadAll()}>Thử lại</button></Panel>
 
   return (
     <div className="tab-scene" style={{ '--tab-img': 'url(/images/rackets-court.jpg)' }}>
@@ -242,7 +253,7 @@ export function PkArena({ activePerson, periodId }) {
               <span className="lb-strip-icon">🏆</span>
               <div>
                 <div className="lb-strip-title">Bảng vinh danh</div>
-                <div className="lb-strip-sub">{isArchived ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : 'Xếp hạng theo mùa, sức mạnh đối thủ và thứ tự hoàn tất trận'}</div>
+                <div className="lb-strip-sub">{isLegacyArchive ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : isFixedPoints ? 'Thắng +3 · Thua −2 · Hiệu số · Đối đầu' : 'Xếp hạng theo Elo của kỳ'}</div>
               </div>
               <button className="lb-strip-guide" onClick={() => setShowGuide(true)} title="Cách xếp hạng">
                 <CircleHelp size={16} aria-hidden="true" />
@@ -250,8 +261,8 @@ export function PkArena({ activePerson, periodId }) {
               </button>
             </div>
           </div>
-          {showGuide && <RankingGuideModal archived={isArchived} onClose={() => setShowGuide(false)} />}
-          {isArchived ? <p className="hint">Bản lưu cố định được dựng lại từ các trận còn tồn tại. Chưa đối chiếu với bảng cuối mùa nguyên gốc; tên lấy từ hồ sơ lúc khôi phục.</p>
+          {showGuide && <RankingGuideModal archived={isLegacyArchive} fixedPoints={isFixedPoints} onClose={() => setShowGuide(false)} />}
+          {isArchived ? <p className="hint">{isLegacyArchive ? 'Bản lưu cố định được dựng lại từ các trận còn tồn tại. Chưa đối chiếu với bảng cuối mùa nguyên gốc; tên lấy từ hồ sơ lúc khôi phục.' : 'Bảng lịch sử đã lưu cố định theo luật của kỳ này. Luật của kỳ mới không thay đổi bảng này.'}</p>
             : <SeasonAchievements achievements={achievements} loading={loading} />}
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
@@ -272,7 +283,7 @@ export function PkArena({ activePerson, periodId }) {
                     <thead>
                       <tr>
                         <th>#</th><th>Người chơi</th>
-                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>{isArchived ? 'Wilson ★' : 'Bậc'}</th><th>{isArchived ? 'Điểm cũ' : 'Điểm'}</th>
+                        <th>Thắng</th><th>Thua</th><th>Tổng</th><th>{isFixedPoints ? 'Hiệu số' : isLegacyArchive ? 'Wilson ★' : 'Bậc'}</th>{isFixedPoints && <th>Đối đầu</th>}<th>{isLegacyArchive ? 'Điểm cũ' : 'Điểm'}</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -282,7 +293,8 @@ export function PkArena({ activePerson, periodId }) {
                           row={row}
                           isMe={row.id === activePerson?.id}
                           achievements={isArchived ? undefined : achievements}
-                          archived={isArchived}
+                          archived={isLegacyArchive}
+                          fixedPoints={isFixedPoints}
                         />
                       ))}
                     </tbody>

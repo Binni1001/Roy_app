@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { api } from '../../../api/client'
 import {
   ConfirmModal,
@@ -66,6 +66,8 @@ export function PkPanel({ periodId, role }) {
   })
   const [matchFilter, setMatchFilter] = useState('upcoming')
   const [loading, setLoading] = useState(false)
+  const [loadError, setLoadError] = useState('')
+  const loadRevision = useRef(0)
   const [toast, setToast] = useState('')
   const [toastType, setToastType] = useState('success')
   const [editing, setEditing] = useState(null)
@@ -81,7 +83,7 @@ export function PkPanel({ periodId, role }) {
   const [specificDate, setSpecificDate] = useState('')
 
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  useEffect(() => { void loadAll() }, [periodId])
+  useEffect(() => { void loadAll(); return () => { loadRevision.current++ } }, [periodId])
   useEffect(() => {
     if (!toast) return undefined
     const timer = setTimeout(() => setToast(''), 2000)
@@ -94,6 +96,7 @@ export function PkPanel({ periodId, role }) {
   }
 
   async function loadAll() {
+    const revision = ++loadRevision.current
     if (!periodId) {
       setMatches([])
       setAchievements(EMPTY_SEASON_ACHIEVEMENTS)
@@ -103,6 +106,7 @@ export function PkPanel({ periodId, role }) {
     }
 
     setLoading(true)
+    setLoadError('')
     try {
       const [arena, loadedPeople, singles, doubles] = await Promise.all([
         api.pk.arena(periodId),
@@ -110,14 +114,15 @@ export function PkPanel({ periodId, role }) {
         api.pk.leaderboard(periodId, 'singles'),
         api.pk.leaderboard(periodId, 'doubles'),
       ])
+      if (revision !== loadRevision.current) return
       setMatches(arena.matches || [])
       setAchievements(arena.achievements || EMPTY_SEASON_ACHIEVEMENTS)
       setPeople(loadedPeople || [])
       setLeaderboards({ singles, doubles })
     } catch (error) {
-      notify(error.message || 'Không tải được dữ liệu đấu trường.', 'error')
+      if (revision === loadRevision.current) setLoadError(error.message || 'Không tải được dữ liệu đấu trường.')
     } finally {
-      setLoading(false)
+      if (revision === loadRevision.current) setLoading(false)
     }
   }
 
@@ -213,6 +218,8 @@ export function PkPanel({ periodId, role }) {
   const lbDoubles = leaderboards.doubles.ranked
   const activeLeaderboard = leaderboards[lbType]
   const isArchived = Boolean(activeLeaderboard.archived)
+  const isLegacyArchive = activeLeaderboard.scoring_method === 'legacy_wilson'
+  const isFixedPoints = activeLeaderboard.scoring_method === 'fixed_points'
   const activeLb = activeLeaderboard.ranked
   const upcoming = matches.filter((match) => match.status === 'pending' || match.status === 'active')
   const completed = matches.filter((match) => match.status === 'completed' && !match.voided_at)
@@ -225,6 +232,8 @@ export function PkPanel({ periodId, role }) {
     const query = memberSearch.trim().toLowerCase()
     return !query || person.full_name?.toLowerCase().includes(query) || person.nickname?.toLowerCase().includes(query)
   })
+
+  if (loadError) return <Panel title="Không tải được Đấu trường"><p role="alert">{loadError}</p><button onClick={() => void loadAll()}>Thử lại</button></Panel>
 
   return (
     <div className="tab-scene" style={{ '--tab-img': 'url(/images/rackets-court.jpg)' }}>
@@ -260,11 +269,12 @@ export function PkPanel({ periodId, role }) {
               <span className="lb-strip-icon">🏆</span>
               <div>
                 <div className="lb-strip-title">Bảng vinh danh theo mùa</div>
-                <div className="lb-strip-sub">{isArchived ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : 'Điểm Elo, sức mạnh đối thủ và thứ tự hoàn tất trận'}</div>
+                <div className="lb-strip-sub">{isLegacyArchive ? 'Lịch sử kỳ tháng 6 · Wilson Score theo luật cũ' : isFixedPoints ? 'Thắng +3 · Thua −2 · Hiệu số · Đối đầu' : 'Điểm Elo theo luật của kỳ'}</div>
               </div>
             </div>
           </div>
-          {isArchived ? <p className="hint">Bản lưu cố định dựng lại từ 57 trận hoàn tất còn lưu. Xếp theo Wilson, sau đó số trận thắng; điểm cũ = max(0, 3 × thắng − thua). Chưa đối chiếu bản cuối mùa nguyên gốc.</p>
+          {isFixedPoints && <p className="hint">Điểm cá nhân bắt đầu từ 0 và có thể âm. Hiệu số cộng tất cả các set, riêng từng người khi đổi đồng đội. Nếu còn hòa, xét thắng−thua đối đầu khi mọi cặp trong nhóm đã gặp nhau; vẫn hòa thì cùng hạng và tự bàn bạc bên ngoài.</p>}
+          {isArchived ? <p className="hint">{isLegacyArchive ? 'Bản lưu cố định dựng lại từ 57 trận hoàn tất còn lưu. Xếp theo Wilson, sau đó số trận thắng; điểm cũ = max(0, 3 × thắng − thua). Chưa đối chiếu bản cuối mùa nguyên gốc.' : 'Bảng lịch sử đã lưu theo luật của kỳ này. Luật của kỳ mới không thay đổi kết quả đã lưu.'}</p>
             : <SeasonAchievements achievements={achievements} loading={loading} />}
           <div className="lb-type-toggle">
             <button className={lbType === 'doubles' ? 'active' : ''} onClick={() => setLbType('doubles')}>
@@ -289,12 +299,12 @@ export function PkPanel({ periodId, role }) {
                     <thead>
                       <tr>
                         <th>#</th><th>Người chơi</th><th>Thắng</th><th>Thua</th>
-                        <th>Tổng</th><th>{isArchived ? 'Wilson ★' : 'Bậc'}</th><th>{isArchived ? 'Điểm cũ' : 'Điểm'}</th>
+                        <th>Tổng</th><th>{isFixedPoints ? 'Hiệu số' : isLegacyArchive ? 'Wilson ★' : 'Bậc'}</th>{isFixedPoints && <th>Đối đầu</th>}<th>{isLegacyArchive ? 'Điểm cũ' : 'Điểm'}</th>
                       </tr>
                     </thead>
                     <tbody>
                       {activeLb.map((row) => (
-                        <AdminLeaderboardRow key={row.id} row={row} archived={isArchived} achievements={isArchived ? undefined : achievements} />
+                        <AdminLeaderboardRow key={row.id} row={row} archived={isLegacyArchive} fixedPoints={isFixedPoints} achievements={isArchived ? undefined : achievements} />
                       ))}
                     </tbody>
                   </table>

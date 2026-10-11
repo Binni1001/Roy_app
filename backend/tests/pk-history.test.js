@@ -28,6 +28,8 @@ test("June archives exactly replay the original UI from preserved evidence, not 
 });
 
 test("June reads need no Elo ledger and other periods retain the same Elo calculation", async (t) => {
+  t.mock.method(pkMatchesRepository, "getSnapshot", async () => ({ data: null }));
+  t.mock.method(pkMatchesRepository, "getScoringRule", async () => ({ data: { pk_scoring_rule: "elo_v1", status: "open" } }));
   const images = t.mock.method(pkMatchesRepository, "getArchivedPlayerAvatars", async () => ({ data: [] }));
   const call = t.mock.method(pkMatchesRepository, "getSeasonRatings", async () => ({ data: [
     { person_id: "a", person: { full_name: "An" }, rating: 1012.3, matches: 5, wins: 3, losses: 2, opponent_ids: ["b", "c", "d"] },
@@ -40,7 +42,7 @@ test("June reads need no Elo ledger and other periods retain the same Elo calcul
   assert.equal(images.mock.callCount(), 1);
   assert.equal(active.ranked[0].points, 1012);
   assert.equal(active.ranked[0].rank, 1);
-  assert.equal(active.archived, undefined);
+  assert.equal(active.archived, false);
   assert.equal(archivedPkLeaderboard("current-period", "singles"), null);
   assert.doesNotThrow(() => assertPkPeriodWritable("current-period"));
 });
