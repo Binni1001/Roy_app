@@ -69,7 +69,7 @@ export function RankingGuideModal({ onClose, archived = false, fixedPoints = fal
   if (fixedPoints) return <Modal title="Cách xếp hạng +3/−2" onClose={onClose}>
     <div className="rg-root">
       <p>Mùa bắt đầu từ 0 điểm: thắng +3, thua −2. Không có hệ số cao ở 5 trận đầu hoặc trừ điểm nghỉ lâu. Điểm có thể âm.</p>
-      <p>Không cần đủ 5 trận. Người đã có kết quả và gặp 3 đối thủ khác nhau được lên bảng. Đơn và đôi tính riêng.</p>
+      <p>Người có ít nhất một trận hoàn tất được lên bảng, không yêu cầu 5 trận hoặc số đối thủ khác nhau. Đơn và đôi tính riêng.</p>
       <p>Ưu tiên điểm, rồi hiệu số tổng điểm cầu ghi được trừ bị ghi qua tất cả các set. Điểm và hiệu số đôi lưu riêng từng người, kể cả khi đổi đồng đội.</p>
       <p>Nếu còn hòa, xét thắng trừ thua trong các trận đối đầu giữa nhóm còn hòa. Đồng đội cùng bên không tính là đối đầu. Chỉ xét khi mọi cặp trong nhóm đã gặp nhau ở hai bên đối diện.</p>
       <p>Chưa phân được thì cùng hạng; mọi người tự bàn bạc phân hạng bên ngoài. Hệ thống không tự thêm trận phân hạng.</p>

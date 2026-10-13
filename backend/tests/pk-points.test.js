@@ -13,17 +13,14 @@ const game = (a, b, scores = [[21,19]], partners = []) => ({
   set_scores: scores.map(([challenger, opponent]) => ({ challenger, opponent })),
 });
 
-test("fixed scoring ranks after three opponents without requiring five matches",()=>{
-  const two=buildFixedPkLeaderboard([game("A","B"),game("A","C")],"singles");
-  assert.equal(two.ranked.length,0);
-  assert.equal(two.qualifying.find(r=>r.id==="A").matches_needed,0);
-  assert.equal(two.qualifying.find(r=>r.id==="A").opponents_needed,1);
-  const three=buildFixedPkLeaderboard([game("A","B"),game("A","C"),game("A","D")],"singles");
-  assert.equal(three.ranked.length,1);
-  assert.equal(three.ranked[0].id,"A");
-  assert.equal(three.ranked[0].total_matches,3);
-  assert.equal(three.ranked[0].points,9);
-  assert.deepEqual(three.requirements,{min_matches:1,min_opponents:3});
+test("fixed scoring displays both players after their first completed match",()=>{
+  const first=buildFixedPkLeaderboard([game("A","B")],"singles");
+  assert.equal(first.ranked.length,2);
+  assert.equal(first.ranked.find(r=>r.id==="A").points,3);
+  assert.equal(first.ranked.find(r=>r.id==="B").points,-2);
+  assert.deepEqual(first.qualifying,[]);
+  assert.deepEqual(first.requirements,{min_matches:1,min_opponents:0});
+  assert.equal(buildFixedPkLeaderboard([{...game("A","B"),status:"pending"}],"singles").ranked.length,0);
 });
 
 test("all matches have fixed +3/−2, negatives allowed and all set rally points count", () => {
@@ -68,7 +65,7 @@ test("voided, cancelled and other disciplines do not count; missing valid scores
     {...game("A","C"),status:"cancelled"},game("A","C",[[21,19]],["D","E"])],"singles",minimal);
   assert.equal(result.ranked.find((r)=>r.id==="A").points,3);
   assert.throws(()=>buildFixedPkLeaderboard([{...game("A","B"),set_scores:null}],"singles",minimal),/tỷ số/);
-  assert.equal(buildFixedPkLeaderboard([game("A","B")],"singles").ranked.length,0);
+  assert.equal(buildFixedPkLeaderboard([game("A","B")],"singles").ranked.length,2);
 });
 
 test("API uses frozen snapshots before any scoring formula and applies new rule only to selected period", async(t)=>{
@@ -80,7 +77,7 @@ test("API uses frozen snapshots before any scoring formula and applies new rule 
   t.mock.method(repo,"getSeasonRatings",async()=>assert.fail("New rule must not read Elo ledger"));
   assert.deepEqual(await pkMatchesService.getLeaderboard("old","singles"),frozen);
   assert.equal(policy.mock.callCount(),0);
-  assert.equal((await pkMatchesService.getLeaderboard("new","singles")).qualifying[0].points,3);
+  assert.equal((await pkMatchesService.getLeaderboard("new","singles")).ranked[0].points,3);
 });
 
 test("missing migration or missing old snapshot reports an error instead of a fake empty history",async(t)=>{

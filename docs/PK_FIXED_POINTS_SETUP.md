@@ -7,7 +7,7 @@ Kỳ áp dụng đầu tiên: Mùa 5, ID `373a7ed1-0e18-502d-9120-225b2f3c2179`,
 
 - Bắt đầu từ 0, thắng +3, thua −2, cho phép điểm âm. Không có hệ số cao cho
   5 trận đầu và không trừ điểm do nghỉ lâu. Từ cập nhật 13/10, bỏ điều kiện 5 trận:
-  người đã có kết quả và gặp ít nhất 3 đối thủ khác nhau được lên bảng. Bảng lịch sử
+  bỏ luôn điều kiện 3 đối thủ. Người có một trận hoàn tất được lên bảng. Bảng lịch sử
   đã lưu trước cập nhật tiếp tục giữ kết quả và điều kiện tại thời điểm chốt.
 - Tổng điểm cầu ghi được trừ tổng điểm cầu bị ghi qua tất cả các set là hiệu số.
 - Đơn và đôi riêng; điểm/hiệu số đôi thuộc từng người. Thay đồng đội không reset số liệu.

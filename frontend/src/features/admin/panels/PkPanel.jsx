@@ -307,7 +307,7 @@ export function PkPanel({ periodId, role }) {
                 <div className="pk-empty-state">
                   <span className="pk-empty-icon">🏆</span>
                   <p className="pk-empty-title">Chưa có người đủ điều kiện</p>
-                  <p className="pk-empty-msg">{isFixedPoints ? 'Chưa có người đã ghi kết quả và gặp đủ 3 đối thủ khác nhau.' : 'Cần ít nhất 5 trận và 3 đối thủ khác nhau trong kỳ.'}</p>
+                  <p className="pk-empty-msg">{isFixedPoints ? 'Chưa có trận hoàn tất. Người chơi được lên bảng ngay sau trận đầu tiên.' : 'Cần ít nhất 5 trận và 3 đối thủ khác nhau trong kỳ.'}</p>
                 </div>
               ) : (
                 <div className="table-wrap">
