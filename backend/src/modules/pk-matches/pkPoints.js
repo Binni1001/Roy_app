@@ -1,4 +1,4 @@
-const DEFAULT_REQUIREMENTS = { min_matches: 5, min_opponents: 3 };
+const DEFAULT_REQUIREMENTS = { min_matches: 1, min_opponents: 3 };
 
 function tier(rank, total) {
   if (rank === 1) return "champion";

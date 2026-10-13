@@ -13,6 +13,19 @@ const game = (a, b, scores = [[21,19]], partners = []) => ({
   set_scores: scores.map(([challenger, opponent]) => ({ challenger, opponent })),
 });
 
+test("fixed scoring ranks after three opponents without requiring five matches",()=>{
+  const two=buildFixedPkLeaderboard([game("A","B"),game("A","C")],"singles");
+  assert.equal(two.ranked.length,0);
+  assert.equal(two.qualifying.find(r=>r.id==="A").matches_needed,0);
+  assert.equal(two.qualifying.find(r=>r.id==="A").opponents_needed,1);
+  const three=buildFixedPkLeaderboard([game("A","B"),game("A","C"),game("A","D")],"singles");
+  assert.equal(three.ranked.length,1);
+  assert.equal(three.ranked[0].id,"A");
+  assert.equal(three.ranked[0].total_matches,3);
+  assert.equal(three.ranked[0].points,9);
+  assert.deepEqual(three.requirements,{min_matches:1,min_opponents:3});
+});
+
 test("all matches have fixed +3/−2, negatives allowed and all set rally points count", () => {
   const matches = [game("A","B",[[21,19],[15,21],[21,18]]), game("A","C")];
   const result = buildFixedPkLeaderboard(matches,"singles",minimal);
