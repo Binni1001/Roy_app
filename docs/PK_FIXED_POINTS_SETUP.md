@@ -38,7 +38,7 @@ Kỳ áp dụng đầu tiên: Mùa 5, ID `373a7ed1-0e18-502d-9120-225b2f3c2179`,
 
 ## Triển khai
 
-1. Bản sao trước nâng cấp: `docs/history/pre-fixed-pk-20261011/backup.json`.
+1. Bản sao trước nâng cấp: `private operator backup (not stored in public Git)`.
    Có bảng đang hiển thị, dữ liệu Elo và hash cho từng kỳ đã đóng.
 2. Chạy **một lần** `supabase/20261011_pk_fixed_points.sql` qua Supabase SQL Editor
    trước khi deploy mã mới. Cần đã chạy các migration Elo 20260713, sửa kèo 20260803

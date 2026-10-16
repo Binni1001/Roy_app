@@ -5,6 +5,7 @@ import { pkMatchesRepository as repo } from "../src/modules/pk-matches/pkMatches
 
 const payload={winner_side:"challenger",set_scores:[{challenger:21,opponent:19}],expected_updated_at:"2026-10-11T00:00:00Z"};
 test("player cannot correct locked results, while admin passes only result fields with trusted actor",async(t)=>{
+  t.mock.method(repo,"getScoringRule",async()=>({data:{status:"open"}}));
   await assert.rejects(()=>service.correctResult("id",payload,false),e=>e.statusCode===403);
   t.mock.method(service,"getById",async()=>({period_id:"current",status:"completed",sets:1}));
   const rpc=t.mock.method(repo,"correctResult",async(id,body,email)=>{
@@ -18,6 +19,7 @@ test("player cannot correct locked results, while admin passes only result field
   assert.equal(rpc.mock.callCount(),1);
 });
 test("result editor reports stale changes and missing migration without fallback mutation",async(t)=>{
+  t.mock.method(repo,"getScoringRule",async()=>({data:{status:"open"}}));
   t.mock.method(service,"getById",async()=>({period_id:"current",status:"completed",sets:1}));
   const rpc=t.mock.method(repo,"correctResult",async()=>({error:{code:"PGRST202",message:"missing"}}));
   await assert.rejects(()=>service.correctResult("id",payload,true),/20261011_pk_result_correction/);

@@ -80,3 +80,9 @@ temp/
 # =========================
 *.swp
 *.swo
+# Private reports, production exports and local recovery data
+output/
+private-data/
+*.bundle
+*.dump
+*.backup

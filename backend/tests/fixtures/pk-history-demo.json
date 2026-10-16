@@ -1,0 +1,207 @@
+{
+  "synthetic": true,
+  "periods": [
+    {
+      "period": {
+        "id": "34ac4b6a-675c-585c-84c0-ab24ba69f50c",
+        "group_id": "0e25f393-ae0c-5761-9737-43a7dcaef67a",
+        "name": "Demo historical season 1",
+        "status": "closed",
+        "start_date": "2026-06-10",
+        "end_date": "2026-07-09"
+      },
+      "elo_ratings": [],
+      "elo_events": [],
+      "leaderboards": {
+        "singles": {
+          "period_id": "34ac4b6a-675c-585c-84c0-ab24ba69f50c",
+          "match_type": "singles",
+          "ranked": [
+            {
+              "id": "11111111-1111-4111-8111-111111111111",
+              "full_name": "Demo Player 1",
+              "nickname": null,
+              "avatar_url": null,
+              "wins": 1,
+              "losses": 0,
+              "total_matches": 1,
+              "rank": 1,
+              "points": 3,
+              "tier_key": "champion"
+            },
+            {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "full_name": "Demo Player 2",
+              "nickname": null,
+              "avatar_url": null,
+              "wins": 0,
+              "losses": 1,
+              "total_matches": 1,
+              "rank": 2,
+              "points": 0,
+              "tier_key": "bronze"
+            }
+          ],
+          "qualifying": [],
+          "archived": true,
+          "scoring_rule": "legacy_wilson_v1",
+          "scoring_method": "legacy_wilson",
+          "requirements": {
+            "min_matches": 0,
+            "min_opponents": 0
+          }
+        },
+        "doubles": {
+          "period_id": "34ac4b6a-675c-585c-84c0-ab24ba69f50c",
+          "match_type": "doubles",
+          "ranked": [],
+          "qualifying": [],
+          "archived": true,
+          "scoring_rule": "legacy_wilson_v1",
+          "scoring_method": "legacy_wilson",
+          "requirements": {
+            "min_matches": 0,
+            "min_opponents": 0
+          }
+        }
+      }
+    },
+    {
+      "period": {
+        "id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+        "group_id": "0e25f393-ae0c-5761-9737-43a7dcaef67a",
+        "name": "Demo historical season 2",
+        "status": "closed",
+        "start_date": "2026-07-10",
+        "end_date": "2026-08-09"
+      },
+      "elo_ratings": [
+        {
+          "id": "b72acea8-b214-5256-a2f5-8b3b63ae7f27",
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "person_id": "11111111-1111-4111-8111-111111111111",
+          "match_type": "singles",
+          "rating": 1020,
+          "matches": 1,
+          "wins": 1,
+          "losses": 0,
+          "opponent_ids": [
+            "22222222-2222-4222-8222-222222222222"
+          ],
+          "last_match_number": 1,
+          "updated_at": "2026-07-10T00:00:00Z"
+        },
+        {
+          "id": "9744a68a-9a32-5b13-9e7b-3132ae96fc51",
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "person_id": "22222222-2222-4222-8222-222222222222",
+          "match_type": "singles",
+          "rating": 980,
+          "matches": 1,
+          "wins": 0,
+          "losses": 1,
+          "opponent_ids": [
+            "11111111-1111-4111-8111-111111111111"
+          ],
+          "last_match_number": 1,
+          "updated_at": "2026-07-10T00:00:00Z"
+        }
+      ],
+      "elo_events": [
+        {
+          "id": "71880194-3126-506f-8fad-e18bf6647ab0",
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "match_id": "74fe0b5a-1f6a-59c4-9e7f-46f28a373c97",
+          "person_id": "11111111-1111-4111-8111-111111111111",
+          "match_type": "singles",
+          "match_number": 1,
+          "side": "challenger",
+          "result": 1,
+          "rating_before": 1000,
+          "rating_after": 1020,
+          "rating_delta": 20,
+          "expected_score": 0.5,
+          "k_factor": 40,
+          "created_at": "2026-07-10T00:00:00Z",
+          "opponent_rating": 1000,
+          "opponent_ids": [
+            "22222222-2222-4222-8222-222222222222"
+          ]
+        },
+        {
+          "id": "d15c8c0a-d49f-5635-a697-7d9de6b2670a",
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "match_id": "74fe0b5a-1f6a-59c4-9e7f-46f28a373c97",
+          "person_id": "22222222-2222-4222-8222-222222222222",
+          "match_type": "singles",
+          "match_number": 1,
+          "side": "opponent",
+          "result": 0,
+          "rating_before": 1000,
+          "rating_after": 980,
+          "rating_delta": -20,
+          "expected_score": 0.5,
+          "k_factor": 40,
+          "created_at": "2026-07-10T00:00:00Z",
+          "opponent_rating": 1000,
+          "opponent_ids": [
+            "11111111-1111-4111-8111-111111111111"
+          ]
+        }
+      ],
+      "leaderboards": {
+        "singles": {
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "match_type": "singles",
+          "ranked": [
+            {
+              "id": "11111111-1111-4111-8111-111111111111",
+              "full_name": "Demo Player 1",
+              "nickname": null,
+              "avatar_url": null,
+              "wins": 1,
+              "losses": 0,
+              "total_matches": 1,
+              "rank": 1,
+              "points": 3,
+              "tier_key": "champion"
+            },
+            {
+              "id": "22222222-2222-4222-8222-222222222222",
+              "full_name": "Demo Player 2",
+              "nickname": null,
+              "avatar_url": null,
+              "wins": 0,
+              "losses": 1,
+              "total_matches": 1,
+              "rank": 2,
+              "points": 0,
+              "tier_key": "bronze"
+            }
+          ],
+          "qualifying": [],
+          "archived": true,
+          "scoring_rule": "elo_v1",
+          "scoring_method": "elo",
+          "requirements": {
+            "min_matches": 0,
+            "min_opponents": 0
+          }
+        },
+        "doubles": {
+          "period_id": "7ee421b7-1ec9-54de-8a82-ea9a31ba72fa",
+          "match_type": "doubles",
+          "ranked": [],
+          "qualifying": [],
+          "archived": true,
+          "scoring_rule": "elo_v1",
+          "scoring_method": "elo",
+          "requirements": {
+            "min_matches": 0,
+            "min_opponents": 0
+          }
+        }
+      }
+    }
+  ]
+}

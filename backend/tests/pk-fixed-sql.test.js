@@ -6,7 +6,7 @@ import { buildFixedPkLeaderboard } from "../src/modules/pk-matches/pkPoints.js";
 
 const next="373a7ed1-0e18-502d-9120-225b2f3c2179", group="0e25f393-ae0c-5761-9737-43a7dcaef67a";
 const people=["11111111-1111-4111-8111-111111111111","22222222-2222-4222-8222-222222222222","33333333-3333-4333-8333-333333333333","44444444-4444-4444-8444-444444444444"];
-const backup=JSON.parse(await readFile(new URL("../../docs/history/pre-fixed-pk-20261011/backup.json",import.meta.url),"utf8"));
+const backup=JSON.parse(await readFile(new URL("./fixtures/pk-history-demo.json",import.meta.url),"utf8"));
 const migration=await readFile(new URL("../../supabase/20261011_pk_fixed_points.sql",import.meta.url),"utf8");
 const correction=await readFile(new URL("../../supabase/20261011_pk_result_correction.sql",import.meta.url),"utf8");
 

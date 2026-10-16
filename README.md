@@ -179,3 +179,7 @@ Deploy as two Vercel projects:
 2. `backend/`
    - Uses `backend/vercel.json`
    - Env: `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, PayOS variables
+
+## Public source privacy
+
+This repository uses synthetic fixtures and excludes production recovery exports. Existing deployments must not rerun historical migration files. See [public source notes](docs/PUBLIC_SOURCE.md) and [security policy](SECURITY.md).
