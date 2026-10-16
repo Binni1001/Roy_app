@@ -22,6 +22,11 @@ jobs:
     defaults:
       run:
         working-directory: backend
+    # Test-only placeholders: imported clients are mocked by the test suite.
+    # No production credentials or database are available to this job.
+    env:
+      SUPABASE_URL: https://ci-placeholder.supabase.co
+      SUPABASE_SERVICE_ROLE_KEY: ci-placeholder-not-a-secret
     steps:
       - uses: actions/checkout@v6
         with:
