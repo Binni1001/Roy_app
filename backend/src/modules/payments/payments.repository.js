@@ -15,6 +15,27 @@ export const paymentsRepository = {
     });
   },
 
+  // Atomically reserves a pending payment (order code, payment, payment_debts) for
+  // the given debts, reusing an identical pending one or cancelling overlapping ones.
+  async createPendingPayment({ personId, debtIds, description, returnUrl, cancelUrl }) {
+    return await supabase.rpc("create_pending_payment", {
+      p_person_id: personId,
+      p_debt_ids: debtIds,
+      p_description: description,
+      p_return_url: returnUrl || null,
+      p_cancel_url: cancelUrl || null
+    });
+  },
+
+  async attachPayosLink(paymentId, { checkoutUrl, qrCode, rawPayload }) {
+    return await supabase.rpc("attach_payos_link", {
+      p_payment_id: paymentId,
+      p_checkout_url: checkoutUrl,
+      p_qr_code: qrCode || null,
+      p_raw_payload: rawPayload || {}
+    });
+  },
+
   async getUnpaidDebts(personId, periodId) {
     return await supabase
       .from("debts")
@@ -59,57 +80,16 @@ export const paymentsRepository = {
       .single();
   },
 
-  async getOpenPeriod(groupId) {
-    let query = supabase
-      .from("periods")
-      .select("id, status, group_id")
-      .eq("status", "open")
-      .order("start_date", { ascending: false })
-      .limit(1);
-
-    query = groupId
-      ? query.eq("group_id", groupId)
-      : query.is("group_id", null);
-
-    return await query.maybeSingle();
-  },
-
-  async createPayment(payload) {
-    return await supabase
-      .from("payments")
-      .insert([payload])
-      .select()
-      .single();
-  },
-
-  async createPaymentDebt(payload) {
-    return await supabase
-      .from("payment_debts")
-      .insert([payload])
-      .select()
-      .single();
-  },
-
-  async getPendingPayments(personId) {
+  async getPayment(paymentId) {
     return await supabase
       .from("payments")
       .select("*")
-      .eq("person_id", personId)
-      .eq("status", "pending")
-      .order("created_at", { ascending: false });
+      .eq("id", paymentId)
+      .maybeSingle();
   },
 
-  async getPaymentDebts(paymentId) {
-    return await supabase
-      .from("payment_debts")
-      .select(`
-        *,
-        debt:debts(*)
-      `)
-      .eq("payment_id", paymentId);
-  },
-
-  async cancelPayment(paymentId) {
+  // Only a still-pending payment can be cancelled; returns data=null otherwise.
+  async cancelPendingPayment(paymentId) {
     return await supabase
       .from("payments")
       .update({
@@ -117,8 +97,9 @@ export const paymentsRepository = {
         updated_at: new Date().toISOString()
       })
       .eq("id", paymentId)
+      .eq("status", "pending")
       .select()
-      .single();
+      .maybeSingle();
   },
 
   async findPaymentByOrderCode(orderCode) {
@@ -126,52 +107,6 @@ export const paymentsRepository = {
       .from("payments")
       .select("*")
       .eq("payos_order_code", orderCode)
-      .maybeSingle();
-  },
-
-  async updatePayment(id, payload) {
-    return await supabase
-      .from("payments")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-  },
-
-  async getPaymentDebtsWithDebt(paymentId) {
-    return await supabase
-      .from("payment_debts")
-      .select(`
-        *,
-        debt:debts(*)
-      `)
-      .eq("payment_id", paymentId);
-  },
-
-  async updateDebt(id, payload) {
-    return await supabase
-      .from("debts")
-      .update(payload)
-      .eq("id", id)
-      .select()
-      .single();
-  },
-
-  async createFundTransaction(payload) {
-    return await supabase
-      .from("club_fund_transactions")
-      .insert([payload])
-      .select()
-      .single();
-  },
-
-  // FIX #1: dùng debt_id để check duplicate thay vì amount (tránh false-negative khi 2 debt cùng amount)
-  async findFundTransaction(paymentId, debtId) {
-    return await supabase
-      .from("club_fund_transactions")
-      .select("*")
-      .eq("payment_id", paymentId)
-      .eq("debt_id", debtId)
       .maybeSingle();
   }
 };

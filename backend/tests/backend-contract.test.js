@@ -145,7 +145,7 @@ test("payments repository has no duplicate legacy pending-payment method", () =>
   const repository = read("src/modules/payments/payments.repository.js");
 
   assert.doesNotMatch(repository, /findPendingPayment/);
-  assert.match(repository, /getPendingPayments/);
+  assert.match(repository, /create_pending_payment/);
   assert.match(repository, /process_paid_payment/);
   assert.match(repository, /mark_payment_failed/);
 });

@@ -39,9 +39,15 @@ export const paymentsController = {
         data
       });
     } catch (error) {
-      return res.status(400).json({
+      // Bad signature: client error. Anything else is ours, so answer 5xx and let
+      // PayOS retry; never leak internal details.
+      if (error.status === 400) {
+        return res.status(400).json({ success: false, message: error.message });
+      }
+      console.error("[payos] webhook processing failed:", error);
+      return res.status(500).json({
         success: false,
-        message: error.message
+        message: "Webhook processing failed"
       });
     }
   },

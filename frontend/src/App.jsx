@@ -7,6 +7,8 @@ import ResetPassword from './pages/ResetPassword'
 import Onboarding from './pages/Onboarding'
 import PendingApproval from './pages/PendingApproval'
 import RejectedScreen from './pages/RejectedScreen'
+import PaymentResult from './pages/PaymentResult'
+import { isPaymentResultPath } from './utils/paymentResult'
 import { canOpenAdmin, getSessionRole } from './utils/appUtils'
 import { GROUPS_ENABLED } from './config/features'
 import { withTimeout } from './utils/withTimeout'
@@ -115,6 +117,8 @@ function App() {
     })
     return () => { mounted = false }
   }, [userId, personTick])
+
+  if (isPaymentResultPath(window.location.pathname)) return <PaymentResult />
 
   if (session === undefined) return sessionError ? (
     <div className="error-boundary-screen" role="alert">
