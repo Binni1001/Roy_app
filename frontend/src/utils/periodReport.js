@@ -5,6 +5,9 @@
  */
 
 import { computeMonthStanding, isCloseoutDebt } from './memberStanding.js'
+import {
+  EXPENSE_CATEGORIES, INCOME_CATEGORIES, expenseCategoryKey, groupFund, incomeCategoryKey
+} from './fundCategories.js'
 
 export function esc(value) {
   return String(value ?? '')
@@ -41,28 +44,6 @@ function cleanDesc(desc) {
   return s || '—'
 }
 
-const norm = (s) => (s || '').toLowerCase()
-
-function incomeCategory(f) {
-  const d = norm(f.description)
-  if (d.includes('mang sang')) return 'Số dư kỳ trước chuyển sang'
-  if (d.includes('shuttle_extra') || d.includes('tiền cầu') || d.includes('tien cau')) return 'Tiền cầu (bù cuối kỳ)'
-  if (d.includes('quỹ tháng') || d.includes('monthly_fee') || d.includes('quy thang')) return 'Quỹ tháng'
-  if (d.includes('vãng lai') || d.includes('vang lai') || d.includes('guest') || d.includes('khach')) return 'Khách vãng lai'
-  if (d.includes('sân') || d.includes('san')) return 'Tiền sân / ống cầu (thành viên ứng)'
-  return 'Thu khác'
-}
-
-function expenseCategory(f) {
-  if (f.transaction_type === 'refund') return 'Hoàn tiền cho thành viên'
-  const d = norm(f.description)
-  if (d.includes('kết chuyển') || d.includes('ket chuyen')) return 'Kết chuyển sang kỳ sau'
-  if (d.includes('lưới') || d.includes('luoi') || d.includes('keo')) return 'Lưới / keo / phụ kiện'
-  if (d.includes('sân') || d.includes('san')) return 'Tiền sân'
-  if (d.includes('cầu') || d.includes('cau')) return 'Mua cầu'
-  return 'Chi khác'
-}
-
 const isIncome = (f) => ['income', 'adjustment'].includes(f.transaction_type)
 const sum = (list, pick) => list.reduce((total, item) => total + (Number(pick(item)) || 0), 0)
 
@@ -93,14 +74,7 @@ export function summarizePeriod({ debts = [], fund = [], shuttleExpenses = [] } 
   const totalIncome = sum(fund.filter(isIncome), (f) => f.amount)
   const totalExpense = sum(fund.filter((f) => !isIncome(f)), (f) => f.amount)
 
-  const groupTotals = (list, categorize) => {
-    const groups = {}
-    for (const f of list) {
-      const name = categorize(f)
-      groups[name] = (groups[name] || 0) + (Number(f.amount) || 0)
-    }
-    return Object.entries(groups).sort((a, b) => b[1] - a[1])
-  }
+  const debtById = new Map(debts.map((d) => [d.id, d]))
 
   const tubes = sum(shuttleExpenses.filter((e) => e.buy_type === 'tube'), (e) => e.tube_count)
   const singles = sum(shuttleExpenses.filter((e) => e.buy_type === 'single'), (e) => e.single_count)
@@ -118,8 +92,8 @@ export function summarizePeriod({ debts = [], fund = [], shuttleExpenses = [] } 
     totalIncome,
     totalExpense,
     balance: totalIncome - totalExpense,
-    incomeGroups: groupTotals(fund.filter(isIncome), incomeCategory),
-    expenseGroups: groupTotals(fund.filter((f) => !isIncome(f)), expenseCategory),
+    incomeGroups: groupFund(fund.filter(isIncome), (f) => incomeCategoryKey(f, debtById), INCOME_CATEGORIES),
+    expenseGroups: groupFund(fund.filter((f) => !isIncome(f)), expenseCategoryKey, EXPENSE_CATEGORIES),
     shuttle: {
       count: shuttleExpenses.length,
       total: sum(shuttleExpenses, (e) => e.total_amount),
@@ -156,10 +130,10 @@ const byDate = (field) => (a, b) => new Date(a[field]) - new Date(b[field])
 
 function categoryRows(groups, color) {
   if (!groups.length) return '<div class="cf-row"><span class="cf-cat">Không có</span></div>'
-  return groups.map(([name, amount]) => `
+  return groups.map((g) => `
       <div class="cf-row">
-        <span class="cf-cat">${esc(name)}</span>
-        <span class="cf-amt" style="color:${color}">${fmt(amount)}</span>
+        <span class="cf-cat">${esc(g.label)}<small>${esc(g.countText)} · ${esc(g.hint)}</small></span>
+        <span class="cf-amt" style="color:${color}">${fmt(g.amount)}</span>
       </div>`).join('')
 }
 
@@ -198,7 +172,9 @@ const STYLES = `
     .cf-head { display: flex; justify-content: space-between; align-items: baseline; margin-bottom: 6px; padding-bottom: 5px; border-bottom: 1px dashed #ccc; }
     .cf-title { font-weight: 800; } .cf-total { font-size: 15px; font-weight: 800; }
     .cf-box.in .cf-title, .cf-box.in .cf-total { color: #2e7d32; } .cf-box.out .cf-title, .cf-box.out .cf-total { color: #c62828; }
-    .cf-row { display: flex; justify-content: space-between; padding: 2px 0; font-size: 12px; }
+    .cf-row { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 12px; }
+    .cf-cat small { display: block; font-size: 10px; color: #888; font-weight: 400; }
+    .cf-amt { white-space: nowrap; }
     .cf-amt { font-weight: 600; }
 
     .pay-box { border: 1px dashed #b8860b; border-radius: 8px; padding: 10px 14px; background: #fffdf7; }
@@ -290,7 +266,7 @@ export function buildPeriodReportHtml(
     </div>
     <p class="note">Quỹ còn lại = Tiền vào − Tiền ra = <strong>${fmt(s.balance)}</strong>${s.balance === 0 ? ' (đã chốt và kết chuyển sang kỳ sau)' : ''}.
       ${incomeDiffers ? 'Tiền vào có thể khác “Đã thu” ở trên vì gồm cả số dư kỳ trước chuyển sang và các khoản thu ngoài công nợ.' : ''}
-      Các nhóm được phân loại tự động theo nội dung giao dịch.</p>
+      Khoản thu được nhóm theo loại công nợ đã đóng; khoản chi được nhóm theo nội dung ghi trong sổ quỹ.</p>
   </section>`
 
   const shuttleSection = s.shuttle.count === 0 ? '' : `
