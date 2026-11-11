@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Panel } from '../../../components/common'
 import { formatMoney, formatDate } from '../../../utils/appUtils'
 import { printPeriodReport } from '../../../utils/printReport'
+import { computeMemberStanding } from '../../../utils/memberStanding'
 
 /* ─────────────────────────────────────────
    CHART PRIMITIVES (pure CSS / SVG)
@@ -233,6 +234,47 @@ function ShuttleSection({ shuttleExpenses }) {
   )
 }
 
+function StandingSection({ debts, balances, people, periodName }) {
+  const standing = computeMemberStanding({ debts, balances, people })
+  const { positive, negative, evenCount } = standing
+
+  return (
+    <Panel title={`⚖️ Ai âm, ai dương${periodName ? ` — kỳ ${periodName}` : ''}`}>
+      <div className="an-stat-row">
+        <StatCard label="Dương (được nhận lại)" value={`${positive.length} người`} sub={formatMoney(standing.totalPositive)} accent="#4caf7d" />
+        <StatCard label="Âm (còn phải đóng)" value={`${negative.length} người`} sub={formatMoney(Math.abs(standing.totalNegative))} accent="#e57373" />
+        <StatCard label="Hòa (không nợ, không dư)" value={`${evenCount} người`} />
+      </div>
+      <div className="an-standing">
+        <div>
+          <h4 className="an-standing-title an-standing-pos">Dương</h4>
+          {positive.length === 0 && <p className="muted">Chưa có ai dương.</p>}
+          {positive.map((r) => (
+            <div key={r.id} className="an-standing-row" title={`Được nhận ${formatMoney(r.balance)} − công nợ ${formatMoney(r.debt)}`}>
+              <span>{r.name}</span>
+              <strong className="an-standing-pos">+{formatMoney(r.net)}</strong>
+            </div>
+          ))}
+        </div>
+        <div>
+          <h4 className="an-standing-title an-standing-neg">Âm</h4>
+          {negative.length === 0 && <p className="muted">Không ai còn âm.</p>}
+          {negative.map((r) => (
+            <div key={r.id} className="an-standing-row" title={`Được nhận ${formatMoney(r.balance)} − công nợ ${formatMoney(r.debt)}`}>
+              <span>{r.name}</span>
+              <strong className="an-standing-neg">−{formatMoney(Math.abs(r.net))}</strong>
+            </div>
+          ))}
+        </div>
+      </div>
+      <p className="muted an-standing-note">
+        Số ròng = tiền được nhận lại − công nợ chưa đóng. “Được nhận lại” là số dư tích lũy của từng người
+        (ví dụ tiền ứng mua cầu), không chỉ tính riêng kỳ này; công nợ lấy theo sổ công nợ của kỳ.
+      </p>
+    </Panel>
+  )
+}
+
 function MemberSection({ debts, members }) {
   // Build per-person summary
   const personMap = {}
@@ -281,13 +323,13 @@ function MemberSection({ debts, members }) {
    MAIN EXPORT
 ───────────────────────────────────────── */
 
-export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePeriod }) {
+export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePeriod, balances = [], people = null }) {
   const [showNames, setShowNames] = useState(true)
   const [includeDetails, setIncludeDetails] = useState(false)
 
   function handleExport() {
     printPeriodReport(
-      { period: activePeriod, debts, fund, shuttleExpenses, members },
+      { period: activePeriod, debts, fund, shuttleExpenses, members, balances, people },
       { showNames, includeDetails }
     )
   }
@@ -314,6 +356,9 @@ export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePe
       <section className="grid two">
         <DebtSection debts={debts} />
         <FundSection fund={fund} />
+      </section>
+      <section className="grid one">
+        <StandingSection debts={debts} balances={balances} people={people} periodName={activePeriod?.name} />
       </section>
       <section className="grid two">
         <MemberSection debts={debts} members={members} />

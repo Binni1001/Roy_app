@@ -89,6 +89,8 @@ export function AdminContent(props) {
           shuttleExpenses={data.shuttleExpenses}
           members={data.members}
           activePeriod={props.activePeriod}
+          balances={data.balances}
+          people={people}
         />
       </PanelSuspense>
     )

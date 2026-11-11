@@ -4,6 +4,8 @@
  * Nothing here touches the DOM, so it can be unit tested.
  */
 
+import { computeMemberStanding } from './memberStanding.js'
+
 export function esc(value) {
   return String(value ?? '')
     .replace(/&/g, '&amp;')
@@ -211,10 +213,11 @@ const STYLES = `
  * options.includeDetails – append member table, shuttle purchases and fund ledger (default false)
  */
 export function buildPeriodReportHtml(
-  { period, debts = [], fund = [], shuttleExpenses = [], members = [] } = {},
+  { period, debts = [], fund = [], shuttleExpenses = [], members = [], balances = [], people = null } = {},
   { showNames = true, includeDetails = false, now = new Date() } = {}
 ) {
   const s = summarizePeriod({ debts, fund, shuttleExpenses })
+  const standing = computeMemberStanding({ debts, balances, people })
   const exportDate = fmtDate(now.toISOString())
   const periodName = period?.name || ''
   const dates = [period?.start_date && fmtDate(period.start_date), period?.end_date && fmtDate(period.end_date)]
@@ -229,6 +232,17 @@ export function buildPeriodReportHtml(
     </div>
     <p class="note">${s.paidPeopleCount} người khác đã đóng đủ.</p>`
     : `<p>${s.debtors.length} người chưa đóng, tổng <strong>${fmt(s.unpaidAmt)}</strong>. ${s.paidPeopleCount} người đã đóng đủ.</p>`}
+  </section>`
+
+  const creditSection = standing.positive.length === 0 ? '' : `
+  <section>
+    <h2>Ai đang dương (được nhận lại)</h2>
+    ${showNames ? `
+    <div class="debtors">
+      ${standing.positive.map((p) => `<div class="debtor"><span>${esc(p.name)}</span><strong style="color:#2e7d32">+${fmt(p.net)}</strong></div>`).join('')}
+    </div>
+    <p class="note">Số ròng = tiền được nhận lại − công nợ chưa đóng. Số dư được nhận lại là tích lũy của từng người, không chỉ riêng kỳ này.</p>`
+    : `<p>${standing.positive.length} người đang dương, tổng <strong>${fmt(standing.totalPositive)}</strong>.</p>`}
   </section>`
 
   const incomeDiffers = s.totalIncome !== s.paidAmt
@@ -327,6 +341,7 @@ export function buildPeriodReportHtml(
   </div>
 
   ${debtorSection}
+  ${creditSection}
   ${cashflowSection}
   ${shuttleSection}
 

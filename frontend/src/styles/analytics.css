@@ -192,3 +192,12 @@
 }
 .an-export-btn:hover { background: rgba(216,174,82,0.22); }
 
+
+/* Ai âm, ai dương */
+.an-standing { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; margin-top: 12px; }
+.an-standing-title { font-size: 0.85rem; margin: 0 0 6px; text-transform: uppercase; letter-spacing: 0.05em; }
+.an-standing-row { display: flex; justify-content: space-between; gap: 10px; padding: 5px 0; border-bottom: 1px dotted rgba(239,231,210,0.15); }
+.an-standing-pos { color: #4caf7d; }
+.an-standing-neg { color: #e57373; }
+.an-standing-note { font-size: 0.75rem; margin-top: 10px; }
+@media (max-width: 860px) { .an-standing { grid-template-columns: 1fr; } }
