@@ -12,7 +12,7 @@ const has = (text, ...parts) => parts.some((part) => text.includes(part))
 export const INCOME_CATEGORIES = {
   fixed: { label: 'Tiền cố định thành viên đóng', hint: 'Phần đóng cố định của mỗi thành viên trong kỳ', unit: 'người' },
   guest: { label: 'Tiền khách vãng lai', hint: 'Khách chơi lẻ do thành viên dẫn theo', unit: 'khoản' },
-  closeout: { label: 'Đóng thêm tiền cầu cuối kỳ', hint: 'Thành viên đóng phần tiền cầu còn thiếu sau khi chia cầu', unit: 'người' },
+  closeout: { label: 'Đóng thêm tiền cầu cuối kỳ trước', hint: 'Thành viên đóng phần tiền cầu còn thiếu từ lần chia cầu cuối kỳ trước, thu vào kỳ này', unit: 'người' },
   carry: { label: 'Số dư kỳ trước chuyển sang', hint: 'Tiền còn lại của kỳ trước', unit: 'khoản' },
   court: { label: 'Thu hộ tiền sân / cầu', hint: 'Thành viên nộp lại tiền đã chi hộ', unit: 'khoản' },
   adjustment: { label: 'Điều chỉnh quỹ', hint: 'Khoản điều chỉnh do quản trị ghi tay', unit: 'khoản' },
