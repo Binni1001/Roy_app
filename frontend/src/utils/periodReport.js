@@ -4,7 +4,7 @@
  * Nothing here touches the DOM, so it can be unit tested.
  */
 
-import { computeMemberStanding } from './memberStanding.js'
+import { computeMonthStanding, isCloseoutDebt } from './memberStanding.js'
 
 export function esc(value) {
   return String(value ?? '')
@@ -68,7 +68,12 @@ const sum = (list, pick) => list.reduce((total, item) => total + (Number(pick(it
 
 /** All numbers shown in the report, computed once. */
 export function summarizePeriod({ debts = [], fund = [], shuttleExpenses = [] } = {}) {
-  const validDebts = debts.filter((d) => d.status !== 'cancelled')
+  // End-of-period shuttle debts are settled with the period but collected in the
+  // next one, so they are not part of what is "due this period".
+  const liveDebts = debts.filter((d) => d.status !== 'cancelled')
+  const validDebts = liveDebts.filter((d) => !isCloseoutDebt(d))
+  const closeoutUnpaid = liveDebts.filter((d) => isCloseoutDebt(d) && d.status === 'unpaid')
+  const closeoutUnpaidPeople = new Set(closeoutUnpaid.map((d) => d.person?.id || d.person_id || d.person?.full_name))
   const totalDebt = sum(validDebts, (d) => d.amount)
   const paidAmt = sum(validDebts.filter((d) => d.status === 'paid'), (d) => d.amount)
   const unpaidAmt = sum(validDebts.filter((d) => d.status === 'unpaid'), (d) => d.amount)
@@ -108,6 +113,8 @@ export function summarizePeriod({ debts = [], fund = [], shuttleExpenses = [] } 
     people,
     debtors,
     paidPeopleCount: people.length - debtors.length,
+    closeoutUnpaidAmt: sum(closeoutUnpaid, (d) => d.amount),
+    closeoutUnpaidCount: closeoutUnpaidPeople.size,
     totalIncome,
     totalExpense,
     balance: totalIncome - totalExpense,
@@ -127,12 +134,18 @@ export function summarizePeriod({ debts = [], fund = [], shuttleExpenses = [] } 
 
 /** One plain sentence that answers "how are we doing this period?" */
 export function headline(summary) {
-  if (summary.totalDebt === 0) return 'Kỳ này chưa có khoản công nợ nào.'
-  if (summary.unpaidAmt === 0) {
-    return `Tất cả ${summary.people.length} thành viên đã đóng đủ. Tổng đã thu ${fmt(summary.paidAmt)}.`
+  let text
+  if (summary.totalDebt === 0) text = 'Kỳ này chưa có khoản công nợ nào.'
+  else if (summary.unpaidAmt === 0) {
+    text = `Tất cả ${summary.people.length} thành viên đã đóng đủ. Tổng đã thu ${fmt(summary.paidAmt)}.`
+  } else {
+    text = `Còn ${summary.debtors.length} người chưa đóng, tổng ${fmt(summary.unpaidAmt)}. `
+      + `Đã thu ${fmt(summary.paidAmt)} trên ${fmt(summary.totalDebt)} (${summary.paidPercent}%).`
   }
-  return `Còn ${summary.debtors.length} người chưa đóng, tổng ${fmt(summary.unpaidAmt)}. `
-    + `Đã thu ${fmt(summary.paidAmt)} trên ${fmt(summary.totalDebt)} (${summary.paidPercent}%).`
+  if (summary.closeoutUnpaidAmt > 0) {
+    text += ` Tiền cầu cuối kỳ: ${summary.closeoutUnpaidCount} người chưa đóng (${fmt(summary.closeoutUnpaidAmt)}), thu vào kỳ sau.`
+  }
+  return text
 }
 
 const rows = (items, render, emptyColspan, emptyText = 'Không có') => items.length
@@ -213,11 +226,11 @@ const STYLES = `
  * options.includeDetails – append member table, shuttle purchases and fund ledger (default false)
  */
 export function buildPeriodReportHtml(
-  { period, debts = [], fund = [], shuttleExpenses = [], members = [], balances = [], people = null } = {},
+  { period, debts = [], fund = [], shuttleExpenses = [], members = [], balances = [], people = null, settlementPreview = null } = {},
   { showNames = true, includeDetails = false, now = new Date() } = {}
 ) {
   const s = summarizePeriod({ debts, fund, shuttleExpenses })
-  const standing = computeMemberStanding({ debts, balances, people })
+  const standing = computeMonthStanding({ settlement: settlementPreview, debts, balances, people })
   const exportDate = fmtDate(now.toISOString())
   const periodName = period?.name || ''
   const dates = [period?.start_date && fmtDate(period.start_date), period?.end_date && fmtDate(period.end_date)]
@@ -234,15 +247,31 @@ export function buildPeriodReportHtml(
     : `<p>${s.debtors.length} người chưa đóng, tổng <strong>${fmt(s.unpaidAmt)}</strong>. ${s.paidPeopleCount} người đã đóng đủ.</p>`}
   </section>`
 
-  const creditSection = standing.positive.length === 0 ? '' : `
+  // Ai âm, ai dương: shuttle settlement of this period (money fronted − share owed).
+  const standingNote = standing.source === 'settlement'
+    ? (standing.settled
+      ? 'Theo kết quả chia tiền cầu đã chốt: tiền đã ứng mua cầu − phần phải chịu.'
+      : 'Dự kiến theo chia tiền cầu, kỳ chưa chốt nên có thể thay đổi.')
+    : 'Tính theo số dư được nhận − công nợ chưa đóng (kỳ chưa có kết quả chia cầu).'
+  const standingColumn = (title, cls, list, total, sign, rowNote) => `
+      <div class="cf-box ${cls}">
+        <div class="cf-head"><span class="cf-title">${title}</span><span class="cf-total">${fmt(Math.abs(total))}</span></div>
+        ${showNames
+    ? (list.length ? list.map((p) => `
+        <div class="cf-row"><span class="cf-cat">${esc(p.name)}${rowNote(p)}</span>
+          <span class="cf-amt">${sign}${fmt(Math.abs(p.net))}</span></div>`).join('')
+      : '<div class="cf-row"><span class="cf-cat">Không có</span></div>')
+    : `<div class="cf-row"><span class="cf-cat">${list.length} người</span></div>`}
+      </div>`
+  const standingSection = standing.positive.length + standing.negative.length === 0 ? '' : `
   <section>
-    <h2>Ai đang dương (được nhận lại)</h2>
-    ${showNames ? `
-    <div class="debtors">
-      ${standing.positive.map((p) => `<div class="debtor"><span>${esc(p.name)}</span><strong style="color:#2e7d32">+${fmt(p.net)}</strong></div>`).join('')}
+    <h2>Tiền cầu cuối kỳ: ai âm, ai dương</h2>
+    <div class="cashflow">
+      ${standingColumn('➕ Dương — được nhận lại', 'in', standing.positive, standing.totalPositive, '+', () => '')}
+      ${standingColumn('➖ Âm — cần đóng', 'out', standing.negative, standing.totalNegative, '−',
+    (p) => (standing.source === 'settlement' ? (p.outstanding > 0 ? ' · thu vào kỳ sau' : ' · đã đóng') : ''))}
     </div>
-    <p class="note">Số ròng = tiền được nhận lại − công nợ chưa đóng. Số dư được nhận lại là tích lũy của từng người, không chỉ riêng kỳ này.</p>`
-    : `<p>${standing.positive.length} người đang dương, tổng <strong>${fmt(standing.totalPositive)}</strong>.</p>`}
+    <p class="note">${standingNote} Khoản âm chưa đóng sẽ được thu vào kỳ sau.</p>
   </section>`
 
   const incomeDiffers = s.totalIncome !== s.paidAmt
@@ -341,7 +370,7 @@ export function buildPeriodReportHtml(
   </div>
 
   ${debtorSection}
-  ${creditSection}
+  ${standingSection}
   ${cashflowSection}
   ${shuttleSection}
 

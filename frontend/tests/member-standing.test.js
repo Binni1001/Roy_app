@@ -1,7 +1,7 @@
 import test from 'node:test'
 import assert from 'node:assert/strict'
-import { computeMemberStanding } from '../src/utils/memberStanding.js'
-import { buildPeriodReportHtml } from '../src/utils/periodReport.js'
+import { computeMemberStanding, computeMonthStanding } from '../src/utils/memberStanding.js'
+import { buildPeriodReportHtml, headline, summarizePeriod } from '../src/utils/periodReport.js'
 
 const person = (id, name, extra = {}) => ({ id, full_name: name, status: 'active', ...extra })
 const unpaid = (id, name, amount) => ({ person_id: id, person: person(id, name), status: 'unpaid', amount })
@@ -43,19 +43,72 @@ test('inactive people and managers are left out when the people list is known', 
   assert.deepEqual(s.negative.map((r) => r.name), ['An'])
 })
 
-test('the report lists who is ahead, and can hide names', () => {
+const settlement = (settled = true) => ({
+  settled,
+  details: [
+    { person_id: 'a', person: person('a', 'An'), paid_for_shuttles: 400000, shuttle_share: 100000, net_amount: 300000 },
+    { person_id: 'b', person: person('b', 'Bình'), paid_for_shuttles: 0, shuttle_share: 102000, net_amount: -102000 },
+    { person_id: 'c', person: person('c', 'Chi'), paid_for_shuttles: 0, shuttle_share: 102000, net_amount: -102000 },
+    { person_id: 'd', person: person('d', 'Dũng'), paid_for_shuttles: 50000, shuttle_share: 50000, net_amount: 0 }
+  ]
+})
+const closeoutDebt = (id, name, amount, status = 'unpaid') => ({ ...unpaid(id, name, amount), debt_type: 'shuttle_extra', status })
+
+test('month standing comes from the shuttle settlement, even when nobody has a balance left', () => {
+  const s = computeMonthStanding({
+    settlement: settlement(),
+    balances: [], // credit already refunded or offset
+    debts: [closeoutDebt('b', 'Bình', 102000), closeoutDebt('c', 'Chi', 102000, 'paid')]
+  })
+
+  assert.equal(s.source, 'settlement')
+  assert.equal(s.settled, true)
+  assert.deepEqual(s.positive.map((r) => [r.name, r.net, r.paid, r.share]), [['An', 300000, 400000, 100000]])
+  assert.deepEqual(s.negative.map((r) => [r.name, r.net, r.outstanding]), [['Bình', -102000, 102000], ['Chi', -102000, 0]])
+  assert.equal(s.evenCount, 1)
+  assert.equal(s.totalPositive, 300000)
+  assert.equal(s.totalNegative, -204000)
+})
+
+test('an unsettled period shows a preview and an empty settlement falls back to balances', () => {
+  assert.equal(computeMonthStanding({ settlement: settlement(false) }).settled, false)
+  const fallback = computeMonthStanding({
+    settlement: { error: 'Ky phai dang mo de chia cau' },
+    balances: [{ person_id: 'b', person: person('b', 'Bình'), balance: 5 }]
+  })
+  assert.equal(fallback.source, 'balance')
+  assert.deepEqual(fallback.positive.map((r) => r.name), ['Bình'])
+})
+
+test('closeout shuttle debts are carried to the next period, not "due this period"', () => {
   const data = {
-    period: { name: 'T11' },
-    debts: [unpaid('a', 'An', 100000)],
-    balances: [{ person_id: 'b', person: person('b', 'Bình'), balance: 50000 }]
+    period: { name: 'Mùa 5' },
+    debts: [
+      { ...unpaid('a', 'An', 300000), status: 'paid', debt_type: 'monthly_fee' },
+      { ...unpaid('b', 'Bình', 300000), status: 'paid', debt_type: 'monthly_fee' },
+      closeoutDebt('b', 'Bình', 102000),
+      closeoutDebt('c', 'Chi', 102000)
+    ],
+    settlementPreview: settlement()
   }
-  const named = buildPeriodReportHtml(data)
-  assert.match(named, /Ai đang dương/)
-  assert.match(named, /Bình/)
+  const s = summarizePeriod(data)
+  assert.equal(s.totalDebt, 600000)
+  assert.equal(s.unpaidAmt, 0)
+  assert.equal(s.debtors.length, 0)
+  assert.equal(s.closeoutUnpaidAmt, 204000)
+  assert.equal(s.closeoutUnpaidCount, 2)
+
+  const text = headline(s)
+  assert.match(text, /đã đóng đủ/)
+  assert.match(text, /thu vào kỳ sau/)
+  assert.doesNotMatch(text, /Còn \d+ người chưa đóng/)
+
+  const html = buildPeriodReportHtml(data)
+  assert.doesNotMatch(html, /Ai còn phải đóng/)
+  assert.match(html, /Tiền cầu cuối kỳ: ai âm, ai dương/)
+  assert.match(html, /\+300\.000đ/)
+  assert.match(html, /thu vào kỳ sau/)
 
   const anonymous = buildPeriodReportHtml(data, { showNames: false })
-  assert.match(anonymous, /1 người đang dương/)
   assert.doesNotMatch(anonymous, /Bình/)
-
-  assert.doesNotMatch(buildPeriodReportHtml({ ...data, balances: [] }), /Ai đang dương/)
 })

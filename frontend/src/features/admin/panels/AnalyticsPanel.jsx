@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { Panel } from '../../../components/common'
 import { formatMoney, formatDate } from '../../../utils/appUtils'
 import { printPeriodReport } from '../../../utils/printReport'
-import { computeMemberStanding } from '../../../utils/memberStanding'
+import { computeMonthStanding, isCloseoutDebt } from '../../../utils/memberStanding'
 
 /* ─────────────────────────────────────────
    CHART PRIMITIVES (pure CSS / SVG)
@@ -234,24 +234,35 @@ function ShuttleSection({ shuttleExpenses }) {
   )
 }
 
-function StandingSection({ debts, balances, people, periodName }) {
-  const standing = computeMemberStanding({ debts, balances, people })
+function StandingSection({ debts, balances, people, settlement, periodName }) {
+  const standing = computeMonthStanding({ settlement, debts, balances, people })
   const { positive, negative, evenCount } = standing
+  const fromSettlement = standing.source === 'settlement'
+  const note = fromSettlement
+    ? (standing.settled
+      ? 'Theo kết quả chia tiền cầu đã chốt của kỳ: tiền đã ứng mua cầu − phần phải chịu.'
+      : 'Dự kiến theo chia tiền cầu — kỳ chưa chốt nên số này có thể thay đổi.')
+    : 'Kỳ chưa có kết quả chia cầu nên đang tính theo số dư được nhận − công nợ chưa đóng (số dư là tích lũy, không riêng kỳ này).'
 
   return (
     <Panel title={`⚖️ Ai âm, ai dương${periodName ? ` — kỳ ${periodName}` : ''}`}>
       <div className="an-stat-row">
         <StatCard label="Dương (được nhận lại)" value={`${positive.length} người`} sub={formatMoney(standing.totalPositive)} accent="#4caf7d" />
-        <StatCard label="Âm (còn phải đóng)" value={`${negative.length} người`} sub={formatMoney(Math.abs(standing.totalNegative))} accent="#e57373" />
-        <StatCard label="Hòa (không nợ, không dư)" value={`${evenCount} người`} />
+        <StatCard label="Âm (cần đóng)" value={`${negative.length} người`} sub={formatMoney(Math.abs(standing.totalNegative))} accent="#e57373" />
+        <StatCard label="Hòa" value={`${evenCount} người`} />
       </div>
       <div className="an-standing">
         <div>
           <h4 className="an-standing-title an-standing-pos">Dương</h4>
           {positive.length === 0 && <p className="muted">Chưa có ai dương.</p>}
           {positive.map((r) => (
-            <div key={r.id} className="an-standing-row" title={`Được nhận ${formatMoney(r.balance)} − công nợ ${formatMoney(r.debt)}`}>
-              <span>{r.name}</span>
+            <div key={r.id} className="an-standing-row">
+              <span>
+                {r.name}
+                {fromSettlement && (
+                  <small className="muted an-standing-detail">Ứng {formatMoney(r.paid)} · phần chịu {formatMoney(r.share)}</small>
+                )}
+              </span>
               <strong className="an-standing-pos">+{formatMoney(r.net)}</strong>
             </div>
           ))}
@@ -260,17 +271,21 @@ function StandingSection({ debts, balances, people, periodName }) {
           <h4 className="an-standing-title an-standing-neg">Âm</h4>
           {negative.length === 0 && <p className="muted">Không ai còn âm.</p>}
           {negative.map((r) => (
-            <div key={r.id} className="an-standing-row" title={`Được nhận ${formatMoney(r.balance)} − công nợ ${formatMoney(r.debt)}`}>
-              <span>{r.name}</span>
+            <div key={r.id} className="an-standing-row">
+              <span>
+                {r.name}
+                {fromSettlement && (
+                  <small className="muted an-standing-detail">
+                    Ứng {formatMoney(r.paid)} · phần chịu {formatMoney(r.share)} · {r.outstanding > 0 ? 'thu vào kỳ sau' : 'đã đóng'}
+                  </small>
+                )}
+              </span>
               <strong className="an-standing-neg">−{formatMoney(Math.abs(r.net))}</strong>
             </div>
           ))}
         </div>
       </div>
-      <p className="muted an-standing-note">
-        Số ròng = tiền được nhận lại − công nợ chưa đóng. “Được nhận lại” là số dư tích lũy của từng người
-        (ví dụ tiền ứng mua cầu), không chỉ tính riêng kỳ này; công nợ lấy theo sổ công nợ của kỳ.
-      </p>
+      <p className="muted an-standing-note">{note}</p>
     </Panel>
   )
 }
@@ -323,13 +338,15 @@ function MemberSection({ debts, members }) {
    MAIN EXPORT
 ───────────────────────────────────────── */
 
-export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePeriod, balances = [], people = null }) {
+export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePeriod, balances = [], people = null, settlementPreview = null }) {
+  // Tiền cầu cuối kỳ được chốt cùng kỳ nhưng thu vào kỳ sau, nên không tính vào số cần thu.
+  const regularDebts = debts.filter((d) => !isCloseoutDebt(d))
   const [showNames, setShowNames] = useState(true)
   const [includeDetails, setIncludeDetails] = useState(false)
 
   function handleExport() {
     printPeriodReport(
-      { period: activePeriod, debts, fund, shuttleExpenses, members, balances, people },
+      { period: activePeriod, debts, fund, shuttleExpenses, members, balances, people, settlementPreview },
       { showNames, includeDetails }
     )
   }
@@ -354,14 +371,14 @@ export function AnalyticsPanel({ debts, fund, shuttleExpenses, members, activePe
         </div>
       </div>
       <section className="grid two">
-        <DebtSection debts={debts} />
+        <DebtSection debts={regularDebts} />
         <FundSection fund={fund} />
       </section>
       <section className="grid one">
-        <StandingSection debts={debts} balances={balances} people={people} periodName={activePeriod?.name} />
+        <StandingSection debts={debts} balances={balances} people={people} settlement={settlementPreview} periodName={activePeriod?.name} />
       </section>
       <section className="grid two">
-        <MemberSection debts={debts} members={members} />
+        <MemberSection debts={regularDebts} members={members} />
         <ShuttleSection shuttleExpenses={shuttleExpenses} />
       </section>
     </div>

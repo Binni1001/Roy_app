@@ -91,6 +91,7 @@ export function AdminContent(props) {
           activePeriod={props.activePeriod}
           balances={data.balances}
           people={people}
+          settlementPreview={data.settlementPreview}
         />
       </PanelSuspense>
     )

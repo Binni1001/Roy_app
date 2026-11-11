@@ -201,3 +201,4 @@
 .an-standing-neg { color: #e57373; }
 .an-standing-note { font-size: 0.75rem; margin-top: 10px; }
 @media (max-width: 860px) { .an-standing { grid-template-columns: 1fr; } }
+.an-standing-detail { display: block; font-size: 0.72rem; }
