@@ -4,6 +4,7 @@ import { api } from '../../../api/client'
 import { ActionGroup, ConfirmModal, Input, Modal, Panel, SimpleTable, StatusBadge } from '../../../components/common'
 import { emptyPeriod } from '../../../constants/appConstants'
 import { formatDate, formatMoney } from '../../../utils/appUtils'
+import { hasActiveGroupMembership } from '../../../utils/groupMembership'
 
 export function PeriodsPanel({ people, periods, members, periodForm, selectedPeriodId, setForm, submit, submitting, canManageMembers = true }) {
   const [showAddPeriod, setShowAddPeriod] = useState(false)
@@ -99,6 +100,7 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
       {showAddMember && (
         <AddMembersModal
           people={people}
+          groupId={periods.find((period) => period.id === selectedPeriodId)?.group_id || null}
           members={members}
           submitting={submitting}
           onClose={() => setShowAddMember(false)}
@@ -156,13 +158,15 @@ export function PeriodsPanel({ people, periods, members, periodForm, selectedPer
   )
 }
 
-function AddMembersModal({ people, members, onClose, onSubmit, submitting }) {
+function AddMembersModal({ people, groupId, members, onClose, onSubmit, submitting }) {
   const [query, setQuery] = useState('')
   const [selectedIds, setSelectedIds] = useState([])
   const existingIds = new Set(members.map((member) => member.person_id || member.person?.id))
   const normalizedQuery = query.trim().toLowerCase()
-  const availablePeople = people
-    .filter((person) => isActivityPerson(person) && !existingIds.has(person.id))
+  const eligiblePeople = people.filter((person) => isActivityPerson(person) && hasActiveGroupMembership(person, groupId))
+  const notInGroup = people.filter((person) => isActivityPerson(person) && !hasActiveGroupMembership(person, groupId)).length
+  const availablePeople = eligiblePeople
+    .filter((person) => !existingIds.has(person.id))
     .filter((person) => {
       if (!normalizedQuery) return true
       return [person.full_name, person.nickname, person.email, person.phone]
@@ -219,6 +223,9 @@ function AddMembersModal({ people, members, onClose, onSubmit, submitting }) {
           <strong>{selectedIds.length} người đã chọn</strong>
           <span>{availablePeople.length} người phù hợp</span>
         </div>
+        {notInGroup > 0 && (
+          <p className="hint">{notInGroup} người không thuộc nhóm của kỳ này nên không hiển thị. Muốn thêm họ, hãy thêm họ vào nhóm trước.</p>
+        )}
 
         <div className="period-member-options">
           {availablePeople.length === 0 ? (
