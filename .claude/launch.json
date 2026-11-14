@@ -4,8 +4,24 @@
     {
       "name": "arch",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["run", "dev", "--prefix", "E:/roy_architecture/frontend"],
+      "runtimeArgs": [
+        "run",
+        "dev",
+        "--prefix",
+        "E:/roy_architecture/frontend"
+      ],
       "port": 3000
+    },
+    {
+      "name": "roy-v2-web",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:web",
+        "--prefix",
+        "v2"
+      ],
+      "port": 5174
     }
   ]
 }

@@ -1,0 +1,23 @@
+{
+  "name": "@roy/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "tsx watch --env-file-if-exists=.env src/dev.ts",
+    "typecheck": "tsc --noEmit -p .",
+    "test": "tsx --test src/app.test.ts"
+  },
+  "dependencies": {
+    "@hono/node-server": "^1.13.0",
+    "@supabase/supabase-js": "^2.108.1",
+    "hono": "^4.6.0",
+    "jose": "^6.0.0"
+  },
+  "devDependencies": {
+    "@roy/shared": "*",
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.8.0"
+  }
+}
