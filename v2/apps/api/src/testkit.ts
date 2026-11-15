@@ -17,6 +17,7 @@ import type { AvailabilityStore } from "./routes/availability.ts";
 import type { ApprovalStore } from "./routes/approvals.ts";
 import type { PeopleStore } from "./routes/people.ts";
 import type { PeriodsStore } from "./routes/periods.ts";
+import type { AdminScheduleStore } from "./routes/adminSchedule.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -99,7 +100,8 @@ export type Store = MemberStore &
   AvailabilityStore &
   ApprovalStore &
   PeopleStore &
-  PeriodsStore;
+  PeriodsStore &
+  AdminScheduleStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -149,6 +151,17 @@ export function setup(store: Partial<Store> = {}) {
     addPeriodMembers: async (_id, ids) => ({ added: ids.length, skipped: 0, feesCreated: 1 }),
     getPeriodMemberPeriodId: async (id) => (id === "m-other" ? "kx" : id === "m1" ? "k1" : null),
     updatePeriodMember: async () => "fee_cancelled",
+    loadAdminSchedule: async () => ({ guestFee: 30000, settled: false, openDays: [], sessions: [], people: [] }),
+    mutateDay: async () => {},
+    getSessionPeriodId: async (id) => (id === "s1" ? "k1" : id === "s-old" ? "k0" : null),
+    createSession: async () => {},
+    updateSession: async () => {},
+    deleteSession: async () => true,
+    getGuestSessionId: async (id) => (id === "a1" ? "s1" : id === "a-old" ? "s-old" : null),
+    getGuestFee: async () => 30000,
+    addGuest: async (_s, _p, amount) => amount > 0,
+    updateGuest: async () => true,
+    removeGuest: async () => true,
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],

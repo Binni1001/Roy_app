@@ -403,3 +403,51 @@ export interface PeriodRoster {
   /** Kết quả thao tác vừa làm, để báo cho owner (ví dụ phí đã trả cần hoàn bằng tay). */
   notice: string | null;
 }
+
+/** Ngày tự đăng ký, như owner thấy (có tên người giữ chỗ). */
+export interface AdminOpenDay {
+  date: string;
+  status: "open" | "closed";
+  capacity: number;
+  names: string[];
+  /** Cùng thứ tự với names. */
+  personIds: string[];
+}
+
+/** Khách vãng lai trong một buổi và trạng thái phí khách của họ. */
+export interface GuestRow {
+  id: string;
+  personId: string;
+  name: string;
+  amount: number;
+  note: string | null;
+  /** none: miễn phí; unpaid: còn nợ; paid: đã trả (không đổi hay xóa được nữa). */
+  feeStatus: "none" | "unpaid" | "paid";
+}
+
+export interface AdminSession {
+  id: string;
+  date: string;
+  shuttles: number;
+  note: string | null;
+  guests: GuestRow[];
+}
+
+export interface SchedulePerson {
+  id: string;
+  name: string;
+  /** Thành viên cố định của kỳ: thường không cần ghi là khách. */
+  fixed: boolean;
+}
+
+/** Màn hình Lịch & điểm danh của owner, cho kỳ đang mở. */
+export interface AdminSchedule {
+  period: PeriodSummary | null;
+  /** Phí khách mặc định mỗi buổi của kỳ. */
+  guestFee: number;
+  settled: boolean;
+  openDays: AdminOpenDay[];
+  sessions: AdminSession[];
+  people: SchedulePerson[];
+  notice: string | null;
+}

@@ -212,6 +212,9 @@ export function Profile() {
         {role === "owner" && (
           <section className="card rise d1 admin-links">
             <h2>Quản trị câu lạc bộ</h2>
+            <Link to="/lich-quan-tri" className="btn btn-ghost link-btn">
+              Lịch & điểm danh
+            </Link>
             <Link to="/ky-quy" className="btn btn-ghost link-btn">
               Kỳ quỹ
             </Link>

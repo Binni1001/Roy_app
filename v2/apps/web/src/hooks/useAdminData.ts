@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdminPeriod, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
-import { apiGet, apiPost, apiPut } from "../lib/api";
+import type { AdminPeriod, AdminSchedule, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
+import { apiDelete, apiGet, apiPost, apiPut } from "../lib/api";
 
 const PEOPLE = ["me", "admin", "people"] as const;
 
@@ -113,4 +113,71 @@ export function useChangePeriodMember(periodId: string) {
     ({ id, status, discountPercent }: { id: string; status: PeriodMemberStatus; discountPercent: ShuttleDiscount }) =>
       apiPut<PeriodRoster>("/admin/period-members/" + encodeURIComponent(id), { status, discountPercent }),
   );
+}
+
+const SCHEDULE = ["me", "admin", "schedule"] as const;
+
+export function useAdminSchedule(enabled: boolean) {
+  return useQuery({
+    queryKey: SCHEDULE,
+    enabled,
+    queryFn: ({ signal }) => apiGet<AdminSchedule>("/admin/schedule", signal),
+  });
+}
+
+/** Mọi thao tác lịch và điểm danh trả lại cả màn hình; phí khách còn hiện ở Ví và Lịch của thành viên. */
+function useScheduleMutation<T>(send: (input: T) => Promise<AdminSchedule>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: (data) => {
+      client.setQueryData(SCHEDULE, data);
+      void client.invalidateQueries({ queryKey: ["me", "wallet"] });
+      void client.invalidateQueries({ queryKey: ["me", "schedule"] });
+    },
+    onError: () => void client.invalidateQueries({ queryKey: SCHEDULE }),
+  });
+}
+
+export function useDayAction() {
+  return useScheduleMutation(({ date, action }: { date: string; action: "open" | "close" | "reopen" }) =>
+    apiPost<AdminSchedule>("/admin/schedule/days", { date, action }),
+  );
+}
+
+export interface SessionForm {
+  date: string;
+  shuttles: number;
+  note: string | null;
+}
+
+export function useAddSession() {
+  return useScheduleMutation((input: SessionForm) => apiPost<AdminSchedule>("/admin/sessions", input));
+}
+
+export function useEditSession() {
+  return useScheduleMutation(({ id, input }: { id: string; input: SessionForm }) =>
+    apiPut<AdminSchedule>("/admin/sessions/" + encodeURIComponent(id), input),
+  );
+}
+
+export function useDeleteSession() {
+  return useScheduleMutation((id: string) => apiDelete<AdminSchedule>("/admin/sessions/" + encodeURIComponent(id)));
+}
+
+export function useAddGuest() {
+  return useScheduleMutation(
+    ({ sessionId, personId, amount, note }: { sessionId: string; personId: string; amount: number; note: string | null }) =>
+      apiPost<AdminSchedule>("/admin/sessions/" + encodeURIComponent(sessionId) + "/guests", { personId, amount, note }),
+  );
+}
+
+export function useEditGuest() {
+  return useScheduleMutation(({ id, amount, note }: { id: string; amount: number; note: string | null }) =>
+    apiPut<AdminSchedule>("/admin/guests/" + encodeURIComponent(id), { amount, note }),
+  );
+}
+
+export function useRemoveGuest() {
+  return useScheduleMutation((id: string) => apiDelete<AdminSchedule>("/admin/guests/" + encodeURIComponent(id)));
 }

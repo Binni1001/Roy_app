@@ -3,6 +3,17 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { decide, listPending, type ApprovalStore } from "./routes/approvals.ts";
+import {
+  addGuest,
+  addSession,
+  changeDay,
+  deleteGuest,
+  editGuest,
+  editSession,
+  loadSchedule as loadAdminSchedule,
+  removeSession,
+  type AdminScheduleStore,
+} from "./routes/adminSchedule.ts";
 import { addMembers, changeMember, createPeriod, editPeriod, listPeriods, loadRoster, openPeriod, type PeriodsStore } from "./routes/periods.ts";
 import { addPerson, changeStatus, editPerson, listPeople, type PeopleStore } from "./routes/people.ts";
 import { loadAvailability, saveAvailability, type AvailabilityStore } from "./routes/availability.ts";
@@ -38,7 +49,8 @@ export interface AppDeps {
     AvailabilityStore &
     ApprovalStore &
     PeopleStore &
-    PeriodsStore;
+    PeriodsStore &
+    AdminScheduleStore;
   corsOrigins: string[];
 }
 
@@ -103,6 +115,70 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/schedule", async (c) => {
+    try {
+      return c.json(await loadAdminSchedule(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/schedule/days", async (c) => {
+    try {
+      return c.json(await changeDay(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/sessions", async (c) => {
+    try {
+      return c.json(await addSession(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/sessions/:id", async (c) => {
+    try {
+      return c.json(await editSession(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.delete("/admin/sessions/:id", async (c) => {
+    try {
+      return c.json(await removeSession(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/sessions/:id/guests", async (c) => {
+    try {
+      return c.json(await addGuest(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/guests/:id", async (c) => {
+    try {
+      return c.json(await editGuest(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.delete("/admin/guests/:id", async (c) => {
+    try {
+      return c.json(await deleteGuest(c.get("user"), c.req.param("id"), store));
     } catch (error) {
       return fail(c, error);
     }
