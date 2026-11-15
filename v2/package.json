@@ -1,0 +1,12 @@
+{
+  "name": "roy-badminton-v2",
+  "private": true,
+  "workspaces": ["apps/*", "packages/*"],
+  "scripts": {
+    "dev:api": "npm run dev -w @roy/api",
+    "dev:web": "npm run dev -w @roy/web",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "build": "npm run build -w @roy/web",
+    "test": "npm run test -w @roy/api"
+  }
+}
