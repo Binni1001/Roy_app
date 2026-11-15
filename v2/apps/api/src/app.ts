@@ -1,6 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
+import { changeMatch, createMatch, type MatchStore } from "./routes/matches.ts";
 import { parseProfileInput, ValidationError, type ProfileStore } from "./routes/profile.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
 import { ActionError, changeOpenDay, type ActionsStore, type OpenDayAction } from "./routes/actions.ts";
@@ -18,7 +19,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore;
+  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore & MatchStore;
   corsOrigins: string[];
 }
 
@@ -93,6 +94,39 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   app.get("/me/arena", async (c) => {
     try {
       return c.json(await loadArena(await resolveMember(c.get("user"), store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/arena/players", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      return c.json(await store.listGroupPlayers(member.groupId));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/me/matches", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      return c.json(await createMatch(member, await c.req.json().catch(() => null), store), 201);
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/me/matches/:id/:action", async (c) => {
+    try {
+      const action = c.req.param("action");
+      if (action !== "accept" && action !== "cancel" && action !== "result") {
+        return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
+      }
+      const user = c.get("user");
+      const member = await resolveMember(user, store);
+      const body = action === "result" ? await c.req.json().catch(() => null) : null;
+      return c.json(await changeMatch(user, member, c.req.param("id"), action, body, store));
     } catch (error) {
       return fail(c, error);
     }

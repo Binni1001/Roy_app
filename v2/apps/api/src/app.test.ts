@@ -9,6 +9,7 @@ import { ActionError, type ActionsStore } from "./routes/actions.ts";
 import type { ArenaStore } from "./routes/arena.ts";
 import type { ArenaHistoryStore } from "./routes/arenaHistory.ts";
 import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
+import type { MatchStore, StoredMatch } from "./routes/matches.ts";
 import type { MemberStore } from "./routes/member.ts";
 import type { ProfileStore } from "./routes/profile.ts";
 
@@ -56,7 +57,19 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-type Store = MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore;
+const stored = (over: Partial<StoredMatch> = {}): StoredMatch => ({
+  id: "m1",
+  periodId: "k1",
+  groupId: "g1",
+  status: "pending",
+  sets: 3,
+  playDate: "2020-01-01",
+  challengerIds: ["x"],
+  opponentIds: ["p1"],
+  ...over,
+});
+
+type Store = MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore & MatchStore;
 
 const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -72,6 +85,11 @@ function setup(store: Partial<Store> = {}) {
   const full: Store = {
     getProfile: async () => ({ fullName: "Minh", nickname: null, phone: null, bio: null, email: "a@b.c", avatarUrl: null }),
     updateProfile: async (_id, input) => ({ ...input, email: "a@b.c", avatarUrl: null }),
+    listGroupPlayers: async () => [{ id: "p1", name: "Minh", avatarUrl: null }, { id: "x", name: "X", avatarUrl: null }],
+    getMatch: async () => stored(),
+    insertMatch: async () => {},
+    setMatchStatus: async () => true,
+    finalizeMatch: async () => {},
     markNotificationsRead: async () => {},
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
@@ -107,8 +125,12 @@ function setup(store: Partial<Store> = {}) {
   });
   const get = (headers: Record<string, string> = {}, path = "/bootstrap") =>
     app.request(path, { headers });
-  const post = (headers: Record<string, string>, path: string) =>
-    app.request(path, { method: "POST", headers });
+  const post = (headers: Record<string, string>, path: string, body?: unknown) =>
+    app.request(path, {
+      method: "POST",
+      headers: body === undefined ? headers : { ...headers, "Content-Type": "application/json" },
+      body: body === undefined ? undefined : JSON.stringify(body),
+    });
   const put = (headers: Record<string, string>, path: string, body: unknown) =>
     app.request(path, {
       method: "PUT",
@@ -301,4 +323,57 @@ test("an invalid profile is rejected before anything is written", async () => {
   assert.equal(res.status, 400);
   assert.equal((await res.json()).code, "INVALID");
   assert.equal(written, 0);
+});
+
+test("creating a match puts the caller as challenger in the open period of their group", async () => {
+  const inserted: unknown[] = [];
+  const { post } = setup({ insertMatch: async (periodId, match) => void inserted.push([periodId, match.challengerId, match.opponentId, match.type]) });
+  const res = await post(await bearer(), "/me/matches", { type: "singles", opponentId: "x", sets: 1, playDate: "2099-01-01" });
+  assert.equal(res.status, 201);
+  assert.deepEqual(inserted, [["k1", "p1", "x", "singles"]]);
+});
+
+test("a match against someone outside the group is rejected and nothing is inserted", async () => {
+  let inserted = 0;
+  const { post } = setup({ insertMatch: async () => void inserted++ });
+  const res = await post(await bearer(), "/me/matches", { type: "singles", opponentId: "stranger", sets: 1, playDate: "2099-01-01" });
+  assert.equal(res.status, 400);
+  assert.equal(inserted, 0);
+});
+
+test("only the challenged side can accept, and only a participant can act on a match", async () => {
+  const mine = setup({ getMatch: async () => stored({ challengerIds: ["p1"], opponentIds: ["x"] }) });
+  assert.equal((await mine.post(await bearer(), "/me/matches/m1/accept")).status, 403);
+  const theirs = setup({ getMatch: async () => stored({ challengerIds: ["x"], opponentIds: ["y"] }) });
+  assert.equal((await theirs.post(await bearer(), "/me/matches/m1/cancel")).status, 404);
+  const otherGroup = setup({ getMatch: async () => stored({ groupId: "other" }) });
+  assert.equal((await otherGroup.post(await bearer(), "/me/matches/m1/accept")).status, 404);
+  assert.equal((await setup().post(await bearer(), "/me/matches/m1/accept")).status, 200);
+});
+
+test("a result is finalized through the database with the caller email and the derived winner", async () => {
+  const calls: unknown[] = [];
+  const { post } = setup({ finalizeMatch: async (id, winner, scores, email) => void calls.push([id, winner, scores.length, email]) });
+  const res = await post(await bearer(), "/me/matches/m1/result", { setScores: [{ challenger: 21, opponent: 10 }, { challenger: 21, opponent: 12 }] });
+  assert.equal(res.status, 200);
+  assert.deepEqual(calls, [["m1", "challenger", 2, "a@b.c"]]);
+});
+
+test("a result cannot be recorded before the play date or for a finished match", async () => {
+  let finalized = 0;
+  const score = { setScores: [{ challenger: 21, opponent: 10 }] };
+  const early = setup({ getMatch: async () => stored({ playDate: "2099-01-01" }), finalizeMatch: async () => void finalized++ });
+  const tooEarly = await early.post(await bearer(), "/me/matches/m1/result", score);
+  assert.equal(tooEarly.status, 409);
+  assert.equal((await tooEarly.json()).code, "TOO_EARLY");
+  const done = setup({ getMatch: async () => stored({ status: "completed" }), finalizeMatch: async () => void finalized++ });
+  assert.equal((await done.post(await bearer(), "/me/matches/m1/result", score)).status, 409);
+  assert.equal(finalized, 0);
+});
+
+test("a status change that lost a race is reported as a conflict", async () => {
+  const { post } = setup({ setMatchStatus: async () => false });
+  const res = await post(await bearer(), "/me/matches/m1/cancel");
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, "MATCH_CHANGED");
 });
