@@ -7,15 +7,17 @@ Cập nhật lần cuối: phiên 5.
 
 Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo, khai lịch bận), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Owner duyệt được yêu cầu vào nhóm ngay trên v2. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã đẩy lên GitHub, đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
 
-Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 75 test API đang qua.
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 83 test API đang qua (gồm 2 bài chạy migration trên PostgreSQL nhúng).
 
-0. **Chủ CLB chạy migration** `supabase/20261116_avatars_own_only.sql` trong Supabase SQL Editor (siết quyền ảnh đại diện). Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
+0. **Chủ CLB chạy hai migration** trong Supabase SQL Editor, mỗi file một lần:
+   - `supabase/20261116_avatars_own_only.sql`: siết quyền ảnh đại diện. Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
+   - `supabase/20261116_v2_period_members.sql`: chỉ thêm hai hàm mới cho màn hình Kỳ quỹ của v2 (thêm người vào kỳ, đổi trạng thái và mức miễn cầu, kèm tạo hoặc hủy phí cố định trong một giao dịch). Không đổi bảng hay dữ liệu cũ.
 1. **Chủ CLB thử tay trên dữ liệu thật** (danh sách ở khung bên dưới). Mọi thao tác ghi mới chỉ mới qua test tự động.
 2. **Cấu hình Supabase cho v2** (chủ CLB làm trong Supabase Dashboard → Authentication → URL Configuration): thêm `http://localhost:5174/**` và địa chỉ v2 sau khi deploy vào Redirect URLs. Thiếu bước này thì email xác nhận, email đặt lại mật khẩu và đăng nhập Google sẽ quay về trang cũ.
 3. **Deploy thử v2** lên hai project Vercel mới: `v2/apps/api` (đã có `vercel.json` chạy ở `sin1`) và `v2/apps/web` (đã có `vercel.json` cho đường dẫn SPA và cache service worker). Biến môi trường như `.env.example`; nhớ đặt `CORS_ORIGINS` của API bằng địa chỉ web. Rồi đo lại tốc độ thật.
 4. **Kiểm tra quyền của vai trò `authenticated`** trên các bảng lõi: cần một phiên đăng nhập thật (khóa anon đã bị chặn hết, xem giai đoạn 0).
 5. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần khóa PayOS trong `v2/apps/api/.env` và thử trên bản sao, không thử trên database thật.
-6. **Giai đoạn 4 (quản trị)** tiếp theo: kỳ quỹ (mở kỳ, thành viên trong kỳ, mức miễn tiền cầu), rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
+6. **Giai đoạn 4 (quản trị)** tiếp theo: lên lịch và điểm danh (buổi đã chơi, khách vãng lai), chi cầu, chốt chia tiền cầu rồi đóng kỳ, rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
 7. **Lịch: lịch cố định của tôi** — chờ phần xếp lịch ở mục 6: ngay cả bản cũ cũng chưa lưu hay công bố lịch cố định, nên chưa có dữ liệu để hiện.
 
 Chủ CLB đã quyết định (phiên 5):
@@ -34,7 +36,7 @@ Quy ước khi làm tiếp:
 
 > **Đẩy code lên GitHub:** lệnh `git push` chỉ chạy được trong tab Terminal của app (nơi có đăng nhập GitHub của chủ CLB), không chạy được từ công cụ Bash của Claude.
 
-> **Cần thử tay trước khi coi là xong** (mọi thao tác ghi mới chỉ qua test tự động): đánh dấu thông báo đã đọc; xóa một thông báo; giữ chỗ rồi hủy chỗ một buổi tự đăng ký; lưu hồ sơ; đổi ảnh đại diện (ảnh hiện cả ở bản cũ vì dùng chung tên file `<person_id>.<đuôi>`); khai lịch bận (Lịch → Lịch bận của tôi, bằng tài khoản thành viên cố định) rồi mở bản cũ xem cùng dữ liệu; tạo một kèo thử, nhận kèo bằng tài khoản thứ hai, ghi tỷ số, rồi nhờ admin hủy kết quả kèo thử; vào Nhân sự thêm một người thử, sửa, cho nghỉ rồi cho chơi lại; tạo tài khoản mới bằng một email phụ, nhập mã mời, rồi duyệt yêu cầu đó trên v2 (Tôi → Duyệt thành viên, hoặc thẻ Chờ duyệt ở trang chủ của owner); quên mật khẩu với email phụ đó; cài app lên điện thoại từ bản đã deploy.
+> **Cần thử tay trước khi coi là xong** (mọi thao tác ghi mới chỉ qua test tự động): đánh dấu thông báo đã đọc; xóa một thông báo; giữ chỗ rồi hủy chỗ một buổi tự đăng ký; lưu hồ sơ; đổi ảnh đại diện (ảnh hiện cả ở bản cũ vì dùng chung tên file `<person_id>.<đuôi>`); khai lịch bận (Lịch → Lịch bận của tôi, bằng tài khoản thành viên cố định) rồi mở bản cũ xem cùng dữ liệu; tạo một kèo thử, nhận kèo bằng tài khoản thứ hai, ghi tỷ số, rồi nhờ admin hủy kết quả kèo thử; vào Nhân sự thêm một người thử, sửa, cho nghỉ rồi cho chơi lại; vào Kỳ quỹ tạo một kỳ nháp thử, thêm hai người (một cố định, một vãng lai), đổi người cố định sang vãng lai xem phí cố định bị hủy, rồi xóa kỳ nháp thử ở bản cũ hoặc nhờ em dọn; tạo tài khoản mới bằng một email phụ, nhập mã mời, rồi duyệt yêu cầu đó trên v2 (Tôi → Duyệt thành viên, hoặc thẻ Chờ duyệt ở trang chủ của owner); quên mật khẩu với email phụ đó; cài app lên điện thoại từ bản đã deploy.
 
 ## Đã xong
 
@@ -98,7 +100,7 @@ Quy ước khi làm tiếp:
 ## Giai đoạn 4 — Quản trị
 
 - [x] Nhân sự: thêm, sửa, cho nghỉ, cho chơi lại (Tôi → Quản trị → Nhân sự; chỉ owner, theo nhóm đang xem; chưa thử ghi trên dữ liệu thật). Không có nút xóa: bản cũ cũng khuyên cho nghỉ thay vì xóa
-- [ ] Kỳ quỹ: tạo, mở, đóng; thành viên trong kỳ; mức miễn tiền cầu
+- [ ] Kỳ quỹ: tạo, mở, đóng; thành viên trong kỳ; mức miễn tiền cầu — xong tạo bản nháp, sửa, mở kỳ, thêm người vào kỳ, đổi cố định/vãng lai/nghỉ và mức miễn cầu (Tôi → Quản trị → Kỳ quỹ; cần migration `20261116_v2_period_members.sql`). Còn **đóng kỳ**: làm sau phần chốt chia tiền cầu, vì đóng kỳ đòi đã chia cầu, trả hết tiền mượn cầu, quỹ về 0 và lưu bảng xếp hạng của kỳ
 - [ ] Luồng lịch gộp: lên lịch → giữ chỗ → điểm danh → buổi đã chơi tự sinh; khách vãng lai
 - [ ] Chi cầu: mua cầu, chia nguồn quỹ và cá nhân, dùng quỹ dư bù
 - [ ] Chốt chia tiền cầu cuối kỳ

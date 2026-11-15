@@ -612,3 +612,38 @@ select.group-pill option { background: var(--surface); }
 .person-form { background: var(--surface-2); border-radius: 18px; padding: 16px; }
 .person-form input, .person-form select { background: var(--surface); }
 .admin-links .link-btn { text-align: center; }
+
+/* Kỳ quỹ */
+.two { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.two > div { display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 480px) { .two { grid-template-columns: 1fr; } }
+.chip { border-radius: 999px; padding: 4px 12px; font-size: 13px; font-weight: 600; border: 1px solid var(--line); white-space: nowrap; }
+.chip-open { color: #8fd8ae; border-color: rgba(143, 216, 174, 0.45); }
+.chip-draft { color: var(--gold-hi); border-color: rgba(216, 174, 82, 0.45); }
+.chip-closed { color: var(--muted); }
+.period-card.selected { border-color: rgba(216, 174, 82, 0.45); }
+.person-head select {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 10px;
+  font: inherit;
+  font-size: 14px;
+}
+.pick-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 8px; }
+.pick {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 0 12px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  cursor: pointer;
+}
+.pick.on { border-color: rgba(216, 174, 82, 0.6); }
+.pick input { accent-color: var(--gold); width: 18px; height: 18px; }
+.pick span:first-of-type { flex: 1; }

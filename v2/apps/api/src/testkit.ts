@@ -16,6 +16,7 @@ import type { AvatarStore } from "./routes/avatar.ts";
 import type { AvailabilityStore } from "./routes/availability.ts";
 import type { ApprovalStore } from "./routes/approvals.ts";
 import type { PeopleStore } from "./routes/people.ts";
+import type { PeriodsStore } from "./routes/periods.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -61,6 +62,19 @@ export const debt = (id: string, status: Debt["status"], amount: number): Debt =
   paidAt: null,
 });
 
+export const adminPeriod = (status: "draft" | "open" | "closed", settled = false) => ({
+  id: "k1",
+  name: "Mua 7",
+  status,
+  startDate: "2026-12-10",
+  endDate: "2027-01-09",
+  fixedMemberFee: 150000,
+  guestFeePerSession: 30000,
+  note: null,
+  settled,
+  memberCount: 0,
+});
+
 export const stored = (over: Partial<StoredMatch> = {}): StoredMatch => ({
   id: "m1",
   periodId: "k1",
@@ -84,7 +98,8 @@ export type Store = MemberStore &
   AvatarStore &
   AvailabilityStore &
   ApprovalStore &
-  PeopleStore;
+  PeopleStore &
+  PeriodsStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -125,6 +140,15 @@ export function setup(store: Partial<Store> = {}) {
     createMember: async () => {},
     updatePerson: async () => {},
     setMemberStatus: async () => {},
+    listPeriods: async () => [],
+    getPeriod: async (id) => (id === "k1" || id === "kd" ? { ...adminPeriod(id === "kd" ? "draft" : "open"), id, groupId: "g1" } : id === "kx" ? { ...adminPeriod("open"), id, groupId: "other" } : null),
+    createPeriod: async () => {},
+    updatePeriod: async () => {},
+    setPeriodStatus: async () => {},
+    getRoster: async (period) => ({ period, members: [], candidates: [] }),
+    addPeriodMembers: async (_id, ids) => ({ added: ids.length, skipped: 0, feesCreated: 1 }),
+    getPeriodMemberPeriodId: async (id) => (id === "m-other" ? "kx" : id === "m1" ? "k1" : null),
+    updatePeriodMember: async () => "fee_cancelled",
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],

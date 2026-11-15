@@ -7,6 +7,7 @@ import { supabaseExtras } from "./storeExtras.ts";
 import { supabaseOnboarding } from "./storeOnboarding.ts";
 import { supabasePlanning } from "./storePlanning.ts";
 import { supabasePeople } from "./storePeople.ts";
+import { supabasePeriods } from "./storePeriods.ts";
 
 const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5174")
   .split(",")
@@ -16,6 +17,6 @@ const corsOrigins = (process.env.CORS_ORIGINS ?? "http://localhost:5174")
 // Điểm vào cho Vercel: xuất app Hono làm default export.
 export default createApp({
   verify: createTokenVerifier(process.env),
-  store: { ...supabaseStore, ...supabaseExtras, ...supabaseActions, ...supabaseMatches, ...supabaseOnboarding, ...supabasePlanning, ...supabasePeople },
+  store: { ...supabaseStore, ...supabaseExtras, ...supabaseActions, ...supabaseMatches, ...supabaseOnboarding, ...supabasePlanning, ...supabasePeople, ...supabasePeriods },
   corsOrigins,
 });

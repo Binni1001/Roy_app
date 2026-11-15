@@ -3,6 +3,7 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { decide, listPending, type ApprovalStore } from "./routes/approvals.ts";
+import { addMembers, changeMember, createPeriod, editPeriod, listPeriods, loadRoster, openPeriod, type PeriodsStore } from "./routes/periods.ts";
 import { addPerson, changeStatus, editPerson, listPeople, type PeopleStore } from "./routes/people.ts";
 import { loadAvailability, saveAvailability, type AvailabilityStore } from "./routes/availability.ts";
 import { MAX_AVATAR_BYTES, parseAvatar, type AvatarStore } from "./routes/avatar.ts";
@@ -36,7 +37,8 @@ export interface AppDeps {
     AvatarStore &
     AvailabilityStore &
     ApprovalStore &
-    PeopleStore;
+    PeopleStore &
+    PeriodsStore;
   corsOrigins: string[];
 }
 
@@ -101,6 +103,62 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/periods", async (c) => {
+    try {
+      return c.json(await listPeriods(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/periods", async (c) => {
+    try {
+      return c.json(await createPeriod(c.get("user"), await c.req.json().catch(() => null), store), 201);
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/periods/:id", async (c) => {
+    try {
+      return c.json(await editPeriod(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/periods/:id/open", async (c) => {
+    try {
+      return c.json(await openPeriod(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/periods/:id/roster", async (c) => {
+    try {
+      return c.json(await loadRoster(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/periods/:id/members", async (c) => {
+    try {
+      return c.json(await addMembers(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/period-members/:id", async (c) => {
+    try {
+      return c.json(await changeMember(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
     } catch (error) {
       return fail(c, error);
     }

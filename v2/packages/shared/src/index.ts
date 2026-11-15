@@ -351,3 +351,55 @@ export interface PersonInput {
   phone: string | null;
   attendanceType: AttendanceType;
 }
+
+/** Kỳ quỹ như owner thấy ở màn hình Kỳ quỹ. */
+export interface AdminPeriod {
+  id: string;
+  name: string;
+  status: PeriodStatus;
+  startDate: string;
+  endDate: string;
+  fixedMemberFee: number;
+  guestFeePerSession: number;
+  note: string | null;
+  /** Đã chốt chia tiền cầu: không đổi thành viên hay mức miễn được nữa. */
+  settled: boolean;
+  memberCount: number;
+}
+
+export interface PeriodInput {
+  name: string;
+  startDate: string;
+  endDate: string;
+  fixedMemberFee: number;
+  guestFeePerSession: number;
+  note: string | null;
+}
+
+export type PeriodMemberStatus = "fixed" | "guest" | "inactive";
+export type ShuttleDiscount = 0 | 50 | 100;
+
+export interface PeriodMemberRow {
+  id: string;
+  personId: string;
+  name: string;
+  avatarUrl: string | null;
+  status: PeriodMemberStatus;
+  /** Phần trăm tiền cầu được miễn khi chia cuối kỳ. */
+  discountPercent: ShuttleDiscount;
+}
+
+/** Người trong nhóm chưa có trong kỳ, có thể thêm vào. */
+export interface PeriodCandidate {
+  id: string;
+  name: string;
+  attendanceType: AttendanceType;
+}
+
+export interface PeriodRoster {
+  period: AdminPeriod;
+  members: PeriodMemberRow[];
+  candidates: PeriodCandidate[];
+  /** Kết quả thao tác vừa làm, để báo cho owner (ví dụ phí đã trả cần hoàn bằng tay). */
+  notice: string | null;
+}
