@@ -19,6 +19,7 @@ import type { PeopleStore } from "./routes/people.ts";
 import type { PeriodsStore } from "./routes/periods.ts";
 import type { AdminScheduleStore } from "./routes/adminSchedule.ts";
 import type { ShuttleStore } from "./routes/shuttles.ts";
+import type { MoneyStore } from "./routes/money.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -103,7 +104,8 @@ export type Store = MemberStore &
   PeopleStore &
   PeriodsStore &
   AdminScheduleStore &
-  ShuttleStore;
+  ShuttleStore &
+  MoneyStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -182,6 +184,33 @@ export function setup(store: Partial<Store> = {}) {
     applyFund: async () => {},
     settle: async () => {},
     closePeriod: async () => {},
+    loadMoney: async () => ({
+      unpaid: [],
+      unpaidTotal: 0,
+      fund: { income: 0, expense: 0, refund: 0, adjustment: 0, balance: 0, entries: [] },
+      people: [],
+    }),
+    getUnpaidDebt: async (id) => (id === "d-p2" ? { personId: "p2" } : id === "d-p3" ? { personId: "p3" } : null),
+    isActiveInGroup: async (personId) => personId !== "gone",
+    collect: async () => {},
+    addDebt: async () => {},
+    cancelDebt: async () => true,
+    remind: async () => 2,
+    addExpense: async () => {},
+    refund: async () => {},
+    getPeriodForReport: async (id) => (id === "k1" ? { ...adminPeriod("open"), groupId: "g1" } : id === "kx" ? { ...adminPeriod("closed"), id, groupId: "other" } : null),
+    buildReport: async (period) => ({
+      period,
+      fixedCount: 0,
+      guestCount: 0,
+      sessionCount: 0,
+      debts: [],
+      cancelledTotal: 0,
+      fund: { income: 0, expense: 0, refund: 0, adjustment: 0, balance: 0 },
+      shuttles: { purchases: 0, shuttles: 0, personalAmount: 0 },
+      settlement: { settled: false, positive: { count: 0, total: 0 }, negative: { count: 0, total: 0 } },
+      unpaid: [],
+    }),
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],

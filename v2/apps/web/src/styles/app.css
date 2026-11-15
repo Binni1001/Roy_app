@@ -676,3 +676,34 @@ input.amount { width: 110px; }
 @media (max-width: 560px) { .three { grid-template-columns: 1fr 1fr; } }
 ul.plain { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
 .row .actions { flex: none; }
+
+/* Công nợ & sổ quỹ */
+.debt-list { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.debt-list li { display: flex; align-items: center; gap: 8px; }
+.debt-pick { flex: 1; display: flex; align-items: center; gap: 10px; min-height: 44px; cursor: pointer; }
+.debt-pick input { accent-color: var(--gold); width: 18px; height: 18px; flex: none; }
+.icon-text {
+  min-height: 44px;
+  padding: 0 10px;
+  border: 0;
+  background: none;
+  color: var(--muted);
+  font: 500 13px "Be Vietnam Pro", sans-serif;
+  cursor: pointer;
+}
+.icon-text:hover { color: var(--danger); }
+
+/* Báo cáo kỳ */
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-top: 8px; }
+.kpis > div { background: var(--surface-2); border-radius: 16px; padding: 12px 14px; display: flex; flex-direction: column; gap: 4px; }
+.kpis strong { font-size: 20px; }
+.report h3 { margin-top: 0; }
+
+@media print {
+  :root { --bg: #fff; --surface: #fff; --surface-2: #f4f4f4; --text: #111; --muted: #555; --line: #ddd; --gold: #8a6a1e; }
+  body { background: #fff; color: #111; }
+  .dock, .app-header, .web-header, .no-print { display: none !important; }
+  .app-main, .web-main { padding: 0 !important; max-width: none !important; }
+  .card { break-inside: avoid; border-color: #ddd; box-shadow: none; }
+  .rise { animation: none !important; }
+}

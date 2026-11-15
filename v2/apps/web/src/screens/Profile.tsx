@@ -215,6 +215,9 @@ export function Profile() {
             <Link to="/lich-quan-tri" className="btn btn-ghost link-btn">
               Lịch & điểm danh
             </Link>
+            <Link to="/cong-no" className="btn btn-ghost link-btn">
+              Công nợ & sổ quỹ
+            </Link>
             <Link to="/tien-cau" className="btn btn-ghost link-btn">
               Tiền cầu & chốt kỳ
             </Link>

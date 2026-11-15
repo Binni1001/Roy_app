@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdminPeriod, AdminSchedule, ExpenseInput, LoanInput, ShuttleOverview, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
+import type { AdminPeriod, AdminSchedule, ExpenseInput, LoanInput, MoneyOverview, PeriodReport, ShuttleOverview, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
 import { apiDelete, apiGet, apiPost, apiPut } from "../lib/api";
 
 const PEOPLE = ["me", "admin", "people"] as const;
@@ -235,4 +235,59 @@ export function useSettle() {
 
 export function useClosePeriod() {
   return useShuttleMutation(() => apiPost<ShuttleOverview>("/admin/shuttles/close"));
+}
+
+const MONEY = ["me", "admin", "money"] as const;
+
+export function useMoney(enabled: boolean) {
+  return useQuery({
+    queryKey: MONEY,
+    enabled,
+    queryFn: ({ signal }) => apiGet<MoneyOverview>("/admin/money", signal),
+  });
+}
+
+/** Thu, chi, hủy nợ đổi ví thành viên, quỹ và màn hình tiền cầu: làm mới cả ba. */
+function useMoneyMutation<T>(send: (input: T) => Promise<MoneyOverview>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: (data) => {
+      client.setQueryData(MONEY, data);
+      void client.invalidateQueries({ queryKey: ["me", "wallet"] });
+      void client.invalidateQueries({ queryKey: SHUTTLES });
+    },
+    onError: () => void client.invalidateQueries({ queryKey: MONEY }),
+  });
+}
+
+export function useCollect() {
+  return useMoneyMutation((input: { personId: string; debtIds: string[]; amount: number; note: string | null }) =>
+    apiPost<MoneyOverview>("/admin/money/collect", input),
+  );
+}
+
+export function useAddDebt() {
+  return useMoneyMutation((input: { personId: string; amount: number; description: string }) => apiPost<MoneyOverview>("/admin/money/debts", input));
+}
+
+export function useCancelDebt() {
+  return useMoneyMutation((id: string) => apiPost<MoneyOverview>("/admin/money/debts/" + encodeURIComponent(id) + "/cancel"));
+}
+
+export function useRemind() {
+  return useMoneyMutation((personId: string) => apiPost<MoneyOverview>("/admin/money/remind/" + encodeURIComponent(personId)));
+}
+
+export function useFundEntry() {
+  return useMoneyMutation((input: { type: "income" | "expense" | "refund"; personId: string | null; amount: number; description: string | null }) =>
+    apiPost<MoneyOverview>("/admin/money/fund", input),
+  );
+}
+
+export function useReport(periodId: string) {
+  return useQuery({
+    queryKey: ["me", "admin", "report", periodId],
+    queryFn: ({ signal }) => apiGet<PeriodReport>("/admin/periods/" + encodeURIComponent(periodId) + "/report", signal),
+  });
 }

@@ -549,3 +549,76 @@ export interface LoanInput {
   borrowedAt: string;
   note: string | null;
 }
+
+export interface OpenDebt {
+  id: string;
+  type: DebtType;
+  amount: number;
+  description: string | null;
+  periodName: string;
+  createdAt: string;
+}
+
+/** Các khoản chưa trả của một người, gộp mọi kỳ của nhóm. */
+export interface PersonDebts {
+  personId: string;
+  name: string;
+  total: number;
+  debts: OpenDebt[];
+}
+
+export type FundType = "income" | "expense" | "refund" | "adjustment";
+
+export interface FundEntry {
+  id: string;
+  type: FundType;
+  amount: number;
+  personName: string | null;
+  description: string | null;
+  createdAt: string;
+}
+
+export interface FundSummary {
+  income: number;
+  expense: number;
+  refund: number;
+  adjustment: number;
+  /** income + adjustment − expense − refund, như hàm shuttle_fund_balance. */
+  balance: number;
+}
+
+/** Màn hình Công nợ & sổ quỹ của owner, cho kỳ đang mở. */
+export interface MoneyOverview {
+  period: PeriodSummary | null;
+  unpaid: PersonDebts[];
+  unpaidTotal: number;
+  fund: FundSummary & { entries: FundEntry[] };
+  /** Người đang hoạt động trong nhóm, kèm số dư (dương là CLB đang giữ tiền của họ). */
+  people: { id: string; name: string; balance: number }[];
+  notice: string | null;
+}
+
+export interface DebtTypeLine {
+  type: DebtType;
+  count: number;
+  total: number;
+  paid: number;
+  unpaid: number;
+}
+
+export interface PeriodReport {
+  period: AdminPeriod;
+  fixedCount: number;
+  guestCount: number;
+  sessionCount: number;
+  debts: DebtTypeLine[];
+  cancelledTotal: number;
+  fund: FundSummary;
+  shuttles: { purchases: number; shuttles: number; personalAmount: number };
+  settlement: {
+    settled: boolean;
+    positive: { count: number; total: number };
+    negative: { count: number; total: number };
+  };
+  unpaid: PersonDebts[];
+}

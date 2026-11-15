@@ -15,6 +15,16 @@ import {
   type AdminScheduleStore,
 } from "./routes/adminSchedule.ts";
 import {
+  addDebt as addDebtRoute,
+  addFund,
+  cancelDebt as cancelDebtRoute,
+  collect,
+  loadMoney,
+  periodReport,
+  remind,
+  type MoneyStore,
+} from "./routes/money.ts";
+import {
   addExpense,
   addLoan,
   changeLoan,
@@ -62,7 +72,8 @@ export interface AppDeps {
     PeopleStore &
     PeriodsStore &
     AdminScheduleStore &
-    ShuttleStore;
+    ShuttleStore &
+    MoneyStore;
   corsOrigins: string[];
 }
 
@@ -127,6 +138,62 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/money", async (c) => {
+    try {
+      return c.json(await loadMoney(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/money/collect", async (c) => {
+    try {
+      return c.json(await collect(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/money/debts", async (c) => {
+    try {
+      return c.json(await addDebtRoute(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/money/debts/:id/cancel", async (c) => {
+    try {
+      return c.json(await cancelDebtRoute(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/money/remind/:id", async (c) => {
+    try {
+      return c.json(await remind(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/money/fund", async (c) => {
+    try {
+      return c.json(await addFund(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/periods/:id/report", async (c) => {
+    try {
+      return c.json(await periodReport(c.get("user"), c.req.param("id"), store));
     } catch (error) {
       return fail(c, error);
     }
