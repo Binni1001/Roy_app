@@ -7,7 +7,7 @@ Cập nhật lần cuối: phiên 5.
 
 Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo, khai lịch bận), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Owner duyệt được yêu cầu vào nhóm ngay trên v2. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã đẩy lên GitHub, đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
 
-Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 109 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 119 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
 
 0. **Chủ CLB chạy ba migration** trong Supabase SQL Editor, mỗi file một lần:
    - `supabase/20261116_avatars_own_only.sql`: siết quyền ảnh đại diện. Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
@@ -18,7 +18,7 @@ Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và 
 3. **Deploy thử v2** lên hai project Vercel mới: `v2/apps/api` (đã có `vercel.json` chạy ở `sin1`) và `v2/apps/web` (đã có `vercel.json` cho đường dẫn SPA và cache service worker). Biến môi trường như `.env.example`; nhớ đặt `CORS_ORIGINS` của API bằng địa chỉ web. Rồi đo lại tốc độ thật.
 4. **Kiểm tra quyền của vai trò `authenticated`** trên các bảng lõi: cần một phiên đăng nhập thật (khóa anon đã bị chặn hết, xem giai đoạn 0).
 5. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần khóa PayOS trong `v2/apps/api/.env` và thử trên bản sao, không thử trên database thật.
-6. **Giai đoạn 4 (quản trị)** còn lại: quản lý kèo PK (sửa, hủy kết quả) và giải đấu đôi (tạo giải, xếp đội, nhập tỷ số); rồi chạy thử trọn một kỳ, rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
+6. **Giai đoạn 4 (quản trị)** đã đủ các màn hình của bản cũ. Còn: chạy thử trọn một kỳ (cần bản sao database), đổi thứ tự trận trong bảng của giải, và xếp lịch cố định từ lịch bận, rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
 7. **Lịch: lịch cố định của tôi** — chờ phần xếp lịch ở mục 6: ngay cả bản cũ cũng chưa lưu hay công bố lịch cố định, nên chưa có dữ liệu để hiện.
 
 Chủ CLB đã quyết định (phiên 5):
@@ -109,7 +109,7 @@ Quy ước khi làm tiếp:
 - [x] Công nợ: khoản thu tay, nhắc nợ, thu tiền (đánh dấu đã trả và ghi quỹ cùng lúc qua `deposit_fund_atomic`), hủy nợ; bù trừ số dư vẫn chỉ chạy tự động bằng trigger (Tôi → Quản trị → Công nợ & sổ quỹ)
 - [x] Sổ quỹ: thu (nộp quỹ), chi, hoàn số dư qua `refund_person_balance`; không có kết chuyển. Số dư quỹ đã đối chiếu khớp với hàm `shuttle_fund_balance` trên 3 kỳ thật
 - [x] Quản lý kèo PK: ghi kết quả hộ, hủy kèo, sửa tỷ số (`correct_pk_match_result`), hủy kết quả có lý do (`void_pk_match`); chỉ kỳ đang mở (Tôi → Quản trị → Quản lý kèo)
-- [ ] Giải đấu đôi: tạo giải, xếp đội, nhập tỷ số
+- [x] Giải đấu đôi: tạo giải nháp, ghép đội và chia bảng (`configure_doubles_tournament`), công bố, nhập và sửa tỷ số (`save_tournament_match`), tạo vòng trong từ thứ hạng vòng bảng (`replace_tournament_knockout`; dựng lại giải thật ra đúng các cặp bản cũ đã dựng), hủy và xóa giải nháp (Tôi → Quản trị → Quản lý giải đấu). Chưa có: đổi thứ tự trận trong bảng
 - [x] Một trang báo cáo kỳ, có in (Kỳ quỹ → Báo cáo): phải thu, đã thu, còn nợ theo loại, quỹ, tiền cầu, kết quả chốt, người còn nợ
 - [ ] Chạy thử trọn một kỳ trên bản sao
 

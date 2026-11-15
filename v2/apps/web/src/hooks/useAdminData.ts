@@ -321,3 +321,70 @@ export function useAdminMatchAction() {
     onError: () => void client.invalidateQueries({ queryKey: ADMIN_MATCHES }),
   });
 }
+
+type AdminTournament = import("@roy/shared").AdminTournament;
+type AdminTournamentSummary = import("@roy/shared").AdminTournamentSummary;
+
+const ADMIN_TOURNAMENTS = ["me", "admin", "tournaments"] as const;
+
+export function useAdminTournaments(enabled: boolean) {
+  return useQuery({
+    queryKey: ADMIN_TOURNAMENTS,
+    enabled,
+    queryFn: ({ signal }) => apiGet<AdminTournamentSummary[]>("/admin/tournaments", signal),
+  });
+}
+
+export function useAdminTournament(id: string) {
+  return useQuery({
+    queryKey: [...ADMIN_TOURNAMENTS, id],
+    queryFn: ({ signal }) => apiGet<AdminTournament>("/admin/tournaments/" + encodeURIComponent(id), signal),
+  });
+}
+
+/** Ghi giải xong: đặt bản mới vào cache, làm mới danh sách giải của owner và của thành viên. */
+function useTournamentMutation<T>(send: (input: T) => Promise<AdminTournament>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: (data) => {
+      client.setQueryData([...ADMIN_TOURNAMENTS, data.id], data);
+      void client.invalidateQueries({ queryKey: ADMIN_TOURNAMENTS, exact: true });
+      void client.invalidateQueries({ queryKey: ["me", "tournaments"] });
+    },
+  });
+}
+
+export function useCreateTournament() {
+  return useTournamentMutation((input: import("@roy/shared").TournamentInput) => apiPost<AdminTournament>("/admin/tournaments", input));
+}
+
+export function useConfigureTournament(id: string) {
+  return useTournamentMutation((input: import("@roy/shared").TournamentSettings & { teams: import("@roy/shared").TeamSetup[] }) =>
+    apiPost<AdminTournament>("/admin/tournaments/" + encodeURIComponent(id) + "/configure", input),
+  );
+}
+
+export function useTournamentStep(id: string) {
+  return useTournamentMutation((step: "publish" | "knockout" | "cancel") =>
+    apiPost<AdminTournament>("/admin/tournaments/" + encodeURIComponent(id) + "/" + step),
+  );
+}
+
+export function useSaveTournamentMatch() {
+  return useTournamentMutation(
+    ({ matchId, setScores, status, rebuildKnockout }: { matchId: string; setScores: { team1: number; team2: number }[]; status?: "pending"; rebuildKnockout?: boolean }) =>
+      apiPut<AdminTournament>("/admin/tournament-matches/" + encodeURIComponent(matchId), { setScores, status, rebuildKnockout }),
+  );
+}
+
+export function useDeleteTournament() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => apiDelete<AdminTournamentSummary[]>("/admin/tournaments/" + encodeURIComponent(id)),
+    onSuccess: (data) => {
+      client.setQueryData(ADMIN_TOURNAMENTS, data);
+      void client.invalidateQueries({ queryKey: ["me", "tournaments"] });
+    },
+  });
+}

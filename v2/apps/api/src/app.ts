@@ -14,6 +14,18 @@ import {
   removeSession,
   type AdminScheduleStore,
 } from "./routes/adminSchedule.ts";
+import {
+  buildKnockout,
+  cancelTournament,
+  configureTournament,
+  createTournament,
+  deleteTournament,
+  listAdminTournaments,
+  loadAdminTournament,
+  publishTournament,
+  saveTournamentMatch,
+  type AdminTournamentStore,
+} from "./routes/adminTournaments.ts";
 import { adminMatchAction, loadAdminMatches, type AdminMatchStore } from "./routes/adminMatches.ts";
 import {
   addDebt as addDebtRoute,
@@ -75,7 +87,8 @@ export interface AppDeps {
     AdminScheduleStore &
     ShuttleStore &
     MoneyStore &
-    AdminMatchStore;
+    AdminMatchStore &
+    AdminTournamentStore;
   corsOrigins: string[];
 }
 
@@ -140,6 +153,78 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/tournaments", async (c) => {
+    try {
+      return c.json(await listAdminTournaments(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/tournaments", async (c) => {
+    try {
+      return c.json(await createTournament(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/tournaments/:id", async (c) => {
+    try {
+      return c.json(await loadAdminTournament(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/tournaments/:id/configure", async (c) => {
+    try {
+      return c.json(await configureTournament(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/tournaments/:id/publish", async (c) => {
+    try {
+      return c.json(await publishTournament(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/tournaments/:id/knockout", async (c) => {
+    try {
+      return c.json(await buildKnockout(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/tournaments/:id/cancel", async (c) => {
+    try {
+      return c.json(await cancelTournament(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.delete("/admin/tournaments/:id", async (c) => {
+    try {
+      return c.json(await deleteTournament(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/tournament-matches/:id", async (c) => {
+    try {
+      return c.json(await saveTournamentMatch(c.get("user"), c.req.param("id"), await c.req.json().catch(() => null), store));
     } catch (error) {
       return fail(c, error);
     }

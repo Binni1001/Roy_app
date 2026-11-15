@@ -21,6 +21,7 @@ import type { AdminScheduleStore } from "./routes/adminSchedule.ts";
 import type { ShuttleStore } from "./routes/shuttles.ts";
 import type { MoneyStore } from "./routes/money.ts";
 import type { AdminMatchStore } from "./routes/adminMatches.ts";
+import type { AdminTournamentStore } from "./routes/adminTournaments.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -107,7 +108,8 @@ export type Store = MemberStore &
   AdminScheduleStore &
   ShuttleStore &
   MoneyStore &
-  AdminMatchStore;
+  AdminMatchStore &
+  AdminTournamentStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -201,6 +203,15 @@ export function setup(store: Partial<Store> = {}) {
     addExpense: async () => {},
     refund: async () => {},
     listAdminMatches: async () => [],
+    listAdminTournaments: async () => [],
+    getTournamentSettings: async () => ({ description: null, groupCount: 1, bestOf: 3, knockoutStart: "final" as const, thirdPlace: false }),
+    createTournament: async () => "t1",
+    setTournamentStatus: async () => {},
+    deleteTournament: async () => {},
+    configureTournament: async () => {},
+    replaceKnockout: async () => {},
+    getTournamentMatch: async (id) => (id === "tm1" ? { tournamentId: "t1", stage: "group", status: "pending" } : null),
+    saveTournamentMatch: async () => {},
     correctMatch: async () => {},
     voidMatch: async () => {},
     getPeriodForReport: async (id) => (id === "k1" ? { ...adminPeriod("open"), groupId: "g1" } : id === "kx" ? { ...adminPeriod("closed"), id, groupId: "other" } : null),

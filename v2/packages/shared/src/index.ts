@@ -631,3 +631,40 @@ export interface AdminMatch extends ArenaMatch {
   /** Gửi lại khi sửa tỷ số, để không ghi đè thay đổi ở nơi khác. */
   updatedAt: string;
 }
+
+export type KnockoutStart = "quarterfinal" | "semifinal" | "final";
+
+export interface TournamentSettings {
+  groupCount: number;
+  bestOf: number;
+  knockoutStart: KnockoutStart;
+  thirdPlace: boolean;
+}
+
+/** Giải như owner thấy: có cả bản nháp và cấu hình. */
+export interface AdminTournament extends TournamentDetail, TournamentSettings {
+  description: string | null;
+  teamCount: number;
+  hasKnockout: boolean;
+  /** Người đang hoạt động trong nhóm, để ghép đội. */
+  players: { id: string; name: string }[];
+}
+
+export interface AdminTournamentSummary extends TournamentSummary, TournamentSettings {
+  teamCount: number;
+}
+
+export interface TournamentInput extends TournamentSettings {
+  name: string;
+  description: string | null;
+  startDate: string | null;
+  endDate: string | null;
+}
+
+export interface TeamSetup {
+  name: string;
+  seed: number | null;
+  /** Bảng của đội: 1 là bảng A … 4 là bảng D. */
+  groupIndex: number;
+  memberIds: string[];
+}

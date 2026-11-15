@@ -48,6 +48,11 @@ export async function loadTournament(
   if (!data || data.groupId !== member.groupId || data.summary.status === "draft") {
     throw new NotFoundError();
   }
+  return assembleTournament(data);
+}
+
+/** Ghép bảng xếp hạng từng bảng và các trận loại trực tiếp theo thứ tự vòng. */
+export function assembleTournament(data: TournamentData): TournamentDetail {
   const teamById = new Map(data.teams.map((team) => [team.id, team]));
   return {
     ...data.summary,

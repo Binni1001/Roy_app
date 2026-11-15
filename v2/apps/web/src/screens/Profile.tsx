@@ -227,6 +227,9 @@ export function Profile() {
             <Link to="/quan-ly-keo" className="btn btn-ghost link-btn">
               Quản lý kèo
             </Link>
+            <Link to="/quan-ly-giai" className="btn btn-ghost link-btn">
+              Quản lý giải đấu
+            </Link>
             <Link to="/nhan-su" className="btn btn-ghost link-btn">
               Nhân sự
             </Link>
