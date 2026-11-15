@@ -40,7 +40,7 @@ export function pickActiveGroup(
 
 export async function loadBootstrap(user: AuthUser, store: BootstrapStore): Promise<Bootstrap> {
   const person = await store.findPerson(user.email);
-  if (!person) return { me: null, memberships: [], openPeriod: null };
+  if (!person) return { me: null, memberships: [], openPeriod: null, role: user.role };
   if (person.status === "inactive") throw new AccountInactiveError();
 
   const memberships: Membership[] = [];
@@ -67,5 +67,6 @@ export async function loadBootstrap(user: AuthUser, store: BootstrapStore): Prom
     },
     memberships,
     openPeriod,
+    role: user.role,
   };
 }

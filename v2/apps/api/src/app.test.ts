@@ -33,7 +33,7 @@ test("bootstrap returns person, memberships and the open period of an active gro
 test("bootstrap reports a signed-in account without a player profile", async () => {
   const { get } = setup({ findPerson: async () => null });
   const res = await get(await bearer("new@b.c"));
-  assert.deepEqual(await res.json(), { me: null, memberships: [], openPeriod: null });
+  assert.deepEqual(await res.json(), { me: null, memberships: [], openPeriod: null, role: "user" });
 });
 
 test("bootstrap blocks an inactive account", async () => {

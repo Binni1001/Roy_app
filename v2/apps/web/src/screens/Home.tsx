@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import type { Bootstrap } from "@roy/shared";
 import { useArena, useSchedule, useWallet } from "../hooks/useMemberData";
 import { formatDate, formatMoney, formatWeekday, isTodayOrLater } from "../lib/format";
+import { PendingCard } from "./Approvals";
 import { openDayNote } from "./Schedule";
 
 function WalletCard() {
@@ -100,6 +101,7 @@ export function Home({ bootstrap }: { bootstrap: Bootstrap }) {
         <WalletCard />
         <ScheduleCard />
         <ArenaCard />
+        <PendingCard />
       </div>
     </div>
   );

@@ -2,6 +2,8 @@ import { Hono, type Context } from "hono";
 import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
+import { decide, listPending, type ApprovalStore } from "./routes/approvals.ts";
+import { loadAvailability, saveAvailability, type AvailabilityStore } from "./routes/availability.ts";
 import { MAX_AVATAR_BYTES, parseAvatar, type AvatarStore } from "./routes/avatar.ts";
 import { changeMatch, createMatch, type MatchStore } from "./routes/matches.ts";
 import { checkInvite, joinGroup, switchGroup, type OnboardingStore } from "./routes/onboarding.ts";
@@ -30,7 +32,9 @@ export interface AppDeps {
     ProfileStore &
     MatchStore &
     OnboardingStore &
-    AvatarStore;
+    AvatarStore &
+    AvailabilityStore &
+    ApprovalStore;
   corsOrigins: string[];
 }
 
@@ -78,6 +82,46 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   app.use("/bootstrap", auth);
   app.use("/me/*", auth);
   app.use("/onboarding/*", auth);
+  app.use("/admin/*", auth);
+
+  app.get("/admin/pending-members", async (c) => {
+    try {
+      return c.json(await listPending(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/pending-members/:personId/:decision", async (c) => {
+    try {
+      const decision = c.req.param("decision");
+      if (decision !== "approve" && decision !== "reject") {
+        return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
+      }
+      return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/availability", async (c) => {
+    try {
+      const user = c.get("user");
+      return c.json(await loadAvailability(user, await resolveMember(user, store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/me/availability", async (c) => {
+    try {
+      const user = c.get("user");
+      const member = await resolveMember(user, store);
+      return c.json(await saveAvailability(user, member, await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
 
   // Vào nhóm bằng mã mời: dùng được cả khi tài khoản chưa có hồ sơ hoặc chưa ở nhóm nào.
   app.post("/onboarding/check-invite", async (c) => {

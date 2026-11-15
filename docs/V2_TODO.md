@@ -5,17 +5,17 @@ Cập nhật lần cuối: phiên 5.
 
 ## Làm tiếp ngay (theo thứ tự)
 
-Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
+Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo, khai lịch bận), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Owner duyệt được yêu cầu vào nhóm ngay trên v2. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã đẩy lên GitHub, đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
 
-Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 63 test API đang qua.
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 71 test API đang qua.
 
 1. **Chủ CLB thử tay trên dữ liệu thật** (danh sách ở khung bên dưới). Mọi thao tác ghi mới chỉ mới qua test tự động.
 2. **Cấu hình Supabase cho v2** (chủ CLB làm trong Supabase Dashboard → Authentication → URL Configuration): thêm `http://localhost:5174/**` và địa chỉ v2 sau khi deploy vào Redirect URLs. Thiếu bước này thì email xác nhận, email đặt lại mật khẩu và đăng nhập Google sẽ quay về trang cũ.
 3. **Deploy thử v2** lên hai project Vercel mới: `v2/apps/api` (đã có `vercel.json` chạy ở `sin1`) và `v2/apps/web` (đã có `vercel.json` cho đường dẫn SPA và cache service worker). Biến môi trường như `.env.example`; nhớ đặt `CORS_ORIGINS` của API bằng địa chỉ web. Rồi đo lại tốc độ thật.
 4. **Kiểm tra quyền của vai trò `authenticated`** trên các bảng lõi: cần một phiên đăng nhập thật (khóa anon đã bị chặn hết, xem giai đoạn 0).
 5. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần khóa PayOS trong `v2/apps/api/.env` và thử trên bản sao, không thử trên database thật.
-6. **Khai lịch bận và lịch cố định của tôi** — xem `backend/src/modules/session-planning/` (lưu hồ sơ lên lịch theo kỳ).
-7. **Bắt đầu giai đoạn 4 (quản trị)**: duyệt thành viên xin vào nhóm là việc đầu tiên, vì luồng mã mời của v2 đã tạo yêu cầu chờ duyệt mà hiện chỉ duyệt được trên bản cũ.
+6. **Giai đoạn 4 (quản trị)** tiếp theo: nhân sự và kỳ quỹ (thêm người, mở kỳ, thành viên trong kỳ), rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
+7. **Lịch: lịch cố định của tôi** — chờ phần xếp lịch ở mục 6: ngay cả bản cũ cũng chưa lưu hay công bố lịch cố định, nên chưa có dữ liệu để hiện.
 
 Cần chủ CLB quyết định:
 
@@ -32,7 +32,7 @@ Quy ước khi làm tiếp:
 
 > **Đẩy code lên GitHub:** lệnh `git push` chỉ chạy được trong tab Terminal của app (nơi có đăng nhập GitHub của chủ CLB), không chạy được từ công cụ Bash của Claude.
 
-> **Cần thử tay trước khi coi là xong** (mọi thao tác ghi mới chỉ qua test tự động): đánh dấu thông báo đã đọc; xóa một thông báo; giữ chỗ rồi hủy chỗ một buổi tự đăng ký; lưu hồ sơ; đổi ảnh đại diện (ảnh hiện cả ở bản cũ vì dùng chung tên file `<person_id>.<đuôi>`); tạo một kèo thử, nhận kèo bằng tài khoản thứ hai, ghi tỷ số, rồi nhờ admin hủy kết quả kèo thử; tạo tài khoản mới bằng một email phụ, nhập mã mời, rồi duyệt yêu cầu đó trên bản cũ; quên mật khẩu với email phụ đó; cài app lên điện thoại từ bản đã deploy.
+> **Cần thử tay trước khi coi là xong** (mọi thao tác ghi mới chỉ qua test tự động): đánh dấu thông báo đã đọc; xóa một thông báo; giữ chỗ rồi hủy chỗ một buổi tự đăng ký; lưu hồ sơ; đổi ảnh đại diện (ảnh hiện cả ở bản cũ vì dùng chung tên file `<person_id>.<đuôi>`); khai lịch bận (Lịch → Lịch bận của tôi, bằng tài khoản thành viên cố định) rồi mở bản cũ xem cùng dữ liệu; tạo một kèo thử, nhận kèo bằng tài khoản thứ hai, ghi tỷ số, rồi nhờ admin hủy kết quả kèo thử; tạo tài khoản mới bằng một email phụ, nhập mã mời, rồi duyệt yêu cầu đó trên v2 (Tôi → Duyệt thành viên, hoặc thẻ Chờ duyệt ở trang chủ của owner); quên mật khẩu với email phụ đó; cài app lên điện thoại từ bản đã deploy.
 
 ## Đã xong
 
@@ -71,7 +71,7 @@ Quy ước khi làm tiếp:
 - [x] Trang chủ: hạng và kèo đang chờ
 - [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
 - [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
-- [ ] Lịch: lịch cố định của tôi
+- [ ] Lịch: lịch cố định của tôi (chờ phần xếp và công bố lịch ở giai đoạn 4; bản cũ cũng chưa có)
 - [ ] Lịch: thành viên có được xem tên người đã giữ chỗ không? (hỏi chủ CLB; bản cũ chỉ cho admin xem)
 - [x] Ví hai cột trên máy tính
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
@@ -85,7 +85,7 @@ Quy ước khi làm tiếp:
 
 - [ ] Trả gộp mọi khoản nợ bằng QR PayOS, màn hình kết quả thanh toán
 - [x] Giữ chỗ và hủy chỗ buổi tự đăng ký (đã viết và có test; chưa bấm thử trên dữ liệu thật)
-- [ ] Khai lịch bận
+- [x] Khai lịch bận: thứ thường bận và ngoại lệ từng ngày, qua RPC `save_session_planning_preferences` (chưa thử lưu trên dữ liệu thật)
 - [x] Tạo kèo, nhận kèo, hủy kèo, ghi tỷ số (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Ghép cặp ngẫu nhiên
 - [x] Sửa hồ sơ: họ tên, biệt danh, số điện thoại, giới thiệu (đã viết và có test; chưa bấm lưu trên dữ liệu thật)
@@ -112,7 +112,7 @@ Quy ước khi làm tiếp:
 
 - [ ] Quyền theo từng nhóm; quản trị cũng là người chơi
 - [ ] Xin tạo nhóm, owner duyệt và cấp
-- [ ] Mã mời, duyệt thành viên, chuyển nhóm — phía thành viên xong (nhập mã, xin vào, đổi nhóm đang xem); còn phía quản trị: duyệt, từ chối, đổi mã
+- [ ] Mã mời, duyệt thành viên, chuyển nhóm — xong nhập mã, xin vào, đổi nhóm đang xem, owner duyệt và từ chối (giống bản cũ: chỉ owner, theo nhóm đang xem); còn đổi mã mời và quyền duyệt theo từng nhóm
 - [ ] Phạm vi nhóm cho thanh toán và mọi thao tác tiền
 - [ ] Thử hai nhóm: không thấy dữ liệu của nhau
 - [ ] Mỗi CLB một tài khoản PayOS (làm sau cùng)

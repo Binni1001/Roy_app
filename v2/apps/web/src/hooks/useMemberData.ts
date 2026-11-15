@@ -1,9 +1,12 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Arena,
+  Availability,
+  AvailabilityInput,
   ArenaHistoryPeriod,
   ArenaPlayer,
   Notifications,
+  PendingMember,
   Profile,
   ProfileInput,
   Schedule,
@@ -167,5 +170,41 @@ export function useMatchAction() {
     onSuccess: (data) => client.setQueryData(["me", "arena"], data),
     // Lỗi thường do trận đã đổi ở nơi khác: tải lại để màn hình khớp thực tế.
     onError: () => void client.invalidateQueries({ queryKey: ["me", "arena"] }),
+  });
+}
+
+export function useAvailability() {
+  return useQuery({
+    queryKey: ["me", "availability"],
+    queryFn: ({ signal }) => apiGet<Availability>("/me/availability", signal),
+  });
+}
+
+export function useSaveAvailability() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: AvailabilityInput) => apiPut<Availability>("/me/availability", input),
+    onSuccess: (data) => client.setQueryData(["me", "availability"], data),
+    // Thường là do sửa ở nơi khác (revision cũ): tải lại để thấy bản mới nhất.
+    onError: () => void client.invalidateQueries({ queryKey: ["me", "availability"] }),
+  });
+}
+
+/** Yêu cầu vào nhóm đang chờ; chỉ owner gọi (enabled). */
+export function usePendingMembers(enabled: boolean) {
+  return useQuery({
+    queryKey: ["me", "admin", "pending"],
+    enabled,
+    queryFn: ({ signal }) => apiGet<PendingMember[]>("/admin/pending-members", signal),
+  });
+}
+
+export function useDecideMember() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ personId, decision }: { personId: string; decision: "approve" | "reject" }) =>
+      apiPost<PendingMember[]>("/admin/pending-members/" + encodeURIComponent(personId) + "/" + decision),
+    onSuccess: (data) => client.setQueryData(["me", "admin", "pending"], data),
+    onError: () => void client.invalidateQueries({ queryKey: ["me", "admin", "pending"] }),
   });
 }

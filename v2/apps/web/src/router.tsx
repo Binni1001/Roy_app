@@ -119,6 +119,11 @@ const notificationsRoute = createRoute({
   path: "/thong-bao",
   component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
+const approvalsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/duyet",
+  component: lazyRouteComponent(() => import("./screens/Approvals"), "Approvals"),
+});
 // Màn hình đặt lại mật khẩu do Root vẽ; route này chỉ để địa chỉ được nhận là hợp lệ.
 const resetRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -141,6 +146,7 @@ const routeTree = rootRoute.addChildren([
   walletRoute,
   profileRoute,
   resetRoute,
+  approvalsRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

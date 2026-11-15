@@ -34,6 +34,8 @@ export interface Bootstrap {
   memberships: Membership[];
   /** Kỳ đang mở của nhóm đang chọn, nếu có. */
   openPeriod: PeriodSummary | null;
+  /** Vai trò toàn hệ thống, đọc từ app_metadata do máy chủ quản lý. */
+  role: "owner" | "admin" | "user";
 }
 
 export interface ApiError {
@@ -280,4 +282,43 @@ export interface InviteCheck {
 export interface JoinGroupInput {
   code: string;
   fullName?: string;
+}
+
+/** Ngày trong tuần theo ISO: 1 = thứ Hai … 7 = Chủ nhật. */
+export type IsoWeekday = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+export type DayOverride = "busy" | "available";
+
+/** Lịch bận của một thành viên cố định trong kỳ đang mở. */
+export interface Availability {
+  period: PeriodSummary | null;
+  /** false khi không phải thành viên cố định của kỳ, hoặc là tài khoản quản trị. */
+  eligible: boolean;
+  /** Lý do không khai được, để hiện cho người dùng. */
+  reason: string | null;
+  /** Kỳ đã đóng thì chỉ xem. */
+  editable: boolean;
+  /** Các thứ có lịch đánh cố định (bản cũ: thứ Hai, Ba, Tư, Sáu, Bảy, Chủ nhật). */
+  playingWeekdays: IsoWeekday[];
+  /** Ngày chơi cố định trong kỳ: thuộc các thứ trên và không phải ngày tự đăng ký. */
+  playDates: string[];
+  busyWeekdays: IsoWeekday[];
+  dateOverrides: Record<string, DayOverride>;
+  /** Tăng 1 mỗi lần lưu; gửi lại để không ghi đè thay đổi ở nơi khác. */
+  revision: number;
+}
+
+export interface AvailabilityInput {
+  expectedRevision: number;
+  busyWeekdays: number[];
+  dateOverrides: Record<string, string>;
+}
+
+/** Người đang xin vào nhóm, chờ owner duyệt. */
+export interface PendingMember {
+  personId: string;
+  fullName: string;
+  nickname: string | null;
+  email: string | null;
+  avatarUrl: string | null;
+  requestedAt: string;
 }

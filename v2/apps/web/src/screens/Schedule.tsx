@@ -1,6 +1,7 @@
 import type { OpenDay, Schedule as ScheduleData } from "@roy/shared";
 import { useOpenDayAction, useSchedule } from "../hooks/useMemberData";
 import { formatDate, formatWeekday, isTodayOrLater } from "../lib/format";
+import { AvailabilityCard } from "./AvailabilityCard";
 import { QueryState } from "./QueryState";
 
 export function openDayNote(day: OpenDay): string {
@@ -68,6 +69,8 @@ function ScheduleView({ schedule }: { schedule: ScheduleData }) {
         )}
         <p className="muted small">Giữ chỗ và hủy chỗ trước 17:30 ngày chơi. Giờ chơi 17:30 đến 19:30.</p>
       </section>
+
+      <AvailabilityCard />
 
       <section className="card rise d1">
         <h2>Buổi đã chơi · {schedule.playedSessions.length}</h2>

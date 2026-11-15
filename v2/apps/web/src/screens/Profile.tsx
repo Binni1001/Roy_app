@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ChangeEvent, type FormEvent } from "react";
+import { Link } from "@tanstack/react-router";
 import { Camera } from "lucide-react";
 import type { Profile as ProfileData, ProfileInput } from "@roy/shared";
 import { useBootstrapData } from "../hooks/useBootstrapData";
@@ -202,11 +203,17 @@ function ProfileForm({ profile }: { profile: ProfileData }) {
 
 export function Profile() {
   const query = useProfile();
+  const { role } = useBootstrapData();
   return (
     <>
       <h1 className="page-title">Tôi</h1>
       <div className="stack narrow">
         <QueryState query={query}>{(profile) => <ProfileForm profile={profile} />}</QueryState>
+        {role === "owner" && (
+          <Link to="/duyet" className="btn btn-ghost link-btn">
+            Duyệt thành viên xin vào nhóm
+          </Link>
+        )}
         <GroupSwitcher />
         <InstallCard />
         <button className="btn btn-ghost" onClick={() => void supabase.auth.signOut()}>

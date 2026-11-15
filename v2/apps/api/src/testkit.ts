@@ -13,6 +13,8 @@ import type { MemberStore } from "./routes/member.ts";
 import type { ProfileStore } from "./routes/profile.ts";
 import type { OnboardingStore } from "./routes/onboarding.ts";
 import type { AvatarStore } from "./routes/avatar.ts";
+import type { AvailabilityStore } from "./routes/availability.ts";
+import type { ApprovalStore } from "./routes/approvals.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -78,7 +80,9 @@ export type Store = MemberStore &
   ProfileStore &
   MatchStore &
   OnboardingStore &
-  AvatarStore;
+  AvatarStore &
+  AvailabilityStore &
+  ApprovalStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -107,6 +111,13 @@ export function setup(store: Partial<Store> = {}) {
     setActiveGroup: async () => {},
     uploadAvatar: async (id, _bytes, type) => `https://cdn/avatars/${id}.${type.split("/")[1]}`,
     setAvatarUrl: async () => {},
+    isFixedMember: async () => true,
+    getPreferences: async () => ({ busyWeekdays: [3], dateOverrides: { "2026-11-14": "available" }, revision: 2 }),
+    listOpenDayDates: async () => ["2026-11-11"],
+    savePreferences: async () => {},
+    listPendingMembers: async () => [],
+    getMembershipStatus: async () => "pending",
+    decideMembership: async () => true,
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],
