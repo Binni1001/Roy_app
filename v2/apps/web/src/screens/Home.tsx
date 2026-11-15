@@ -76,38 +76,18 @@ function ArenaCard() {
 export function Home({ bootstrap }: { bootstrap: Bootstrap }) {
   const { me, openPeriod, memberships } = bootstrap;
 
-  if (!me) {
-    return (
-      <section className="card rise">
-        <h1>Tạo hồ sơ người chơi</h1>
-        <p className="muted">
-          Tài khoản của bạn chưa gắn với hồ sơ nào trong câu lạc bộ. Nhờ quản trị viên thêm bạn bằng
-          đúng email đang đăng nhập.
-        </p>
-      </section>
-    );
-  }
-
+  // Root chỉ vẽ trang chủ khi đã có hồ sơ và nhóm đang hoạt động.
+  if (!me) return null;
   const name = me.nickname || me.fullName;
-  const pending = memberships.filter((m) => m.status === "pending");
-
-  if (!me.activeGroupId) {
-    return (
-      <section className="card rise">
-        <h1>Chào {name}</h1>
-        <p className="muted">
-          {pending.length
-            ? `Yêu cầu vào ${pending[0].groupName} đang chờ quản trị viên duyệt.`
-            : "Bạn chưa ở trong nhóm nào. Nhập mã mời của câu lạc bộ để tham gia."}
-        </p>
-      </section>
-    );
-  }
+  const group = memberships.find((m) => m.groupId === me.activeGroupId);
 
   return (
     <div className="home">
       <section className="hero rise">
-        <p className="eyebrow">{openPeriod ? `${openPeriod.name} đang mở` : "Chưa có kỳ đang mở"}</p>
+        <p className="eyebrow">
+          {group ? `${group.groupName} · ` : ""}
+          {openPeriod ? `${openPeriod.name} đang mở` : "Chưa có kỳ đang mở"}
+        </p>
         <h1>Chào {name}</h1>
         {openPeriod && (
           <p className="muted">

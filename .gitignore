@@ -73,6 +73,7 @@ temp/
 *.jpg
 !frontend/public/**
 !frontend/src/**
+!v2/apps/web/public/**
 !logo.png
 
 # =========================

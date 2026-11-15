@@ -1,28 +1,22 @@
-import { createContext, useContext } from "react";
 import {
   Outlet,
   createRootRoute,
   createRoute,
   createRouter,
   lazyRouteComponent,
+  useLocation,
 } from "@tanstack/react-router";
-import type { Bootstrap } from "@roy/shared";
 import { useBootstrap } from "./hooks/useBootstrap";
+import { BootstrapContext, useBootstrapData } from "./hooks/useBootstrapData";
 import { useSession } from "./hooks/useSession";
 import { ApiRequestError } from "./lib/api";
 import { supabase } from "./lib/supabase";
 import { Shell } from "./layouts/Shell";
 import { Home } from "./screens/Home";
 import { Login } from "./screens/Login";
+import { Onboarding } from "./screens/Onboarding";
+import { RESET_PATH, ResetPassword } from "./screens/ResetPassword";
 import { Schedule } from "./screens/Schedule";
-
-const BootstrapContext = createContext<Bootstrap | null>(null);
-
-function useBootstrapData(): Bootstrap {
-  const value = useContext(BootstrapContext);
-  if (!value) throw new Error("Bootstrap data is not loaded");
-  return value;
-}
 
 function Loading() {
   return (
@@ -48,9 +42,13 @@ function Problem({ title, detail, action }: { title: string; detail: string; act
 
 function Root() {
   const session = useSession();
-  const bootstrap = useBootstrap(session?.user.id);
+  const { pathname } = useLocation();
+  const recovering = pathname === RESET_PATH;
+  const bootstrap = useBootstrap(recovering ? undefined : session?.user.id);
 
   if (session === undefined) return <Loading />;
+  // Liên kết đặt lại mật khẩu: xử lý trước mọi thứ khác, kể cả khi liên kết đã hết hạn.
+  if (recovering) return <ResetPassword session={session} />;
   if (!session) return <Login />;
   if (bootstrap.isPending) return <Loading />;
 
@@ -68,6 +66,11 @@ function Root() {
     return (
       <Problem title="Không tải được dữ liệu" detail={error.message} action={() => void bootstrap.refetch()} />
     );
+  }
+
+  // Chưa có hồ sơ hoặc chưa có nhóm đang hoạt động: chỉ hiện màn hình xin vào nhóm.
+  if (!bootstrap.data.me?.activeGroupId) {
+    return <Onboarding bootstrap={bootstrap.data} email={session.user.email ?? ""} />;
   }
 
   return (
@@ -116,6 +119,12 @@ const notificationsRoute = createRoute({
   path: "/thong-bao",
   component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
+// Màn hình đặt lại mật khẩu do Root vẽ; route này chỉ để địa chỉ được nhận là hợp lệ.
+const resetRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: RESET_PATH,
+  component: () => null,
+});
 const profileRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/toi",
@@ -131,6 +140,7 @@ const routeTree = rootRoute.addChildren([
   notificationsRoute,
   walletRoute,
   profileRoute,
+  resetRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

@@ -1,15 +1,22 @@
 {
+  "id": "/",
   "name": "Roy Badminton",
   "short_name": "Roy",
   "description": "Lịch đánh, đấu trường và ví của câu lạc bộ.",
   "lang": "vi",
   "start_url": "/",
+  "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
   "background_color": "#10141b",
   "theme_color": "#10141b",
   "icons": [
     { "src": "/icons/logo-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icons/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" }
+    { "src": "/icons/logo-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ],
+  "shortcuts": [
+    { "name": "Lịch đánh", "url": "/lich", "icons": [{ "src": "/icons/logo-192.png", "sizes": "192x192" }] },
+    { "name": "Ví", "url": "/vi", "icons": [{ "src": "/icons/logo-192.png", "sizes": "192x192" }] }
   ]
 }

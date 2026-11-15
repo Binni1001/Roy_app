@@ -11,7 +11,7 @@ import type {
   TournamentSummary,
   Wallet,
 } from "@roy/shared";
-import { apiGet, apiPost, apiPut } from "../lib/api";
+import { apiDelete, apiGet, apiPost, apiPut, apiUpload } from "../lib/api";
 
 // Cùng một khóa cache cho mọi màn hình: trang chủ và màn hình chi tiết dùng chung một lần tải.
 
@@ -66,6 +66,29 @@ export function useMarkNotificationsRead() {
   return useMutation({
     mutationFn: () => apiPost<Notifications>("/me/notifications/read"),
     onSuccess: (data) => client.setQueryData(["me", "notifications"], data),
+  });
+}
+
+/** Xóa một thông báo (id) hoặc tất cả (không có id). */
+export function useDeleteNotifications() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (id?: string) =>
+      apiDelete<Notifications>("/me/notifications" + (id ? "/" + encodeURIComponent(id) : "")),
+    onSuccess: (data) => client.setQueryData(["me", "notifications"], data),
+  });
+}
+
+/** Ảnh đã được thu nhỏ ở trình duyệt; máy chủ trả hồ sơ mới có địa chỉ ảnh. */
+export function useUploadAvatar() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (file: Blob) => apiUpload<Profile>("/me/avatar", file),
+    onSuccess: (data) => {
+      client.setQueryData(["me", "profile"], data);
+      void client.invalidateQueries({ queryKey: ["bootstrap"] });
+      void client.invalidateQueries({ queryKey: ["me", "arena"] });
+    },
   });
 }
 

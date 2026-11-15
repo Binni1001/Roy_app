@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import { Bell } from "lucide-react";
 import type { Bootstrap } from "@roy/shared";
 import { useIsDesktop } from "../hooks/useIsDesktop";
+import { useSwitchGroup } from "../hooks/useGroups";
 import { useNotifications } from "../hooks/useMemberData";
 import { NAV } from "./nav";
 
@@ -35,9 +36,31 @@ function BellLink() {
   );
 }
 
+/** Tên nhóm đang xem; thành ô chọn khi người dùng hoạt động ở nhiều nhóm. */
+function GroupPill({ bootstrap }: { bootstrap: Bootstrap }) {
+  const switchGroup = useSwitchGroup();
+  const active = bootstrap.memberships.filter((m) => m.status === "active");
+  const current = active.find((m) => m.groupId === bootstrap.me?.activeGroupId);
+  if (active.length < 2) return <span className="group-pill">{current?.groupName ?? "Chưa vào nhóm"}</span>;
+  return (
+    <select
+      className="group-pill"
+      aria-label="Nhóm đang xem"
+      value={current?.groupId ?? ""}
+      disabled={switchGroup.isPending}
+      onChange={(e) => switchGroup.mutate(e.target.value)}
+    >
+      {active.map((m) => (
+        <option key={m.groupId} value={m.groupId}>
+          {m.groupName}
+        </option>
+      ))}
+    </select>
+  );
+}
+
 /** Bố cục web: thanh điều hướng trên cùng, nội dung nhiều cột. */
 function WebLayout({ bootstrap, children }: ShellProps) {
-  const group = bootstrap.memberships.find((m) => m.groupId === bootstrap.me?.activeGroupId);
   return (
     <div className="web">
       <header className="web-header">
@@ -50,7 +73,7 @@ function WebLayout({ bootstrap, children }: ShellProps) {
           ))}
         </nav>
         <div className="header-end">
-          <span className="group-pill">{group?.groupName ?? "Chưa vào nhóm"}</span>
+          <GroupPill bootstrap={bootstrap} />
           <BellLink />
         </div>
       </header>

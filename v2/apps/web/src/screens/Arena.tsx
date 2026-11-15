@@ -85,17 +85,24 @@ function matchStatus(match: ArenaMatch): string {
 
 function MatchCard({ match, meId }: { match: ArenaMatch; meId: string }) {
   const mineIsChallenger = match.challengers.some((player) => player.id === meId);
+  const mine = mineIsChallenger || match.opponents.some((player) => player.id === meId);
   const done = match.status === "completed" && !match.voided && match.winnerSide;
   const won = done && (match.winnerSide === "challenger") === mineIsChallenger;
+  // Kèo của người khác: hiện bên thắng thay vì thắng/thua của tôi.
+  const outcome = done
+    ? mine
+      ? won
+        ? "Thắng"
+        : "Thua"
+      : `${names(match.winnerSide === "challenger" ? match.challengers : match.opponents)} thắng`
+    : matchStatus(match);
   return (
     <li className="match">
       <div className="match-meta">
         <span>
           {match.type === "doubles" ? "Đôi" : "Đơn"} · {match.sets} ván · {formatDate(match.playedAt)}
         </span>
-        <span className={done ? (won ? "win" : "loss") : ""}>
-          {done ? (won ? "Thắng" : "Thua") : matchStatus(match)}
-        </span>
+        <span className={done && mine ? (won ? "win" : "loss") : ""}>{outcome}</span>
       </div>
       <div className="match-sides">
         <span>{names(match.challengers)}</span>
@@ -107,12 +114,13 @@ function MatchCard({ match, meId }: { match: ArenaMatch; meId: string }) {
           {match.setScores.map((s) => `${s.challenger}-${s.opponent}`).join(" · ")}
         </div>
       )}
-      <MatchButtons match={match} meId={meId} />
+      {mine && <MatchButtons match={match} meId={meId} />}
     </li>
   );
 }
 
 function ArenaView({ arena }: { arena: ArenaData }) {
+  const [scope, setScope] = useState<"mine" | "all">("mine");
   const [type, setType] = useState<MatchType>(
     arena.singles.length >= arena.doubles.length && arena.singles.length ? "singles" : "doubles",
   );
@@ -151,15 +159,25 @@ function ArenaView({ arena }: { arena: ArenaData }) {
       </section>
 
       <section className="card rise d1">
-        <h2>Kèo của bạn · {arena.myMatches.length}</h2>
-        {arena.myMatches.length ? (
+        <div className="card-head">
+          <h2>Kèo trong kỳ</h2>
+          <div className="seg" role="group" aria-label="Phạm vi kèo">
+            <button className={scope === "mine" ? "on" : ""} onClick={() => setScope("mine")}>
+              Của bạn · {arena.myMatches.length}
+            </button>
+            <button className={scope === "all" ? "on" : ""} onClick={() => setScope("all")}>
+              Tất cả · {arena.periodMatches.length}
+            </button>
+          </div>
+        </div>
+        {(scope === "mine" ? arena.myMatches : arena.periodMatches).length ? (
           <ul className="matches">
-            {arena.myMatches.map((match) => (
+            {(scope === "mine" ? arena.myMatches : arena.periodMatches).map((match) => (
               <MatchCard key={match.id} match={match} meId={arena.meId} />
             ))}
           </ul>
         ) : (
-          <p className="muted">Bạn chưa có kèo nào trong kỳ này.</p>
+          <p className="muted">{scope === "mine" ? "Bạn chưa có kèo nào trong kỳ này." : "Kỳ này chưa có kèo nào."}</p>
         )}
         <NewMatchForm meId={arena.meId} />
         <Link to="/giai-dau" className="btn btn-ghost link-btn">

@@ -25,8 +25,17 @@ export function apiPut<T>(path: string, body: unknown): Promise<T> {
   return request<T>("PUT", path, undefined, body);
 }
 
+export function apiDelete<T>(path: string): Promise<T> {
+  return request<T>("DELETE", path);
+}
+
+/** Gửi nguyên một file (ảnh), không bọc JSON. */
+export function apiUpload<T>(path: string, file: Blob): Promise<T> {
+  return request<T>("POST", path, undefined, file);
+}
+
 async function request<T>(
-  method: "GET" | "POST" | "PUT",
+  method: "GET" | "POST" | "PUT" | "DELETE",
   path: string,
   signal?: AbortSignal,
   body?: unknown,
@@ -35,15 +44,16 @@ async function request<T>(
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
+  const isFile = body instanceof Blob;
   const send = (accessToken: string | undefined) =>
     fetch(`${API_URL}${path}`, {
       method,
       signal,
       headers: {
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
-        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+        ...(body === undefined ? {} : { "Content-Type": isFile ? body.type || "application/octet-stream" : "application/json" }),
       },
-      body: body === undefined ? undefined : JSON.stringify(body),
+      body: body === undefined ? undefined : isFile ? body : JSON.stringify(body),
     });
 
   let response: Response;
