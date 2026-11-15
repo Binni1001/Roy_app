@@ -22,7 +22,7 @@ Cập nhật lần cuối: 15/11/2026.
 
 ## Giai đoạn 1 — Nền ứng dụng
 
-- [ ] Đăng nhập thật trên v2 và xem `/bootstrap` trả đúng hồ sơ, nhóm, kỳ
+- [x] Đăng nhập thật trên v2 và xem `/bootstrap` trả đúng hồ sơ, nhóm, kỳ (trang chủ tải đủ trong ~1 giây)
 - [ ] Đăng ký, quên mật khẩu, đặt lại mật khẩu
 - [ ] Màn hình cho tài khoản chưa có hồ sơ, đang chờ duyệt, đã nghỉ
 - [ ] Tách mã theo màn hình (gói web hiện 164 KB nén)
