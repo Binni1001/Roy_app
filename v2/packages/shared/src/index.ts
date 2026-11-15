@@ -236,3 +236,22 @@ export interface TournamentDetail extends TournamentSummary {
   groups: TournamentGroup[];
   knockout: TournamentMatch[];
 }
+
+export interface ArenaHistoryRow extends ArenaPlayer {
+  rank: number;
+  /** Giá trị đã lưu khi đóng kỳ; ý nghĩa tùy luật của kỳ (điểm +3/−2, Elo, Wilson). */
+  points: number;
+  wins: number;
+  losses: number;
+  matches: number;
+}
+
+export interface ArenaHistoryPeriod {
+  periodId: string;
+  periodName: string;
+  startDate: string;
+  /** fixed_3_2_v1 | elo_v1 | legacy_wilson_v1 */
+  scoringRule: string;
+  singles: ArenaHistoryRow[];
+  doubles: ArenaHistoryRow[];
+}

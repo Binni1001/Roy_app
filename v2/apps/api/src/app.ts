@@ -4,6 +4,7 @@ import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
 import { ActionError, changeOpenDay, type ActionsStore, type OpenDayAction } from "./routes/actions.ts";
 import { loadArena, type ArenaStore } from "./routes/arena.ts";
+import { buildArenaHistory, type ArenaHistoryStore } from "./routes/arenaHistory.ts";
 import { loadNotifications, loadTournament, NotFoundError, type ExtrasStore } from "./routes/extras.ts";
 import {
   loadSchedule,
@@ -16,7 +17,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore & ExtrasStore & ActionsStore;
+  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore;
   corsOrigins: string[];
 }
 
@@ -88,6 +89,15 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   app.get("/me/arena", async (c) => {
     try {
       return c.json(await loadArena(await resolveMember(c.get("user"), store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/arena/history", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      return c.json(buildArenaHistory(await store.listLeaderboardSnapshots(member.groupId)));
     } catch (error) {
       return fail(c, error);
     }

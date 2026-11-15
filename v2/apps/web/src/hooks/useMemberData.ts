@@ -1,6 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Arena,
+  ArenaHistoryPeriod,
   Notifications,
   Schedule,
   TournamentDetail,
@@ -73,5 +74,14 @@ export function useOpenDayAction() {
     onSuccess: (data) => client.setQueryData(["me", "schedule"], data),
     // Lỗi thường do dữ liệu đã đổi (đủ người, quá giờ): tải lại để màn hình khớp thực tế.
     onError: () => void client.invalidateQueries({ queryKey: ["me", "schedule"] }),
+  });
+}
+
+export function useArenaHistory() {
+  return useQuery({
+    queryKey: ["me", "arena", "history"],
+    queryFn: ({ signal }) => apiGet<ArenaHistoryPeriod[]>("/me/arena/history", signal),
+    // Bảng của kỳ đã đóng không đổi nữa.
+    staleTime: 60 * 60_000,
   });
 }

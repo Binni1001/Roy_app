@@ -398,3 +398,24 @@ a.brand { color: inherit; text-decoration: none; }
 .btn-dark { background: var(--bg); color: var(--text); }
 .btn-dark:hover { background: #1a202b; }
 .day .btn { margin-top: 10px; width: 100%; }
+
+/* Lịch sử đấu trường */
+h3 { margin: 14px 0 0; font-size: 14px; font-weight: 600; color: var(--muted); }
+.past { border-top: 1px solid var(--line); }
+.past:first-of-type { border-top: 0; }
+.past summary {
+  min-height: 48px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.past summary::-webkit-details-marker { display: none; }
+.past summary::after { content: "+"; color: var(--gold); font-size: 20px; font-weight: 600; margin-left: auto; }
+.past[open] summary::after { content: "−"; }
+.past summary .row-sub { margin-left: 4px; }
+@media (min-width: 900px) {
+  .arena > .card:nth-child(3) { grid-column: 1 / -1; }
+}

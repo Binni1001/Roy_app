@@ -1,5 +1,6 @@
 import type { TournamentMatch, TournamentSetScore, TournamentSummary, TournamentTeam } from "@roy/shared";
 import { db } from "./db.ts";
+import type { ArenaHistoryStore } from "./routes/arenaHistory.ts";
 import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
 
 type Result<T> = { data: T | null; error: { message: string } | null };
@@ -34,7 +35,7 @@ function summary(row: TournamentRow, championName: string | null): TournamentSum
 }
 
 /** Truy vấn Supabase cho thông báo và giải đấu. Không chứa logic nghiệp vụ. */
-export const supabaseExtras: ExtrasStore = {
+export const supabaseExtras: ExtrasStore & ArenaHistoryStore = {
   async listNotifications(personId, limit) {
     const data = rows<{ id: string; kind: string; title: string; body: string | null; read: boolean; created_at: string }>(
       await db()
@@ -163,5 +164,28 @@ export const supabaseExtras: ExtrasStore = {
       matches,
     };
     return data;
+  },
+
+  async listLeaderboardSnapshots(groupId) {
+    const data = rows<{
+      period_id: string;
+      match_type: "singles" | "doubles";
+      scoring_rule: string;
+      result: { ranked?: unknown } | null;
+      period: { name: string; start_date: string };
+    }>(
+      await db()
+        .from("pk_leaderboard_snapshots")
+        .select("period_id, match_type, scoring_rule, result, period:periods!inner(name, start_date, group_id)")
+        .eq("period.group_id", groupId),
+    );
+    return data.map((row) => ({
+      periodId: row.period_id,
+      periodName: row.period.name,
+      startDate: row.period.start_date,
+      matchType: row.match_type,
+      scoringRule: row.scoring_rule,
+      ranked: row.result?.ranked,
+    }));
   },
 };

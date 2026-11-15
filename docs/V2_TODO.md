@@ -16,7 +16,7 @@ Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và 
 3. **Lịch: xem ai đã giữ chỗ** — CẦN HỎI CHỦ CLB TRƯỚC. Quy tắc bản cũ (docs/open-play-days.md): thành viên chỉ thấy số người, chỉ admin thấy tên. Không tự đổi quy tắc này.
 4. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần thêm khóa PayOS vào `v2/apps/api/.env`. Phải thử trên bản sao trước, không thử trên database thật.
 5. **Tạo kèo, nhận kèo, ghi tỷ số** — ghi qua RPC `finalize_pk_match`; kiểm tra người gọi là người tham gia trận.
-6. **Bảng lịch sử Đấu trường các kỳ cũ** — đọc `pk_leaderboard_snapshots.result`, không tính lại.
+6. ~~Bảng lịch sử Đấu trường các kỳ cũ~~ — xong (`GET /me/arena/history`, thẻ Các kỳ trước trong màn hình Đấu trường).
 7. **Sửa hồ sơ và ảnh đại diện**.
 8. **Tách mã theo màn hình** — gói web đang 169 KB nén; dùng `lazyRouteComponent` cho Giải đấu, Đấu trường, Ví.
 9. **Deploy thử v2** lên hai project Vercel mới (API ở `sin1`), rồi đo lại tốc độ thật.
@@ -65,7 +65,8 @@ Quy ước khi làm tiếp:
 - [ ] Lịch: thành viên có được xem tên người đã giữ chỗ không? (hỏi chủ CLB; bản cũ chỉ cho admin xem)
 - [x] Ví hai cột trên máy tính
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
-- [ ] Đấu trường: bảng lịch sử các kỳ cũ (đọc từ bảng đã lưu), xem kèo của người khác
+- [x] Đấu trường: bảng lịch sử các kỳ cũ, đọc nguyên từ bảng đã lưu (5 kỳ trên dữ liệu thật)
+- [ ] Đấu trường: xem kèo của người khác
 - [x] Giải đấu: danh sách giải, vòng bảng có bảng xếp hạng, các vòng loại trực tiếp
 - [x] Thông báo: chuông có số chưa đọc, danh sách thông báo
 - [ ] Đối chiếu số liệu v2 với bản cũ trên cùng database

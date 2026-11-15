@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import type { Arena as ArenaData, ArenaMatch, ArenaPlayer, LeaderboardRow, MatchType } from "@roy/shared";
-import { useArena } from "../hooks/useMemberData";
+import { useArena, useArenaHistory } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
 
@@ -164,7 +164,56 @@ function ArenaView({ arena }: { arena: ArenaData }) {
           Xem giải đấu của câu lạc bộ
         </Link>
       </section>
+
+      <History />
     </div>
+  );
+}
+
+const RULES: Record<string, string> = {
+  fixed_3_2_v1: "Thắng +3, thua −2",
+  elo_v1: "Điểm Elo",
+  legacy_wilson_v1: "Điểm Wilson",
+};
+
+/** Bảng đã lưu khi đóng kỳ. Hiện nguyên trạng, không tính lại theo luật mới. */
+function History() {
+  const { data } = useArenaHistory();
+  if (!data?.length) return null;
+  return (
+    <section className="card rise d2">
+      <h2>Các kỳ trước</h2>
+      {data.map((period) => (
+        <details className="past" key={period.periodId}>
+          <summary>
+            <span className="row-title">{period.periodName}</span>
+            <span className="row-sub">{RULES[period.scoringRule] ?? period.scoringRule}</span>
+          </summary>
+          {(["doubles", "singles"] as const)
+            .filter((kind) => period[kind].length > 0)
+            .map((kind) => (
+              <div key={kind}>
+                <h3>{kind === "doubles" ? "Đôi" : "Đơn"}</h3>
+                <ol className="rows board">
+                  {period[kind].map((row) => (
+                    <li className="row" key={row.id}>
+                      <span className="rank">{row.rank}</span>
+                      <Avatar player={row} size={36} />
+                      <div className="grow">
+                        <div className="row-title">{row.name}</div>
+                        <div className="row-sub">
+                          {row.wins} thắng · {row.losses} thua
+                        </div>
+                      </div>
+                      <div className="row-amount">{row.points}</div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+            ))}
+        </details>
+      ))}
+    </section>
   );
 }
 

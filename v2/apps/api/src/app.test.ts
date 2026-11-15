@@ -7,6 +7,7 @@ import { createTokenVerifier, userFromClaims } from "./auth.ts";
 import { pickActiveGroup, type PersonRow } from "./routes/bootstrap.ts";
 import { ActionError, type ActionsStore } from "./routes/actions.ts";
 import type { ArenaStore } from "./routes/arena.ts";
+import type { ArenaHistoryStore } from "./routes/arenaHistory.ts";
 import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
 import type { MemberStore } from "./routes/member.ts";
 
@@ -54,7 +55,7 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-type Store = MemberStore & ArenaStore & ExtrasStore & ActionsStore;
+type Store = MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore;
 
 const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -71,6 +72,7 @@ function setup(store: Partial<Store> = {}) {
     markNotificationsRead: async () => {},
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
+    listLeaderboardSnapshots: async () => [],
     listNotifications: async () => [],
     countUnreadNotifications: async () => 4,
     listTournaments: async () => [],
@@ -263,4 +265,12 @@ test("write routes require a token", async () => {
   const { post } = setup();
   assert.equal((await post({}, "/me/open-days/d1/join")).status, 401);
   assert.equal((await post({}, "/me/notifications/read")).status, 401);
+});
+
+test("arena history is asked only for the caller active group", async () => {
+  const seen: string[] = [];
+  const { get } = setup({ listLeaderboardSnapshots: async (groupId) => { seen.push(groupId); return []; } });
+  const res = await get(await bearer(), "/me/arena/history");
+  assert.equal(res.status, 200);
+  assert.deepEqual(seen, ["g1"]);
 });
