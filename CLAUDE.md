@@ -121,6 +121,7 @@ Single file: `frontend/src/App.css` (~4600 lines). Dark-gold theme:
 ### Supabase Storage
 - Bucket `avatars`: public, 2MB limit, image types only. See `supabase/20260624_avatars_storage.sql`.
 - Frontend uploads directly to Supabase Storage (not through backend). Avatar URL stored in `people.avatar_url`.
+- File name is `<people.id>.<ext>` at the bucket root. `supabase/20261116_avatars_own_only.sql` limits writes to the owner of that id (owner/admin roles may write any). v2 uploads through its API with the service key.
 
 ### Payments (PayOS)
 - `POST /api/payments/create-for-person-period` creates a PayOS checkout link.

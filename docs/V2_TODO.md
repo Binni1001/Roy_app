@@ -9,6 +9,7 @@ Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang ch�
 
 Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 71 test API đang qua.
 
+0. **Chủ CLB chạy migration** `supabase/20261116_avatars_own_only.sql` trong Supabase SQL Editor (siết quyền ảnh đại diện). Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
 1. **Chủ CLB thử tay trên dữ liệu thật** (danh sách ở khung bên dưới). Mọi thao tác ghi mới chỉ mới qua test tự động.
 2. **Cấu hình Supabase cho v2** (chủ CLB làm trong Supabase Dashboard → Authentication → URL Configuration): thêm `http://localhost:5174/**` và địa chỉ v2 sau khi deploy vào Redirect URLs. Thiếu bước này thì email xác nhận, email đặt lại mật khẩu và đăng nhập Google sẽ quay về trang cũ.
 3. **Deploy thử v2** lên hai project Vercel mới: `v2/apps/api` (đã có `vercel.json` chạy ở `sin1`) và `v2/apps/web` (đã có `vercel.json` cho đường dẫn SPA và cache service worker). Biến môi trường như `.env.example`; nhớ đặt `CORS_ORIGINS` của API bằng địa chỉ web. Rồi đo lại tốc độ thật.
@@ -22,9 +23,7 @@ Chủ CLB đã quyết định (phiên 5):
 - Lịch: thành viên **được xem tên** người đã giữ chỗ (khác bản cũ, nơi chỉ admin xem). v2 đã làm theo.
 - Kèo: **giữ quy tắc như bản cũ**: thành viên tạo kèo được cho bất kỳ ai trong CLB, và ai trong trận cũng nhận, hủy, ghi tỷ số được. v2 đã làm theo.
 
-Còn chờ chủ CLB trả lời:
-
-- Ảnh đại diện: chính sách bucket `avatars` hiện cho mọi tài khoản đã đăng nhập ghi đè hoặc xóa ảnh của **bất kỳ ai** (`supabase/20260624_avatars_storage.sql`), không chỉ ảnh của mình. Siết lại nghĩa là mỗi người chỉ đổi được ảnh của chính mình (quản trị vẫn đổi được cho người khác). v2 đã chỉ cho đổi ảnh của mình; bản cũ còn dựa vào quyền rộng nên chỉ siết được sau khi tắt bản cũ, hoặc sớm hơn bằng một migration nhỏ.
+- Ảnh đại diện: **mỗi người chỉ đổi ảnh của chính mình** (owner và admin vẫn đổi hộ được). Migration `supabase/20261116_avatars_own_only.sql` đã viết và chạy thử trên PostgreSQL nhúng (PGlite): người thường không thêm, ghi đè hay xóa được ảnh người khác, kể cả khi đặt tên file lách luật hoặc tự khai vai trò trong `user_metadata`; ai cũng vẫn xem được ảnh. **Chủ CLB cần chạy file này trong Supabase SQL Editor** thì mới có hiệu lực.
 
 Quy ước khi làm tiếp:
 
