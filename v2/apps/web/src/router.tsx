@@ -8,6 +8,8 @@ import { supabase } from "./lib/supabase";
 import { Shell } from "./layouts/Shell";
 import { Home } from "./screens/Home";
 import { Login } from "./screens/Login";
+import { Schedule } from "./screens/Schedule";
+import { Wallet } from "./screens/Wallet";
 
 const BootstrapContext = createContext<Bootstrap | null>(null);
 
@@ -103,7 +105,7 @@ const homeRoute = createRoute({
 const scheduleRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/lich",
-  component: () => <ComingSoon title="Lịch đánh" />,
+  component: Schedule,
 });
 const arenaRoute = createRoute({
   getParentRoute: () => rootRoute,
@@ -113,7 +115,7 @@ const arenaRoute = createRoute({
 const walletRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/vi",
-  component: () => <ComingSoon title="Ví" />,
+  component: Wallet,
 });
 const profileRoute = createRoute({ getParentRoute: () => rootRoute, path: "/toi", component: Profile });
 

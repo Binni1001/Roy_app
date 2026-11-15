@@ -32,9 +32,11 @@ Cập nhật lần cuối: 15/11/2026.
 
 ## Giai đoạn 2 — Thành viên, chỉ xem
 
-- [ ] Trang chủ: buổi tối nay, khoản cần đóng, hạng, kèo đang chờ
-- [ ] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
-- [ ] Lịch: tuần này, cả kỳ, ai đã giữ chỗ
+- [x] Trang chủ: khoản cần đóng, buổi mở sắp tới
+- [ ] Trang chủ: hạng và kèo đang chờ (sau khi có Đấu trường)
+- [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
+- [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
+- [ ] Lịch: xem ai đã giữ chỗ, lịch cố định của tôi
 - [ ] Đấu trường: bảng xếp hạng đơn và đôi, kèo của tôi, lịch sử kỳ cũ
 - [ ] Giải đấu: vòng bảng, nhánh loại trực tiếp
 - [ ] Thông báo

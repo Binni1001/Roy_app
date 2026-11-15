@@ -22,6 +22,17 @@
         "v2"
       ],
       "port": 5174
+    },
+    {
+      "name": "roy-v2-api",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:api",
+        "--prefix",
+        "v2"
+      ],
+      "port": 5050
     }
   ]
 }
