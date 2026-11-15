@@ -1,7 +1,10 @@
 import { Hono, type Context } from "hono";
+import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
+import { MAX_AVATAR_BYTES, parseAvatar, type AvatarStore } from "./routes/avatar.ts";
 import { changeMatch, createMatch, type MatchStore } from "./routes/matches.ts";
+import { checkInvite, joinGroup, switchGroup, type OnboardingStore } from "./routes/onboarding.ts";
 import { parseProfileInput, ValidationError, type ProfileStore } from "./routes/profile.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
 import { ActionError, changeOpenDay, type ActionsStore, type OpenDayAction } from "./routes/actions.ts";
@@ -19,7 +22,15 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore & MatchStore;
+  store: MemberStore &
+    ArenaStore &
+    ArenaHistoryStore &
+    ExtrasStore &
+    ActionsStore &
+    ProfileStore &
+    MatchStore &
+    OnboardingStore &
+    AvatarStore;
   corsOrigins: string[];
 }
 
@@ -66,6 +77,32 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   const auth = requireAuth(verify);
   app.use("/bootstrap", auth);
   app.use("/me/*", auth);
+  app.use("/onboarding/*", auth);
+
+  // Vào nhóm bằng mã mời: dùng được cả khi tài khoản chưa có hồ sơ hoặc chưa ở nhóm nào.
+  app.post("/onboarding/check-invite", async (c) => {
+    try {
+      return c.json(await checkInvite(await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/onboarding/join", async (c) => {
+    try {
+      return c.json(await joinGroup(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/me/active-group", async (c) => {
+    try {
+      return c.json(await switchGroup(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
 
   app.get("/bootstrap", async (c) => {
     try {
@@ -197,6 +234,37 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
       return fail(c, error);
     }
   });
+
+  app.delete("/me/notifications/:id?", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      await store.deleteNotifications(member.personId, c.req.param("id") ?? null);
+      return c.json(await loadNotifications(member, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post(
+    "/me/avatar",
+    bodyLimit({
+      maxSize: MAX_AVATAR_BYTES,
+      onError: (c) => c.json({ code: "AVATAR_TOO_LARGE", message: "Ảnh lớn hơn 2 MB." }, 413),
+    }),
+    async (c) => {
+      try {
+        const member = await resolveMember(c.get("user"), store);
+        const { bytes, type } = parseAvatar(new Uint8Array(await c.req.arrayBuffer()));
+        const url = await store.uploadAvatar(member.personId, bytes, type);
+        await store.setAvatarUrl(member.personId, url);
+        const profile = await store.getProfile(member.personId);
+        if (!profile) throw new NotFoundError();
+        return c.json(profile);
+      } catch (error) {
+        return fail(c, error);
+      }
+    },
+  );
 
   app.post("/me/open-days/:id/:action", async (c) => {
     try {

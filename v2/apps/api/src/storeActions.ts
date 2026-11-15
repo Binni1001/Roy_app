@@ -36,6 +36,13 @@ export const supabaseActions: ActionsStore & ProfileStore = {
     if (error) throw new Error(error.message);
   },
 
+  async deleteNotifications(personId, id) {
+    let query = db().from("notifications").delete().eq("person_id", personId);
+    if (id) query = query.eq("id", id);
+    const { error } = await query;
+    if (error) throw new Error(error.message);
+  },
+
   async findOpenDay(dayId) {
     const { data, error } = await db()
       .from("open_play_days")

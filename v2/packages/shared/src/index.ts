@@ -154,6 +154,8 @@ export interface Arena {
   doubles: LeaderboardRow[];
   /** Kèo có tôi tham gia, mới nhất trước. */
   myMatches: ArenaMatch[];
+  /** Mọi kèo chưa hủy trong kỳ, mới nhất trước, tối đa 60 kèo. */
+  periodMatches: ArenaMatch[];
   meId: string;
 }
 
@@ -267,4 +269,15 @@ export interface ProfileInput {
 export interface Profile extends ProfileInput {
   email: string | null;
   avatarUrl: string | null;
+}
+
+/** Kết quả kiểm tra mã mời: chỉ trả tên nhóm, không lộ thông tin khác. */
+export interface InviteCheck {
+  groupName: string;
+}
+
+/** Gửi khi tham gia nhóm bằng mã mời. fullName chỉ cần khi tài khoản chưa có hồ sơ. */
+export interface JoinGroupInput {
+  code: string;
+  fullName?: string;
 }

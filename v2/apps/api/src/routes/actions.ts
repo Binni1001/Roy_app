@@ -9,7 +9,7 @@ export type OpenDayAction = "join" | "leave";
 export class ActionError extends Error {
   constructor(
     message: string,
-    readonly status: 403 | 409 | 503,
+    readonly status: 400 | 403 | 404 | 409 | 413 | 415 | 503,
     readonly code: string,
   ) {
     super(message);
@@ -18,6 +18,8 @@ export class ActionError extends Error {
 
 export interface ActionsStore {
   markNotificationsRead(personId: string): Promise<void>;
+  /** Xóa thông báo của chính người đó; id null là xóa hết. */
+  deleteNotifications(personId: string, id: string | null): Promise<void>;
   findOpenDay(dayId: string): Promise<{ periodId: string; date: string; groupId: string | null } | null>;
   /**
    * Gọi RPC mutate_open_play_day. Database tự kiểm tra sức chứa, hạn giờ,
