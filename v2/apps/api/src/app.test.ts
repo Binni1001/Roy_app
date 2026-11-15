@@ -5,6 +5,7 @@ import type { Debt } from "@roy/shared";
 import { createApp } from "./app.ts";
 import { createTokenVerifier, userFromClaims } from "./auth.ts";
 import { pickActiveGroup, type PersonRow } from "./routes/bootstrap.ts";
+import type { ArenaStore } from "./routes/arena.ts";
 import type { MemberStore } from "./routes/member.ts";
 
 const env = {
@@ -51,9 +52,13 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-function setup(store: Partial<MemberStore> = {}) {
+type Store = MemberStore & ArenaStore;
+
+function setup(store: Partial<Store> = {}) {
   const periodCalls: string[] = [];
-  const full: MemberStore = {
+  const full: Store = {
+    getScoringRule: async () => "fixed_3_2_v1",
+    listPeriodMatches: async () => [],
     findPerson: async () => person,
     findOpenPeriod: async (groupId) => {
       periodCalls.push(groupId);

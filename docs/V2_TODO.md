@@ -33,11 +33,12 @@ Cập nhật lần cuối: 15/11/2026.
 ## Giai đoạn 2 — Thành viên, chỉ xem
 
 - [x] Trang chủ: khoản cần đóng, buổi mở sắp tới
-- [ ] Trang chủ: hạng và kèo đang chờ (sau khi có Đấu trường)
+- [x] Trang chủ: hạng và kèo đang chờ
 - [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
 - [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
 - [ ] Lịch: xem ai đã giữ chỗ, lịch cố định của tôi
-- [ ] Đấu trường: bảng xếp hạng đơn và đôi, kèo của tôi, lịch sử kỳ cũ
+- [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
+- [ ] Đấu trường: bảng lịch sử các kỳ cũ (đọc từ bảng đã lưu), xem kèo của người khác
 - [ ] Giải đấu: vòng bảng, nhánh loại trực tiếp
 - [ ] Thông báo
 - [ ] Đối chiếu số liệu v2 với bản cũ trên cùng database

@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
+import { loadArena, type ArenaStore } from "./routes/arena.ts";
 import {
   loadSchedule,
   loadWallet,
@@ -13,7 +14,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore;
+  store: MemberStore & ArenaStore;
   corsOrigins: string[];
 }
 
@@ -71,6 +72,14 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   app.get("/me/schedule", async (c) => {
     try {
       return c.json(await loadSchedule(await resolveMember(c.get("user"), store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/arena", async (c) => {
+    try {
+      return c.json(await loadArena(await resolveMember(c.get("user"), store), store));
     } catch (error) {
       return fail(c, error);
     }

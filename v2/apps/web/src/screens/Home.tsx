@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import type { Bootstrap } from "@roy/shared";
-import { useSchedule, useWallet } from "../hooks/useMemberData";
+import { useArena, useSchedule, useWallet } from "../hooks/useMemberData";
 import { formatDate, formatMoney, formatWeekday, isTodayOrLater } from "../lib/format";
 import { openDayNote } from "./Schedule";
 
@@ -51,6 +51,28 @@ function ScheduleCard() {
   );
 }
 
+function ArenaCard() {
+  const { data, isPending, isError } = useArena();
+  const board = data && (data.doubles.length >= data.singles.length ? data.doubles : data.singles);
+  const me = board?.find((row) => row.id === data?.meId);
+  const waiting = data?.myMatches.filter((match) => match.status === "pending" || match.status === "active").length ?? 0;
+  return (
+    <Link to="/dau-truong" className="card card-link rise d3">
+      <h2>Đấu trường</h2>
+      {isPending && <div className="skeleton short" />}
+      {isError && <p className="muted">Không tải được đấu trường. Chạm để thử lại.</p>}
+      {data && (
+        <>
+          <p className="big gold">{me ? `Hạng ${me.rank}` : "Chưa xếp hạng"}</p>
+          <p className="muted">
+            {waiting ? `${waiting} kèo đang chờ` : me ? `${me.wins} thắng · ${me.losses} thua` : "Đánh một trận để lên bảng"}
+          </p>
+        </>
+      )}
+    </Link>
+  );
+}
+
 export function Home({ bootstrap }: { bootstrap: Bootstrap }) {
   const { me, openPeriod, memberships } = bootstrap;
 
@@ -97,10 +119,7 @@ export function Home({ bootstrap }: { bootstrap: Bootstrap }) {
       <div className="grid">
         <WalletCard />
         <ScheduleCard />
-        <Link to="/dau-truong" className="card card-link rise d3">
-          <h2>Đấu trường</h2>
-          <p className="muted">Bảng xếp hạng và kèo của bạn sẽ hiện ở đây.</p>
-        </Link>
+        <ArenaCard />
       </div>
     </div>
   );

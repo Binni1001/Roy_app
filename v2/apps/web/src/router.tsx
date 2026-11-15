@@ -6,6 +6,7 @@ import { useSession } from "./hooks/useSession";
 import { ApiRequestError } from "./lib/api";
 import { supabase } from "./lib/supabase";
 import { Shell } from "./layouts/Shell";
+import { Arena } from "./screens/Arena";
 import { Home } from "./screens/Home";
 import { Login } from "./screens/Login";
 import { Schedule } from "./screens/Schedule";
@@ -74,15 +75,6 @@ function Root() {
   );
 }
 
-function ComingSoon({ title }: { title: string }) {
-  return (
-    <section className="card rise">
-      <h1>{title}</h1>
-      <p className="muted">Màn hình này sẽ được dựng ở giai đoạn 2.</p>
-    </section>
-  );
-}
-
 function Profile() {
   const { me } = useBootstrapData();
   return (
@@ -110,7 +102,7 @@ const scheduleRoute = createRoute({
 const arenaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dau-truong",
-  component: () => <ComingSoon title="Đấu trường" />,
+  component: Arena,
 });
 const walletRoute = createRoute({
   getParentRoute: () => rootRoute,

@@ -104,3 +104,55 @@ export interface Schedule {
   openDays: OpenDay[];
   playedSessions: PlayedSession[];
 }
+
+export type MatchType = "singles" | "doubles";
+export type MatchSide = "challenger" | "opponent";
+export type Tier = "champion" | "diamond" | "platinum" | "gold" | "silver" | "bronze";
+
+export interface ArenaPlayer {
+  id: string;
+  name: string;
+  avatarUrl: string | null;
+}
+
+export interface SetScore {
+  challenger: number;
+  opponent: number;
+}
+
+export interface ArenaMatch {
+  id: string;
+  type: MatchType;
+  /** pending | active | completed | cancelled */
+  status: string;
+  playedAt: string;
+  sets: number;
+  challengers: ArenaPlayer[];
+  opponents: ArenaPlayer[];
+  winnerSide: MatchSide | null;
+  setScores: SetScore[] | null;
+  voided: boolean;
+}
+
+export interface LeaderboardRow extends ArenaPlayer {
+  rank: number;
+  /** true khi có người khác cùng hạng. */
+  tied: boolean;
+  tier: Tier;
+  points: number;
+  wins: number;
+  losses: number;
+  matches: number;
+  scoreDifference: number;
+}
+
+export interface Arena {
+  period: PeriodSummary | null;
+  /** false khi kỳ đang mở không dùng luật thắng +3, thua -2. */
+  supported: boolean;
+  singles: LeaderboardRow[];
+  doubles: LeaderboardRow[];
+  /** Kèo có tôi tham gia, mới nhất trước. */
+  myMatches: ArenaMatch[];
+  meId: string;
+}

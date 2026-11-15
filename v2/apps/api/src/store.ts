@@ -1,6 +1,8 @@
 import type { PostgrestError } from "@supabase/supabase-js";
 import { db } from "./db.ts";
 import type { PersonRow } from "./routes/bootstrap.ts";
+import type { ArenaMatch, ArenaPlayer, MatchSide, MatchType, SetScore } from "@roy/shared";
+import type { ArenaStore } from "./routes/arena.ts";
 import type { MemberStore } from "./routes/member.ts";
 
 function check<T>(result: { data: T; error: PostgrestError | null }): T {
@@ -14,7 +16,22 @@ function list<T>(result: { data: T[] | null; error: PostgrestError | null }): T[
 }
 
 /** Mọi truy vấn Supabase của API nằm ở đây. Không chứa logic nghiệp vụ. */
-export const supabaseStore: MemberStore = {
+interface PlayerRow {
+  id: string;
+  full_name: string;
+  nickname: string | null;
+  avatar_url: string | null;
+}
+
+const PLAYER = "(id, full_name, nickname, avatar_url)";
+
+function players(...rows: (PlayerRow | null)[]): ArenaPlayer[] {
+  return rows
+    .filter((row): row is PlayerRow => Boolean(row))
+    .map((row) => ({ id: row.id, name: row.nickname || row.full_name, avatarUrl: row.avatar_url }));
+}
+
+export const supabaseStore: MemberStore & ArenaStore = {
   async findPerson(email) {
     const data = check(
       await db()
@@ -165,5 +182,51 @@ export const supabaseStore: MemberStore = {
         .order("play_date", { ascending: false }),
     );
     return rows.map((row) => ({ id: row.id, date: row.play_date, note: row.note }));
+  },
+
+  async getScoringRule(periodId) {
+    const data = check(await db().from("periods").select("pk_scoring_rule").eq("id", periodId).maybeSingle());
+    return data?.pk_scoring_rule ?? null;
+  },
+
+  async listPeriodMatches(periodId) {
+    const rows = list(
+      await db()
+        .from("pk_matches")
+        .select(
+          "id, match_type, status, played_at, sets, winner_side, set_scores, voided_at, " +
+            "challenger:people!challenger_id" + PLAYER + ", challenger_partner:people!challenger_partner_id" + PLAYER + ", " +
+            "opponent:people!opponent_id" + PLAYER + ", opponent_partner:people!opponent_partner_id" + PLAYER,
+        )
+        .eq("period_id", periodId)
+        .order("played_at", { ascending: false }),
+    ) as unknown as {
+      id: string;
+      match_type: MatchType;
+      status: string;
+      played_at: string;
+      sets: number;
+      winner_side: MatchSide | null;
+      set_scores: SetScore[] | null;
+      voided_at: string | null;
+      challenger: PlayerRow | null;
+      challenger_partner: PlayerRow | null;
+      opponent: PlayerRow | null;
+      opponent_partner: PlayerRow | null;
+    }[];
+    return rows.map(
+      (row): ArenaMatch => ({
+        id: row.id,
+        type: row.match_type,
+        status: row.status,
+        playedAt: row.played_at,
+        sets: row.sets,
+        challengers: players(row.challenger, row.challenger_partner),
+        opponents: players(row.opponent, row.opponent_partner),
+        winnerSide: row.winner_side,
+        setScores: row.set_scores,
+        voided: Boolean(row.voided_at),
+      }),
+    );
   },
 };
