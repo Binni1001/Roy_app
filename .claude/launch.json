@@ -33,6 +33,38 @@
         "v2"
       ],
       "port": 5050
+    },
+    {
+      "name": "roy-v2-api-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "run",
+        "dev:api",
+        "--prefix",
+        "v2"
+      ],
+      "port": 5051,
+      "env": {
+        "PORT": "5051",
+        "CORS_ORIGINS": "http://localhost:5175"
+      }
+    },
+    {
+      "name": "roy-v2-web-alt",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": [
+        "--prefix",
+        "v2/apps/web",
+        "run",
+        "dev",
+        "--",
+        "--port",
+        "5175"
+      ],
+      "port": 5175,
+      "env": {
+        "VITE_API_URL": "http://localhost:5051"
+      }
     }
   ]
 }

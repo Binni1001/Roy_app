@@ -10,7 +10,32 @@ Roy Badminton Club management web app. Tracks member debts, badminton sessions, 
 backend/   Node.js 22 + Express — REST API, deployed to Vercel Functions
 frontend/  React 19 + Vite — SPA, deployed to Vercel
 supabase/  Plain SQL migration files — run manually via Supabase SQL Editor
+v2/        The rebuild in progress (see below) — same Supabase database, not deployed yet
 ```
+
+## v2 rebuild
+
+A full rebuild runs in parallel against the **same live Supabase database**. Plan: `docs/OVERHAUL_PLAN.md`. Ordered checklist: `docs/V2_TODO.md` — read it first and tick items as they land.
+
+```
+v2/apps/api        Hono + TypeScript (Vercel, sin1). Local JWT check via JWKS, GET /bootstrap, /me/*, /onboarding/*
+v2/apps/web        React 19 + Vite + TanStack Router/Query. PWA. Layout switches app (dock) / web (top nav) at 900px
+v2/packages/shared Types shared by api and web
+```
+
+```bash
+cd v2 && npm install
+npm run dev:api        # :5050  (needs apps/api/.env)
+npm run dev:web        # :5174  (needs apps/web/.env)
+npm run typecheck && npm test && npm run build
+```
+
+Rules for v2:
+- Queries live only in `apps/api/src/store*.ts`; logic in `routes/` and `domain/` with tests (`testkit.ts` builds an app over in-memory stores).
+- Every `/me/*` route goes through `resolveMember` (who is calling, which group they are viewing).
+- Money and ranking writes call the existing database RPCs; never re-implement them as several separate statements.
+- Schema changes must be additive. Read real column names from `$SUPABASE_URL/rest/v1/` with the service key instead of guessing.
+- Never exercise write actions against the live database during development; the club owner tests them by hand.
 
 ## Commands
 

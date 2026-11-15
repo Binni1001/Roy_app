@@ -2,7 +2,7 @@ name: Quality checks
 
 on:
   push:
-    branches: [main]
+    branches: [main, "claude/**"]
   pull_request:
     branches: [main]
   workflow_dispatch:
@@ -63,5 +63,31 @@ jobs:
           cache-dependency-path: frontend/package-lock.json
       - run: npm ci
       - run: npm run lint
+      - run: npm test
+      - run: npm run build
+
+  v2:
+    name: v2 typecheck, tests and build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    defaults:
+      run:
+        working-directory: v2
+    # Build-only placeholders. Tests use in-memory stores and a local test key; no real database is reached.
+    env:
+      VITE_SUPABASE_URL: https://ci-placeholder.supabase.co
+      VITE_SUPABASE_ANON_KEY: ci-placeholder-not-a-secret
+      VITE_API_URL: https://api.example.invalid
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: v2/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
       - run: npm test
       - run: npm run build
