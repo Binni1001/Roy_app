@@ -669,3 +669,10 @@ input.amount { width: 110px; }
 .fee-paid { color: #8fd8ae; }
 .session-title { margin: 0; font-size: 16px; color: var(--text); }
 .section-title { margin: 8px 4px 0; font-size: 18px; }
+
+/* Tiền cầu */
+.three { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+.three > div { display: flex; flex-direction: column; gap: 6px; }
+@media (max-width: 560px) { .three { grid-template-columns: 1fr 1fr; } }
+ul.plain { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: column; gap: 2px; }
+.row .actions { flex: none; }

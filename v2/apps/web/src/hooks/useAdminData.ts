@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import type { AdminPeriod, AdminSchedule, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
+import type { AdminPeriod, AdminSchedule, ExpenseInput, LoanInput, ShuttleOverview, ManagedPerson, PeriodInput, PeriodMemberStatus, PeriodRoster, PersonInput, ShuttleDiscount } from "@roy/shared";
 import { apiDelete, apiGet, apiPost, apiPut } from "../lib/api";
 
 const PEOPLE = ["me", "admin", "people"] as const;
@@ -180,4 +180,59 @@ export function useEditGuest() {
 
 export function useRemoveGuest() {
   return useScheduleMutation((id: string) => apiDelete<AdminSchedule>("/admin/guests/" + encodeURIComponent(id)));
+}
+
+const SHUTTLES = ["me", "admin", "shuttles"] as const;
+
+export function useShuttles(enabled: boolean) {
+  return useQuery({
+    queryKey: SHUTTLES,
+    enabled,
+    queryFn: ({ signal }) => apiGet<ShuttleOverview>("/admin/shuttles", signal),
+  });
+}
+
+/** Thao tác tiền cầu đổi công nợ, số dư, quỹ và có thể cả kỳ đang mở: làm mới các màn hình liên quan. */
+function useShuttleMutation<T>(send: (input: T) => Promise<ShuttleOverview>) {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: send,
+    onSuccess: (data) => {
+      client.setQueryData(SHUTTLES, data);
+      void client.invalidateQueries({ queryKey: ["me", "wallet"] });
+      void client.invalidateQueries({ queryKey: PERIODS, exact: true });
+      if (!data.period) void client.invalidateQueries({ queryKey: ["bootstrap"] });
+    },
+    onError: () => void client.invalidateQueries({ queryKey: SHUTTLES }),
+  });
+}
+
+export function useAddExpense() {
+  return useShuttleMutation((input: ExpenseInput) => apiPost<ShuttleOverview>("/admin/shuttles/expenses", input));
+}
+
+export function useDeleteExpense() {
+  return useShuttleMutation((id: string) => apiDelete<ShuttleOverview>("/admin/shuttles/expenses/" + encodeURIComponent(id)));
+}
+
+export function useAddLoan() {
+  return useShuttleMutation((input: LoanInput) => apiPost<ShuttleOverview>("/admin/shuttles/loans", input));
+}
+
+export function useLoanAction() {
+  return useShuttleMutation(({ id, action }: { id: string; action: "repay" | "cancel" }) =>
+    apiPost<ShuttleOverview>("/admin/shuttles/loans/" + encodeURIComponent(id) + "/" + action),
+  );
+}
+
+export function useApplyFund() {
+  return useShuttleMutation((input: { buyerId: string; amount: number }) => apiPost<ShuttleOverview>("/admin/shuttles/fund", input));
+}
+
+export function useSettle() {
+  return useShuttleMutation(() => apiPost<ShuttleOverview>("/admin/shuttles/settle"));
+}
+
+export function useClosePeriod() {
+  return useShuttleMutation(() => apiPost<ShuttleOverview>("/admin/shuttles/close"));
 }

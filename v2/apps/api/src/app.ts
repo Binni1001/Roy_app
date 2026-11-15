@@ -14,6 +14,17 @@ import {
   removeSession,
   type AdminScheduleStore,
 } from "./routes/adminSchedule.ts";
+import {
+  addExpense,
+  addLoan,
+  changeLoan,
+  closeOpenPeriod,
+  loadShuttles,
+  removeExpense,
+  settleShuttles,
+  useFund,
+  type ShuttleStore,
+} from "./routes/shuttles.ts";
 import { addMembers, changeMember, createPeriod, editPeriod, listPeriods, loadRoster, openPeriod, type PeriodsStore } from "./routes/periods.ts";
 import { addPerson, changeStatus, editPerson, listPeople, type PeopleStore } from "./routes/people.ts";
 import { loadAvailability, saveAvailability, type AvailabilityStore } from "./routes/availability.ts";
@@ -50,7 +61,8 @@ export interface AppDeps {
     ApprovalStore &
     PeopleStore &
     PeriodsStore &
-    AdminScheduleStore;
+    AdminScheduleStore &
+    ShuttleStore;
   corsOrigins: string[];
 }
 
@@ -115,6 +127,70 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/shuttles", async (c) => {
+    try {
+      return c.json(await loadShuttles(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/expenses", async (c) => {
+    try {
+      return c.json(await addExpense(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.delete("/admin/shuttles/expenses/:id", async (c) => {
+    try {
+      return c.json(await removeExpense(c.get("user"), c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/loans", async (c) => {
+    try {
+      return c.json(await addLoan(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/loans/:id/:action", async (c) => {
+    try {
+      return c.json(await changeLoan(c.get("user"), c.req.param("id"), c.req.param("action"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/fund", async (c) => {
+    try {
+      return c.json(await useFund(c.get("user"), await c.req.json().catch(() => null), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/settle", async (c) => {
+    try {
+      return c.json(await settleShuttles(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/shuttles/close", async (c) => {
+    try {
+      return c.json(await closeOpenPeriod(c.get("user"), store));
     } catch (error) {
       return fail(c, error);
     }

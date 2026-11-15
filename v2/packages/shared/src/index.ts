@@ -451,3 +451,101 @@ export interface AdminSchedule {
   people: SchedulePerson[];
   notice: string | null;
 }
+
+export type BuyType = "tube" | "single" | "mixed";
+
+export interface ShuttleExpense {
+  id: string;
+  buyerId: string;
+  buyerName: string;
+  buyType: BuyType;
+  tubeCount: number;
+  shuttlePerTube: number;
+  singleCount: number;
+  shuttleCount: number;
+  /** Phần người mua tự bỏ tiền, được chia lại khi chốt. Phần quỹ chi nằm ở sổ quỹ. */
+  amount: number;
+  buyDate: string;
+  note: string | null;
+}
+
+export interface AdminShuttleLoan {
+  id: string;
+  personId: string;
+  personName: string;
+  quantity: number;
+  unitPrice: number;
+  amount: number;
+  borrowedAt: string;
+  note: string | null;
+  /** unpaid | paid | cancelled */
+  status: string;
+}
+
+export interface SettlementLine {
+  personId: string;
+  name: string;
+  discountPercent: number;
+  /** Tiền người đó đã tự bỏ ra mua cầu. */
+  paid: number;
+  /** Phần tiền cầu người đó phải chịu. */
+  share: number;
+  /** paid − share: dương là được cộng số dư, âm là phải nộp thêm. */
+  net: number;
+}
+
+export interface BlockingItem {
+  kind: "debt" | "shuttle_loan";
+  personName: string;
+  periodName: string;
+  amount: number;
+}
+
+export interface ShuttleOverview {
+  period: PeriodSummary | null;
+  expenses: ShuttleExpense[];
+  loans: AdminShuttleLoan[];
+  /** Người mua cầu được chọn: thành viên cố định đang hoạt động của kỳ. */
+  buyers: { id: string; name: string }[];
+  /** Người mượn cầu được chọn: mọi người đang hoạt động trong nhóm. */
+  people: { id: string; name: string }[];
+  settlement: {
+    settled: boolean;
+    totalAmount: number;
+    totalShuttles: number;
+    memberCount: number;
+    lines: SettlementLine[];
+    fundBalance: number;
+    /** Khoản còn nợ và tiền mượn cầu chưa trả, phải thu hết trước khi chốt. */
+    blocking: BlockingItem[];
+    canSettle: boolean;
+    /** Lý do chưa xem trước được (ví dụ kỳ chưa có thành viên cố định). */
+    problem: string | null;
+  };
+  canClose: boolean;
+  /** Đóng kỳ trên v2 chỉ hỗ trợ kỳ dùng luật +3/−2. */
+  closeSupported: boolean;
+  notice: string | null;
+}
+
+export interface ExpenseInput {
+  buyerId: string;
+  buyType: BuyType;
+  tubeCount: number;
+  shuttlePerTube: number;
+  singleCount: number;
+  /** Tổng giá mua. */
+  totalPrice: number;
+  /** Phần quỹ chi; phần còn lại là người mua tự bỏ. */
+  fundAmount: number;
+  buyDate: string;
+  note: string | null;
+}
+
+export interface LoanInput {
+  personId: string;
+  quantity: number;
+  unitPrice: number;
+  borrowedAt: string;
+  note: string | null;
+}

@@ -18,6 +18,7 @@ import type { ApprovalStore } from "./routes/approvals.ts";
 import type { PeopleStore } from "./routes/people.ts";
 import type { PeriodsStore } from "./routes/periods.ts";
 import type { AdminScheduleStore } from "./routes/adminSchedule.ts";
+import type { ShuttleStore } from "./routes/shuttles.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -101,7 +102,8 @@ export type Store = MemberStore &
   ApprovalStore &
   PeopleStore &
   PeriodsStore &
-  AdminScheduleStore;
+  AdminScheduleStore &
+  ShuttleStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -162,6 +164,24 @@ export function setup(store: Partial<Store> = {}) {
     addGuest: async (_s, _p, amount) => amount > 0,
     updateGuest: async () => true,
     removeGuest: async () => true,
+    loadShuttleOverview: async () => ({
+      expenses: [],
+      loans: [],
+      buyers: [],
+      people: [],
+      settlement: { settled: false, totalAmount: 0, totalShuttles: 0, memberCount: 0, lines: [], fundBalance: 0, blocking: [], canSettle: true, problem: null },
+      canClose: false,
+      closeSupported: true,
+    }),
+    createExpense: async () => {},
+    getExpensePeriodId: async (id) => (id === "e1" ? "k1" : id === "e-old" ? "k0" : null),
+    deleteExpense: async () => {},
+    createLoan: async () => {},
+    getLoanPeriodId: async (id) => (id === "l1" ? "k1" : null),
+    changeLoan: async () => {},
+    applyFund: async () => {},
+    settle: async () => {},
+    closePeriod: async () => {},
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],
