@@ -377,3 +377,16 @@ test("a status change that lost a race is reported as a conflict", async () => {
   assert.equal(res.status, 409);
   assert.equal((await res.json()).code, "MATCH_CHANGED");
 });
+
+test("a failure to load the signing keys is a server error, not an invalid session", async () => {
+  const app = createApp({
+    verify: async () => {
+      throw new TypeError("fetch failed");
+    },
+    store: {} as never,
+    corsOrigins: [],
+  });
+  const res = await app.request("/bootstrap", { headers: { Authorization: "Bearer anything" } });
+  assert.equal(res.status, 503);
+  assert.equal((await res.json()).code, "AUTH_UNAVAILABLE");
+});

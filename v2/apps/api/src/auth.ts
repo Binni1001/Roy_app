@@ -55,7 +55,18 @@ export function requireAuth(verify: TokenVerifier): MiddlewareHandler<AuthEnv> {
     let user: AuthUser | null = null;
     try {
       user = userFromClaims(await verify(token));
-    } catch {
+    } catch (error) {
+      // Token sai, hết hạn hoặc ký bằng khóa lạ là lỗi của người gọi (401).
+      // Mọi lỗi khác (không tải được khóa công khai, mạng chập chờn) là lỗi phía máy chủ:
+      // báo 503 để web thử lại, không được báo nhầm là phiên đăng nhập hỏng.
+      const code = (error as { code?: string } | null)?.code ?? "";
+      if (!/^ERR_(JWT|JWS)_/.test(code) && code !== "ERR_JWKS_NO_MATCHING_KEY") {
+        console.error("[auth] could not verify token:", error);
+        return c.json(
+          { code: "AUTH_UNAVAILABLE", message: "Chưa kiểm tra được phiên đăng nhập. Thử lại sau giây lát." },
+          503,
+        );
+      }
       user = null;
     }
     if (!user) {

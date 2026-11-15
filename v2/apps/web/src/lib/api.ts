@@ -17,8 +17,8 @@ export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
   return request<T>("GET", path, signal);
 }
 
-export function apiPost<T>(path: string): Promise<T> {
-  return request<T>("POST", path);
+export function apiPost<T>(path: string, body?: unknown): Promise<T> {
+  return request<T>("POST", path, undefined, body);
 }
 
 export function apiPut<T>(path: string, body: unknown): Promise<T> {
@@ -35,17 +35,27 @@ async function request<T>(
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
 
-  let response: Response;
-  try {
-    response = await fetch(`${API_URL}${path}`, {
+  const send = (accessToken: string | undefined) =>
+    fetch(`${API_URL}${path}`, {
       method,
       signal,
       headers: {
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
         ...(body === undefined ? {} : { "Content-Type": "application/json" }),
       },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
+
+  let response: Response;
+  try {
+    response = await send(token);
+    if (response.status === 401 && token) {
+      // Token có thể vừa hết hạn: làm mới một lần rồi thử lại. Vẫn 401 thì phiên đã hỏng, quay về đăng nhập.
+      const refreshed = await supabase.auth.refreshSession();
+      const next = refreshed.data.session?.access_token;
+      if (next) response = await send(next);
+      if (!next || response.status === 401) void supabase.auth.signOut();
+    }
   } catch (error) {
     if (signal?.aborted) throw error;
     throw new ApiRequestError("Không kết nối được máy chủ. Kiểm tra mạng rồi thử lại.", 0, "NETWORK");

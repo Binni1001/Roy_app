@@ -2,6 +2,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Arena,
   ArenaHistoryPeriod,
+  ArenaPlayer,
   Notifications,
   Profile,
   ProfileInput,
@@ -105,5 +106,43 @@ export function useSaveProfile() {
       void client.invalidateQueries({ queryKey: ["bootstrap"] });
       void client.invalidateQueries({ queryKey: ["me", "arena"] });
     },
+  });
+}
+
+/** Danh sách người có thể mời vào kèo; chỉ tải khi mở form tạo kèo. */
+export function useArenaPlayers(enabled: boolean) {
+  return useQuery({
+    queryKey: ["me", "arena", "players"],
+    enabled,
+    queryFn: ({ signal }) => apiGet<ArenaPlayer[]>("/me/arena/players", signal),
+    staleTime: 10 * 60_000,
+  });
+}
+
+export interface NewMatchInput {
+  type: "singles" | "doubles";
+  opponentId: string;
+  partnerId: string;
+  opponentPartnerId: string;
+  sets: number;
+  playDate: string;
+}
+
+export function useCreateMatch() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: NewMatchInput) => apiPost<Arena>("/me/matches", input),
+    onSuccess: (data) => client.setQueryData(["me", "arena"], data),
+  });
+}
+
+export function useMatchAction() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action, body }: { id: string; action: "accept" | "cancel" | "result"; body?: unknown }) =>
+      apiPost<Arena>("/me/matches/" + encodeURIComponent(id) + "/" + action, body),
+    onSuccess: (data) => client.setQueryData(["me", "arena"], data),
+    // Lỗi thường do trận đã đổi ở nơi khác: tải lại để màn hình khớp thực tế.
+    onError: () => void client.invalidateQueries({ queryKey: ["me", "arena"] }),
   });
 }

@@ -15,7 +15,7 @@ Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và 
    Bản gốc: gọi RPC có sẵn `mutate_open_play_day` (xem cách bản cũ gọi trong `backend/src/modules/session-planning/`). RPC đã tự kiểm tra sức chứa 8 chỗ, hạn 17:30 và quyền nhóm.
 3. **Lịch: xem ai đã giữ chỗ** — CẦN HỎI CHỦ CLB TRƯỚC. Quy tắc bản cũ (docs/open-play-days.md): thành viên chỉ thấy số người, chỉ admin thấy tên. Không tự đổi quy tắc này.
 4. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần thêm khóa PayOS vào `v2/apps/api/.env`. Phải thử trên bản sao trước, không thử trên database thật.
-5. **Tạo kèo, nhận kèo, ghi tỷ số** — ghi qua RPC `finalize_pk_match`; kiểm tra người gọi là người tham gia trận.
+5. ~~Tạo kèo, nhận kèo, hủy kèo, ghi tỷ số~~ — đã viết (`POST /me/matches`, `POST /me/matches/:id/accept|cancel|result`, form trong màn hình Đấu trường), **chưa bấm thử trên dữ liệu thật**. Khác bản cũ, cần chủ CLB xác nhận: người tạo kèo bắt buộc là bên thách đấu (bản cũ cho thành viên tạo kèo cho người khác), và chỉ bên được thách đấu mới nhận kèo.
 6. ~~Bảng lịch sử Đấu trường các kỳ cũ~~ — xong (`GET /me/arena/history`, thẻ Các kỳ trước trong màn hình Đấu trường).
 7. ~~Sửa hồ sơ~~ — xong phần họ tên, biệt danh, số điện thoại, giới thiệu (`GET/PUT /me/profile`), **chưa bấm lưu trên dữ liệu thật**. Còn lại: đổi ảnh đại diện (tải lên bucket `avatars` của Supabase Storage).
 8. ~~Tách mã theo màn hình~~ — đã tách, nhưng gần như không giảm dung lượng: mỗi màn hình chỉ 1–2 KB nén, còn ~169 KB nén là thư viện (supabase-js, react-dom, TanStack). Muốn nhẹ hơn thật thì thay `@supabase/supabase-js` ở web bằng `@supabase/auth-js` (chỉ cần đăng nhập); việc này đụng luồng đăng nhập nên phải thử lại đăng nhập, Google và làm mới token.
@@ -28,7 +28,9 @@ Quy ước khi làm tiếp:
 - Mọi đường `/me/*` đi qua `resolveMember` để lấy đúng người và đúng nhóm đang chọn.
 - Thao tác ghi về tiền và xếp hạng chỉ gọi RPC có sẵn của database, không viết lại bằng nhiều câu lệnh rời.
 
-> **Cần chủ CLB làm một lần:** Git trên máy này đã mất đăng nhập GitHub, nên các commit mới chỉ nằm trên máy, chưa lên GitHub. Mở terminal trong thư mục dự án và chạy `git push origin claude/project-analysis-83dc4c`, đăng nhập GitHub trong cửa sổ hiện ra.
+> **Đẩy code lên GitHub:** lệnh `git push` chỉ chạy được trong tab Terminal của app (nơi có đăng nhập GitHub của chủ CLB), không chạy được từ công cụ Bash của Claude.
+
+> **Cần thử tay trước khi coi là xong** (mọi thao tác ghi mới chỉ qua test tự động): đánh dấu thông báo đã đọc; giữ chỗ rồi hủy chỗ một buổi tự đăng ký; lưu hồ sơ; tạo một kèo thử, nhận kèo bằng tài khoản thứ hai, ghi tỷ số, rồi nhờ admin hủy kết quả kèo thử.
 
 ## Đã xong
 
@@ -54,6 +56,7 @@ Quy ước khi làm tiếp:
 - [ ] Màn hình cho tài khoản chưa có hồ sơ, đang chờ duyệt, đã nghỉ
 - [x] Tách mã theo màn hình (màn hình đã tách; phần nặng còn lại là thư viện)
 - [ ] Giảm dung lượng thư viện: dùng `@supabase/auth-js` thay cho `@supabase/supabase-js` ở web
+- [x] Phân biệt lỗi xác thực: token sai trả 401, lỗi tải khóa công khai trả 503; web tự làm mới token và thử lại một lần khi gặp 401
 - [ ] Service worker: mở lại app khi mất mạng, nút cài app
 - [ ] Deploy thử: project Vercel cho `v2/apps/api` (sin1) và `v2/apps/web`
 - [ ] CI: kiểm tra kiểu, test, build mỗi lần đẩy code
@@ -79,7 +82,7 @@ Quy ước khi làm tiếp:
 - [ ] Trả gộp mọi khoản nợ bằng QR PayOS, màn hình kết quả thanh toán
 - [x] Giữ chỗ và hủy chỗ buổi tự đăng ký (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Khai lịch bận
-- [ ] Tạo kèo, nhận kèo, ghi tỷ số
+- [x] Tạo kèo, nhận kèo, hủy kèo, ghi tỷ số (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Ghép cặp ngẫu nhiên
 - [x] Sửa hồ sơ: họ tên, biệt danh, số điện thoại, giới thiệu (đã viết và có test; chưa bấm lưu trên dữ liệu thật)
 - [ ] Đổi ảnh đại diện

@@ -3,6 +3,7 @@ import { Link } from "@tanstack/react-router";
 import type { Arena as ArenaData, ArenaMatch, ArenaPlayer, LeaderboardRow, MatchType } from "@roy/shared";
 import { useArena, useArenaHistory } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
+import { MatchButtons, NewMatchForm } from "./MatchActions";
 import { QueryState } from "./QueryState";
 
 function initials(name: string): string {
@@ -106,6 +107,7 @@ function MatchCard({ match, meId }: { match: ArenaMatch; meId: string }) {
           {match.setScores.map((s) => `${s.challenger}-${s.opponent}`).join(" · ")}
         </div>
       )}
+      <MatchButtons match={match} meId={meId} />
     </li>
   );
 }
@@ -159,7 +161,7 @@ function ArenaView({ arena }: { arena: ArenaData }) {
         ) : (
           <p className="muted">Bạn chưa có kèo nào trong kỳ này.</p>
         )}
-        <p className="muted small">Tạo kèo và ghi tỷ số trong app sẽ có ở bản cập nhật tới.</p>
+        <NewMatchForm meId={arena.meId} />
         <Link to="/giai-dau" className="btn btn-ghost link-btn">
           Xem giải đấu của câu lạc bộ
         </Link>
