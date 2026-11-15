@@ -22,8 +22,8 @@ export interface ApprovalStore extends BootstrapStore {
  * Như bản cũ, chỉ owner duyệt được yêu cầu vào nhóm. Nhóm được duyệt là nhóm owner đang xem.
  * Quyền theo từng nhóm (giai đoạn 5) sẽ thay điều kiện này.
  */
-async function managedGroup(user: AuthUser, store: BootstrapStore): Promise<string> {
-  if (user.role !== "owner") throw new ActionError("Chỉ owner được duyệt thành viên.", 403, "OWNER_ONLY");
+export async function managedGroup(user: AuthUser, store: BootstrapStore): Promise<string> {
+  if (user.role !== "owner") throw new ActionError("Chỉ owner được làm việc này.", 403, "OWNER_ONLY");
   const person = await store.findPerson(user.email);
   if (!person) throw new NoProfileError();
   if (person.status === "inactive") throw new AccountInactiveError();

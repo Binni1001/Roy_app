@@ -210,9 +210,15 @@ export function Profile() {
       <div className="stack narrow">
         <QueryState query={query}>{(profile) => <ProfileForm profile={profile} />}</QueryState>
         {role === "owner" && (
-          <Link to="/duyet" className="btn btn-ghost link-btn">
-            Duyệt thành viên xin vào nhóm
-          </Link>
+          <section className="card rise d1 admin-links">
+            <h2>Quản trị câu lạc bộ</h2>
+            <Link to="/nhan-su" className="btn btn-ghost link-btn">
+              Nhân sự
+            </Link>
+            <Link to="/duyet" className="btn btn-ghost link-btn">
+              Duyệt thành viên xin vào nhóm
+            </Link>
+          </section>
         )}
         <GroupSwitcher />
         <InstallCard />

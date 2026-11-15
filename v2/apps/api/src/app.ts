@@ -3,6 +3,7 @@ import { bodyLimit } from "hono/body-limit";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { decide, listPending, type ApprovalStore } from "./routes/approvals.ts";
+import { addPerson, changeStatus, editPerson, listPeople, type PeopleStore } from "./routes/people.ts";
 import { loadAvailability, saveAvailability, type AvailabilityStore } from "./routes/availability.ts";
 import { MAX_AVATAR_BYTES, parseAvatar, type AvatarStore } from "./routes/avatar.ts";
 import { changeMatch, createMatch, type MatchStore } from "./routes/matches.ts";
@@ -34,7 +35,8 @@ export interface AppDeps {
     OnboardingStore &
     AvatarStore &
     AvailabilityStore &
-    ApprovalStore;
+    ApprovalStore &
+    PeopleStore;
   corsOrigins: string[];
 }
 
@@ -99,6 +101,40 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/people", async (c) => {
+    try {
+      return c.json(await listPeople(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/people", async (c) => {
+    try {
+      return c.json(await addPerson(c.get("user"), await c.req.json().catch(() => null), store), 201);
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/people/:id", async (c) => {
+    try {
+      const body = await c.req.json().catch(() => null);
+      return c.json(await editPerson(c.get("user"), c.req.param("id"), body, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/admin/people/:id/status", async (c) => {
+    try {
+      const body = await c.req.json().catch(() => null);
+      return c.json(await changeStatus(c.get("user"), c.req.param("id"), body, store));
     } catch (error) {
       return fail(c, error);
     }

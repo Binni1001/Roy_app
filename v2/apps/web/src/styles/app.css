@@ -592,3 +592,23 @@ select.group-pill option { background: var(--surface); }
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
+
+/* Nhân sự */
+.search {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 0 14px;
+  font: inherit;
+  width: 100%;
+}
+.people { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.person { border-top: 1px solid var(--line); padding: 12px 0; display: flex; flex-direction: column; gap: 10px; }
+.person:first-child { border-top: 0; }
+.person-head { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.person.resting .row-title { color: var(--muted); }
+.person-form { background: var(--surface-2); border-radius: 18px; padding: 16px; }
+.person-form input, .person-form select { background: var(--surface); }
+.admin-links .link-btn { text-align: center; }

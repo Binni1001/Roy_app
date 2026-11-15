@@ -324,3 +324,30 @@ export interface PendingMember {
   avatarUrl: string | null;
   requestedAt: string;
 }
+
+export type AttendanceType = "fixed" | "guest";
+
+/** Một người trong nhóm, như owner thấy ở màn hình Nhân sự. */
+export interface ManagedPerson {
+  id: string;
+  fullName: string;
+  nickname: string | null;
+  email: string | null;
+  phone: string | null;
+  avatarUrl: string | null;
+  /** Cố định hay vãng lai: mặc định khi thêm người vào kỳ. */
+  attendanceType: AttendanceType;
+  /** Trạng thái trong nhóm này: active = đang chơi, inactive = đã nghỉ. */
+  status: "active" | "inactive";
+  role: MemberRole;
+  joinedAt: string | null;
+}
+
+export interface PersonInput {
+  fullName: string;
+  nickname: string | null;
+  /** Email đăng nhập; phải trùng email tài khoản Supabase để người đó vào được app. */
+  email: string | null;
+  phone: string | null;
+  attendanceType: AttendanceType;
+}

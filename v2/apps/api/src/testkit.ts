@@ -15,6 +15,7 @@ import type { OnboardingStore } from "./routes/onboarding.ts";
 import type { AvatarStore } from "./routes/avatar.ts";
 import type { AvailabilityStore } from "./routes/availability.ts";
 import type { ApprovalStore } from "./routes/approvals.ts";
+import type { PeopleStore } from "./routes/people.ts";
 
 export const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -82,7 +83,8 @@ export type Store = MemberStore &
   OnboardingStore &
   AvatarStore &
   AvailabilityStore &
-  ApprovalStore;
+  ApprovalStore &
+  PeopleStore;
 
 export const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -118,6 +120,11 @@ export function setup(store: Partial<Store> = {}) {
     listPendingMembers: async () => [],
     getMembershipStatus: async () => "pending",
     decideMembership: async () => true,
+    listGroupPeople: async () => [],
+    findPersonIdByEmail: async () => null,
+    createMember: async () => {},
+    updatePerson: async () => {},
+    setMemberStatus: async () => {},
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
     listLeaderboardSnapshots: async () => [],
