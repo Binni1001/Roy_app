@@ -147,6 +147,7 @@ export function useArenaPlayers(enabled: boolean) {
 
 export interface NewMatchInput {
   type: "singles" | "doubles";
+  challengerId: string;
   opponentId: string;
   partnerId: string;
   opponentPartnerId: string;

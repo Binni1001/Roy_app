@@ -28,6 +28,7 @@ Migration có thể chạy lại mà không mất đăng ký. Không phụ thu�
 - RPC chỉ cho service role gọi; nhận actor từ JWT đã xác thực. RPC kiểm tra lại vai trò, CLB, trạng thái thành viên/kỳ và thời gian.
 - Khóa giao dịch theo kỳ/ngày cho mọi thao tác để không vượt 8 chỗ; khóa chính chặn đăng ký trùng.
 - Thành viên nhận số người và trạng thái đăng ký của mình; admin nhận thêm tên người đăng ký, không trả email/Auth metadata.
+- v2 (chủ CLB quyết định ở phiên 5): thành viên cũng xem được tên người đã giữ chỗ (biệt danh hoặc họ tên), vẫn không trả email/Auth metadata. Bản cũ giữ nguyên quy tắc chỉ admin xem tên.
 - Khi rollback ứng dụng, giữ hai bảng và RPC để bảo toàn đăng ký đã có. Không xóa dữ liệu để rollback giao diện.
 
 ## Kiểm tra tự động

@@ -208,9 +208,9 @@ test("a match against someone outside the group is rejected and nothing is inser
   assert.equal(inserted, 0);
 });
 
-test("only the challenged side can accept, and only a participant can act on a match", async () => {
+test("anyone in the match can accept it, and only a participant can act on a match", async () => {
   const mine = setup({ getMatch: async () => stored({ challengerIds: ["p1"], opponentIds: ["x"] }) });
-  assert.equal((await mine.post(await bearer(), "/me/matches/m1/accept")).status, 403);
+  assert.equal((await mine.post(await bearer(), "/me/matches/m1/accept")).status, 200);
   const theirs = setup({ getMatch: async () => stored({ challengerIds: ["x"], opponentIds: ["y"] }) });
   assert.equal((await theirs.post(await bearer(), "/me/matches/m1/cancel")).status, 404);
   const otherGroup = setup({ getMatch: async () => stored({ groupId: "other" }) });

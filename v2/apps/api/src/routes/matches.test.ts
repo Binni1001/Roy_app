@@ -7,11 +7,16 @@ const allowed = new Set(["me", "a", "b", "c"]);
 const today = "2026-11-20";
 const base = { type: "singles", opponentId: "a", sets: 3, playDate: today };
 
-test("the caller is always the challenger and singles carry no partners", () => {
-  const match = parseNewMatch({ ...base, partnerId: "b", opponentPartnerId: "c", challengerId: "a" }, "me", allowed, today);
-  assert.equal(match.challengerId, "me");
-  assert.equal(match.challengerPartnerId, null);
-  assert.equal(match.opponentPartnerId, null);
+test("the caller is the challenger unless another one is chosen, and singles carry no partners", () => {
+  const mine = parseNewMatch({ ...base, partnerId: "b", opponentPartnerId: "c" }, "me", allowed, today);
+  assert.equal(mine.challengerId, "me");
+  assert.equal(mine.challengerPartnerId, null);
+  assert.equal(mine.opponentPartnerId, null);
+  // Như bản cũ: tạo kèo hộ hai người khác trong câu lạc bộ.
+  const forOthers = parseNewMatch({ ...base, challengerId: "b", opponentId: "a" }, "me", allowed, today);
+  assert.deepEqual([forOthers.challengerId, forOthers.opponentId], ["b", "a"]);
+  assert.throws(() => parseNewMatch({ ...base, challengerId: "a" }, "me", allowed, today), ValidationError);
+  assert.throws(() => parseNewMatch({ ...base, challengerId: "stranger" }, "me", allowed, today), ValidationError);
 });
 
 test("doubles need four different people", () => {

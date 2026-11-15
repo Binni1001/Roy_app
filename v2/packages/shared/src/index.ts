@@ -93,6 +93,8 @@ export interface OpenDay {
   capacity: number;
   registered: number;
   mine: boolean;
+  /** Tên người đã giữ chỗ, theo thứ tự đăng ký. Chủ CLB cho mọi thành viên xem. */
+  names: string[];
 }
 
 export interface PlayedSession {

@@ -46,6 +46,11 @@ function ScheduleView({ schedule }: { schedule: ScheduleData }) {
                   <div className="day-sub">{formatWeekday(day.date)}</div>
                   <div className="day-num">{formatDate(day.date)}</div>
                   <div className="day-sub">{openDayNote(day)}</div>
+                  {day.names.length > 0 && (
+                    <div className="day-names" title={day.names.join(", ")}>
+                      {day.names.join(", ")}
+                    </div>
+                  )}
                   {action && (
                     <button
                       className={`btn btn-small ${action === "join" ? "btn-gold" : "btn-dark"}`}

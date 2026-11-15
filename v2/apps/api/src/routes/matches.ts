@@ -65,13 +65,15 @@ export function parseNewMatch(body: unknown, meId: string, allowed: Set<string>,
   if (playDate < today) throw new ValidationError("Ngày thi đấu không được nằm trong quá khứ.");
 
   if (!isId(raw.opponentId)) throw new ValidationError("Chọn đối thủ.");
+  // Như bản cũ: thành viên tạo kèo được cho bất kỳ ai trong câu lạc bộ, không bắt buộc có mình.
+  const challengerId = isId(raw.challengerId) ? raw.challengerId : meId;
   const doubles = type === "doubles";
   if (doubles && (!isId(raw.partnerId) || !isId(raw.opponentPartnerId))) {
     throw new ValidationError("Trận đôi cần đủ bốn người chơi.");
   }
   const match: NewMatch = {
     type,
-    challengerId: meId,
+    challengerId,
     challengerPartnerId: doubles ? (raw.partnerId as string) : null,
     opponentId: raw.opponentId,
     opponentPartnerId: doubles ? (raw.opponentPartnerId as string) : null,
@@ -151,10 +153,8 @@ export async function changeMatch(
   const match = await ownMatch(member, id, store);
   const stale = () => new ActionError("Trận vừa thay đổi. Tải lại rồi thử lại.", 409, "MATCH_CHANGED");
 
+  // Như bản cũ: bất kỳ ai trong trận cũng nhận, hủy hoặc ghi tỷ số được.
   if (action === "accept") {
-    if (match.side !== "opponent") {
-      throw new ActionError("Chỉ bên được thách đấu mới nhận kèo.", 403, "NOT_OPPONENT");
-    }
     if (!(await store.setMatchStatus(id, "active", ["pending"]))) throw stale();
   } else if (action === "cancel") {
     if (!(await store.setMatchStatus(id, "cancelled", ["pending", "active"]))) throw stale();

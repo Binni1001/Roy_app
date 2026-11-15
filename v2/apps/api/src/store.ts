@@ -153,7 +153,10 @@ export const supabaseStore: MemberStore & ArenaStore = {
     const rows = list(
       await db()
         .from("open_play_days")
-        .select("id, play_date, status, capacity, open_play_registrations(person_id)")
+        .select(
+          "id, play_date, status, capacity, " +
+            "open_play_registrations(person_id, created_at, person:people(full_name, nickname))",
+        )
         .eq("period_id", periodId)
         .order("play_date", { ascending: true }),
     ) as unknown as {
@@ -161,7 +164,11 @@ export const supabaseStore: MemberStore & ArenaStore = {
       play_date: string;
       status: string;
       capacity: number;
-      open_play_registrations: { person_id: string }[];
+      open_play_registrations: {
+        person_id: string;
+        created_at: string;
+        person: { full_name: string; nickname: string | null } | null;
+      }[];
     }[];
     return rows.map((row) => ({
       id: row.id,
@@ -170,6 +177,9 @@ export const supabaseStore: MemberStore & ArenaStore = {
       capacity: row.capacity,
       registered: row.open_play_registrations.length,
       mine: row.open_play_registrations.some((r) => r.person_id === personId),
+      names: [...row.open_play_registrations]
+        .sort((a, b) => a.created_at.localeCompare(b.created_at))
+        .map((r) => r.person?.nickname || r.person?.full_name || "Thành viên"),
     }));
   },
 

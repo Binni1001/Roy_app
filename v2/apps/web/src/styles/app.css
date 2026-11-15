@@ -582,3 +582,13 @@ select.group-pill option { background: var(--surface); }
 
 /* Duyệt thành viên */
 .approval { flex-wrap: wrap; }
+.day-names {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

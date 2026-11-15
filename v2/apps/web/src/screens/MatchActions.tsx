@@ -37,10 +37,12 @@ function PlayerSelect({
   );
 }
 
-/** Tạo kèo mới. Người tạo luôn là bên thách đấu. */
+/** Tạo kèo mới. Mặc định mình là bên thách đấu; tạo hộ người khác cũng được, như bản cũ. */
 export function NewMatchForm({ meId }: { meId: string }) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<MatchType>("doubles");
+  // Như bản cũ: mặc định mình là bên thách đấu, nhưng tạo kèo hộ người khác cũng được.
+  const [challengerId, setChallengerId] = useState(meId);
   const [opponentId, setOpponentId] = useState("");
   const [partnerId, setPartnerId] = useState("");
   const [opponentPartnerId, setOpponentPartnerId] = useState("");
@@ -57,16 +59,17 @@ export function NewMatchForm({ meId }: { meId: string }) {
     );
   }
 
-  const others = (players.data ?? []).filter((player) => player.id !== meId);
+  const everyone = players.data ?? [];
   const doubles = type === "doubles";
 
   function submit(event: FormEvent) {
     event.preventDefault();
     create.mutate(
-      { type, opponentId, partnerId, opponentPartnerId, sets: Number(sets), playDate },
+      { type, challengerId, opponentId, partnerId, opponentPartnerId, sets: Number(sets), playDate },
       {
         onSuccess: () => {
           setOpen(false);
+          setChallengerId(meId);
           setOpponentId("");
           setPartnerId("");
           setOpponentPartnerId("");
@@ -83,32 +86,40 @@ export function NewMatchForm({ meId }: { meId: string }) {
         <option value="singles">Đánh đơn</option>
       </select>
 
+      <PlayerSelect
+        id="challenger"
+        label="Bên thách đấu"
+        value={challengerId}
+        onChange={setChallengerId}
+        players={everyone}
+        taken={[partnerId, opponentId, opponentPartnerId]}
+      />
       {doubles && (
         <PlayerSelect
           id="partner"
-          label="Đồng đội của bạn"
+          label="Đồng đội bên thách đấu"
           value={partnerId}
           onChange={setPartnerId}
-          players={others}
-          taken={[opponentId, opponentPartnerId]}
+          players={everyone}
+          taken={[challengerId, opponentId, opponentPartnerId]}
         />
       )}
       <PlayerSelect
         id="opponent"
-        label="Đối thủ"
+        label="Bên được thách đấu"
         value={opponentId}
         onChange={setOpponentId}
-        players={others}
-        taken={[partnerId, opponentPartnerId]}
+        players={everyone}
+        taken={[challengerId, partnerId, opponentPartnerId]}
       />
       {doubles && (
         <PlayerSelect
           id="opponent-partner"
-          label="Đồng đội của đối thủ"
+          label="Đồng đội bên được thách đấu"
           value={opponentPartnerId}
           onChange={setOpponentPartnerId}
-          players={others}
-          taken={[partnerId, opponentId]}
+          players={everyone}
+          taken={[challengerId, partnerId, opponentId]}
         />
       )}
 
@@ -146,13 +157,12 @@ export function NewMatchForm({ meId }: { meId: string }) {
 }
 
 /** Nút nhận kèo, hủy kèo và ghi tỷ số cho một trận còn mở mà mình tham gia. */
-export function MatchButtons({ match, meId }: { match: ArenaMatch; meId: string }) {
+export function MatchButtons({ match }: { match: ArenaMatch; meId?: string }) {
   const [mode, setMode] = useState<"idle" | "confirm-cancel" | "score">("idle");
   const [scores, setScores] = useState(() => Array.from({ length: match.sets }, () => ({ challenger: "", opponent: "" })));
   const act = useMatchAction();
 
   if (match.voided || (match.status !== "pending" && match.status !== "active")) return null;
-  const iAmOpponent = match.opponents.some((player) => player.id === meId);
   const run = (action: "accept" | "cancel") => act.mutate({ id: match.id, action }, { onSuccess: () => setMode("idle") });
 
   function submitScore(event: FormEvent) {
@@ -212,7 +222,7 @@ export function MatchButtons({ match, meId }: { match: ArenaMatch; meId: string 
         </div>
       ) : (
         <div className="match-actions">
-          {match.status === "pending" && iAmOpponent && (
+          {match.status === "pending" && (
             <button className="btn btn-gold btn-small" onClick={() => run("accept")} disabled={act.isPending}>
               Nhận kèo
             </button>

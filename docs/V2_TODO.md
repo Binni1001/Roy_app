@@ -17,11 +17,14 @@ Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và 
 6. **Giai đoạn 4 (quản trị)** tiếp theo: nhân sự và kỳ quỹ (thêm người, mở kỳ, thành viên trong kỳ), rồi xếp lịch từ lịch bận đã khai (bản cũ mới có xếp nháp, chưa có duyệt và công bố), rồi điểm danh.
 7. **Lịch: lịch cố định của tôi** — chờ phần xếp lịch ở mục 6: ngay cả bản cũ cũng chưa lưu hay công bố lịch cố định, nên chưa có dữ liệu để hiện.
 
-Cần chủ CLB quyết định:
+Chủ CLB đã quyết định (phiên 5):
 
-- Lịch: thành viên có được xem tên người đã giữ chỗ không? Bản cũ chỉ cho admin xem (docs/open-play-days.md).
-- Kèo: v2 bắt người tạo kèo phải là bên thách đấu và chỉ bên bị thách mới nhận kèo; bản cũ cho thành viên tạo kèo hộ người khác.
-- Ảnh đại diện: chính sách bucket `avatars` hiện cho mọi tài khoản đã đăng nhập ghi đè hoặc xóa ảnh của bất kỳ ai (`supabase/20260624_avatars_storage.sql`). v2 không dùng quyền này (ảnh đi qua API bằng khóa service), nhưng bản cũ vẫn tải ảnh thẳng từ trình duyệt nên chưa siết được ngay. Siết lại sau khi tắt bản cũ, hoặc sớm hơn nếu chủ CLB muốn.
+- Lịch: thành viên **được xem tên** người đã giữ chỗ (khác bản cũ, nơi chỉ admin xem). v2 đã làm theo.
+- Kèo: **giữ quy tắc như bản cũ**: thành viên tạo kèo được cho bất kỳ ai trong CLB, và ai trong trận cũng nhận, hủy, ghi tỷ số được. v2 đã làm theo.
+
+Còn chờ chủ CLB trả lời:
+
+- Ảnh đại diện: chính sách bucket `avatars` hiện cho mọi tài khoản đã đăng nhập ghi đè hoặc xóa ảnh của **bất kỳ ai** (`supabase/20260624_avatars_storage.sql`), không chỉ ảnh của mình. Siết lại nghĩa là mỗi người chỉ đổi được ảnh của chính mình (quản trị vẫn đổi được cho người khác). v2 đã chỉ cho đổi ảnh của mình; bản cũ còn dựa vào quyền rộng nên chỉ siết được sau khi tắt bản cũ, hoặc sớm hơn bằng một migration nhỏ.
 
 Quy ước khi làm tiếp:
 
@@ -72,7 +75,7 @@ Quy ước khi làm tiếp:
 - [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
 - [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
 - [ ] Lịch: lịch cố định của tôi (chờ phần xếp và công bố lịch ở giai đoạn 4; bản cũ cũng chưa có)
-- [ ] Lịch: thành viên có được xem tên người đã giữ chỗ không? (hỏi chủ CLB; bản cũ chỉ cho admin xem)
+- [x] Lịch: thành viên xem được tên người đã giữ chỗ (chủ CLB quyết định ở phiên 5)
 - [x] Ví hai cột trên máy tính
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
 - [x] Đấu trường: bảng lịch sử các kỳ cũ, đọc nguyên từ bảng đã lưu (5 kỳ trên dữ liệu thật)
