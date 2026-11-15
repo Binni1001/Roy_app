@@ -1,7 +1,30 @@
 # Danh sách việc — Roy Badminton v2
 
 Làm xong mục nào thì đổi `[ ]` thành `[x]`. Phạm vi và lý do: [OVERHAUL_PLAN.md](OVERHAUL_PLAN.md).
-Cập nhật lần cuối: 15/11/2026.
+Cập nhật lần cuối: 16/11/2026.
+
+## Làm tiếp ngay (theo thứ tự)
+
+Trạng thái ngày 16/11/2026: phần thành viên chỉ xem đã chạy với dữ liệu thật (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo). Mọi thứ nằm trên nhánh `claude/project-analysis-83dc4c`, chưa vào `main`, chưa deploy.
+
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`.
+
+1. **Đánh dấu thông báo đã đọc** — thao tác ghi đầu tiên, đơn giản nhất. Thêm `POST /me/notifications/read` (cập nhật `notifications.read = true` theo `person_id`), gọi khi mở màn hình Thông báo, làm mới cache `["me","notifications"]`.
+2. **Giữ chỗ và hủy chỗ buổi tự đăng ký** — gọi RPC có sẵn `mutate_open_play_day` (xem cách bản cũ gọi trong `backend/src/modules/session-planning/`). RPC đã tự kiểm tra sức chứa 8 chỗ, hạn 17:30 và quyền nhóm.
+3. **Lịch: xem ai đã giữ chỗ** — `open_play_registrations` nối `people`; thành viên chỉ thấy tên, không thấy email.
+4. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần thêm khóa PayOS vào `v2/apps/api/.env`. Phải thử trên bản sao trước, không thử trên database thật.
+5. **Tạo kèo, nhận kèo, ghi tỷ số** — ghi qua RPC `finalize_pk_match`; kiểm tra người gọi là người tham gia trận.
+6. **Bảng lịch sử Đấu trường các kỳ cũ** — đọc `pk_leaderboard_snapshots.result`, không tính lại.
+7. **Sửa hồ sơ và ảnh đại diện**.
+8. **Tách mã theo màn hình** — gói web đang 169 KB nén; dùng `lazyRouteComponent` cho Giải đấu, Đấu trường, Ví.
+9. **Deploy thử v2** lên hai project Vercel mới (API ở `sin1`), rồi đo lại tốc độ thật.
+
+Quy ước khi làm tiếp:
+
+- Tên bảng và cột lấy từ schema thật: gọi `$SUPABASE_URL/rest/v1/` bằng khóa service (đã có trong `v2/apps/api/.env`), không đoán.
+- Truy vấn nằm trong `v2/apps/api/src/store*.ts`; logic nằm trong `routes/` và `domain/`, có test đi kèm.
+- Mọi đường `/me/*` đi qua `resolveMember` để lấy đúng người và đúng nhóm đang chọn.
+- Thao tác ghi về tiền và xếp hạng chỉ gọi RPC có sẵn của database, không viết lại bằng nhiều câu lệnh rời.
 
 ## Đã xong
 
@@ -37,6 +60,7 @@ Cập nhật lần cuối: 15/11/2026.
 - [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
 - [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
 - [ ] Lịch: xem ai đã giữ chỗ, lịch cố định của tôi
+- [x] Ví hai cột trên máy tính
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
 - [ ] Đấu trường: bảng lịch sử các kỳ cũ (đọc từ bảng đã lưu), xem kèo của người khác
 - [x] Giải đấu: danh sách giải, vòng bảng có bảng xếp hạng, các vòng loại trực tiếp

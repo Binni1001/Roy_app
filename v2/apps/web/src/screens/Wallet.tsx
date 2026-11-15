@@ -26,7 +26,7 @@ function DebtRow({ debt }: { debt: Debt }) {
 function WalletView({ wallet }: { wallet: WalletData }) {
   const { unpaidDebts, settledDebts, transactions, openLoans } = wallet;
   return (
-    <div className="stack">
+    <div className="stack wallet">
       <section className="due rise">
         <div>
           <p className="due-label">

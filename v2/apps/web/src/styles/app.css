@@ -387,3 +387,8 @@ a.brand { color: inherit; text-decoration: none; }
 .standings tr.qualified td:first-child { color: var(--gold); font-weight: 700; }
 .standings tr.qualified .row-title { color: var(--gold); }
 .standings .strong { font-weight: 700; }
+
+@media (min-width: 900px) {
+  .wallet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
+  .wallet .due { grid-column: 1 / -1; }
+}
