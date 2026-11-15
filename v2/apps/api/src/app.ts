@@ -3,6 +3,7 @@ import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
 import { loadArena, type ArenaStore } from "./routes/arena.ts";
+import { loadNotifications, loadTournament, NotFoundError, type ExtrasStore } from "./routes/extras.ts";
 import {
   loadSchedule,
   loadWallet,
@@ -14,7 +15,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore;
+  store: MemberStore & ArenaStore & ExtrasStore;
   corsOrigins: string[];
 }
 
@@ -27,6 +28,9 @@ function fail(c: Context, error: unknown) {
   }
   if (error instanceof NoProfileError) {
     return c.json({ code: "NO_PROFILE", message: "Tài khoản chưa có hồ sơ người chơi." }, 404);
+  }
+  if (error instanceof NotFoundError) {
+    return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
   }
   if (error instanceof NoGroupError) {
     return c.json({ code: "NO_GROUP", message: "Bạn chưa ở trong nhóm nào đang hoạt động." }, 403);
@@ -80,6 +84,32 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
   app.get("/me/arena", async (c) => {
     try {
       return c.json(await loadArena(await resolveMember(c.get("user"), store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/notifications", async (c) => {
+    try {
+      return c.json(await loadNotifications(await resolveMember(c.get("user"), store), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/tournaments", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      return c.json(await store.listTournaments(member.groupId));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/tournaments/:id", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      return c.json(await loadTournament(member, c.req.param("id"), store));
     } catch (error) {
       return fail(c, error);
     }

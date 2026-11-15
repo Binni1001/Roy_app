@@ -39,8 +39,8 @@ Cập nhật lần cuối: 15/11/2026.
 - [ ] Lịch: xem ai đã giữ chỗ, lịch cố định của tôi
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
 - [ ] Đấu trường: bảng lịch sử các kỳ cũ (đọc từ bảng đã lưu), xem kèo của người khác
-- [ ] Giải đấu: vòng bảng, nhánh loại trực tiếp
-- [ ] Thông báo
+- [x] Giải đấu: danh sách giải, vòng bảng có bảng xếp hạng, các vòng loại trực tiếp
+- [x] Thông báo: chuông có số chưa đọc, danh sách thông báo
 - [ ] Đối chiếu số liệu v2 với bản cũ trên cùng database
 
 ## Giai đoạn 3 — Thành viên, thao tác
@@ -51,6 +51,7 @@ Cập nhật lần cuối: 15/11/2026.
 - [ ] Tạo kèo, nhận kèo, ghi tỷ số
 - [ ] Ghép cặp ngẫu nhiên
 - [ ] Sửa hồ sơ và ảnh đại diện
+- [ ] Đánh dấu thông báo đã đọc, xóa thông báo
 
 ## Giai đoạn 4 — Quản trị
 

@@ -9,7 +9,9 @@ import { Shell } from "./layouts/Shell";
 import { Arena } from "./screens/Arena";
 import { Home } from "./screens/Home";
 import { Login } from "./screens/Login";
+import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { Schedule } from "./screens/Schedule";
+import { TournamentDetail, Tournaments } from "./screens/Tournaments";
 import { Wallet } from "./screens/Wallet";
 
 const BootstrapContext = createContext<Bootstrap | null>(null);
@@ -109,9 +111,33 @@ const walletRoute = createRoute({
   path: "/vi",
   component: Wallet,
 });
+const tournamentsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/giai-dau",
+  component: Tournaments,
+});
+const tournamentRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/giai-dau/$id",
+  component: TournamentDetail,
+});
+const notificationsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/thong-bao",
+  component: NotificationsScreen,
+});
 const profileRoute = createRoute({ getParentRoute: () => rootRoute, path: "/toi", component: Profile });
 
-const routeTree = rootRoute.addChildren([homeRoute, scheduleRoute, arenaRoute, walletRoute, profileRoute]);
+const routeTree = rootRoute.addChildren([
+  homeRoute,
+  scheduleRoute,
+  arenaRoute,
+  tournamentsRoute,
+  tournamentRoute,
+  notificationsRoute,
+  walletRoute,
+  profileRoute,
+]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });
 

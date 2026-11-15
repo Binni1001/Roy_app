@@ -156,3 +156,83 @@ export interface Arena {
   myMatches: ArenaMatch[];
   meId: string;
 }
+
+export interface NotificationItem {
+  id: string;
+  kind: string;
+  title: string;
+  body: string | null;
+  read: boolean;
+  createdAt: string;
+}
+
+export interface Notifications {
+  unread: number;
+  items: NotificationItem[];
+}
+
+export interface TournamentSummary {
+  id: string;
+  name: string;
+  /** group_stage | knockout | completed | cancelled */
+  status: string;
+  startDate: string | null;
+  endDate: string | null;
+  championName: string | null;
+}
+
+export interface TournamentTeam {
+  id: string;
+  name: string;
+  seed: number | null;
+  players: string[];
+}
+
+export interface StandingRow {
+  team: TournamentTeam;
+  rank: number;
+  qualified: boolean;
+  played: number;
+  wins: number;
+  losses: number;
+  points: number;
+  setDifference: number;
+  pointDifference: number;
+}
+
+export interface TournamentSetScore {
+  team1: number;
+  team2: number;
+}
+
+export interface TournamentMatch {
+  id: string;
+  /** group | quarterfinal | semifinal | third_place | final */
+  stage: string;
+  groupId: string | null;
+  bracketKey: string | null;
+  matchNumber: number | null;
+  /** pending | completed | bye */
+  status: string;
+  team1: TournamentTeam | null;
+  team2: TournamentTeam | null;
+  /** Mô tả nguồn đội khi chưa xác định, ví dụ nhất bảng A. */
+  team1Source: string | null;
+  team2Source: string | null;
+  team1Sets: number | null;
+  team2Sets: number | null;
+  setScores: TournamentSetScore[] | null;
+  winnerTeamId: string | null;
+}
+
+export interface TournamentGroup {
+  id: string;
+  name: string;
+  standings: StandingRow[];
+  matches: TournamentMatch[];
+}
+
+export interface TournamentDetail extends TournamentSummary {
+  groups: TournamentGroup[];
+  knockout: TournamentMatch[];
+}

@@ -6,6 +6,7 @@ import { createApp } from "./app.ts";
 import { createTokenVerifier, userFromClaims } from "./auth.ts";
 import { pickActiveGroup, type PersonRow } from "./routes/bootstrap.ts";
 import type { ArenaStore } from "./routes/arena.ts";
+import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
 import type { MemberStore } from "./routes/member.ts";
 
 const env = {
@@ -52,11 +53,24 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-type Store = MemberStore & ArenaStore;
+type Store = MemberStore & ArenaStore & ExtrasStore;
+
+const tournament = (groupId: string, status = "completed"): TournamentData => ({
+  summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
+  groupId,
+  qualifiersPerGroup: 2,
+  teams: [],
+  groups: [],
+  matches: [],
+});
 
 function setup(store: Partial<Store> = {}) {
   const periodCalls: string[] = [];
   const full: Store = {
+    listNotifications: async () => [],
+    countUnreadNotifications: async () => 4,
+    listTournaments: async () => [],
+    getTournament: async () => tournament("g1"),
     getScoringRule: async () => "fixed_3_2_v1",
     listPeriodMatches: async () => [],
     findPerson: async () => person,
@@ -170,4 +184,29 @@ test("schedule is empty when the group has no open period", async () => {
   const { get } = setup({ findOpenPeriod: async () => null });
   const res = await get(await bearer(), "/me/schedule");
   assert.deepEqual(await res.json(), { period: null, openDays: [], playedSessions: [] });
+});
+
+test("notifications return the unread count with the latest items", async () => {
+  const res = await setup().get(await bearer(), "/me/notifications");
+  assert.deepEqual(await res.json(), { items: [], unread: 4 });
+});
+
+test("a tournament of the caller group is returned", async () => {
+  const res = await setup().get(await bearer(), "/me/tournaments/t1");
+  assert.equal(res.status, 200);
+  assert.equal((await res.json()).name, "Giai doi");
+});
+
+test("a tournament of another group, a draft, or a missing one is reported as not found", async () => {
+  for (const getTournament of [async () => tournament("other"), async () => tournament("g1", "draft"), async () => null]) {
+    const res = await setup({ getTournament }).get(await bearer(), "/me/tournaments/t1");
+    assert.equal(res.status, 404);
+  }
+});
+
+test("the tournament list is asked only for the caller active group", async () => {
+  const seen: string[] = [];
+  const { get } = setup({ listTournaments: async (groupId) => { seen.push(groupId); return []; } });
+  await get(await bearer(), "/me/tournaments");
+  assert.deepEqual(seen, ["g1"]);
 });

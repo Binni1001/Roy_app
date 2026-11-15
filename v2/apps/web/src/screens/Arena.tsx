@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "@tanstack/react-router";
 import type { Arena as ArenaData, ArenaMatch, ArenaPlayer, LeaderboardRow, MatchType } from "@roy/shared";
 import { useArena } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
@@ -159,6 +160,9 @@ function ArenaView({ arena }: { arena: ArenaData }) {
           <p className="muted">Bạn chưa có kèo nào trong kỳ này.</p>
         )}
         <p className="muted small">Tạo kèo và ghi tỷ số trong app sẽ có ở bản cập nhật tới.</p>
+        <Link to="/giai-dau" className="btn btn-ghost link-btn">
+          Xem giải đấu của câu lạc bộ
+        </Link>
       </section>
     </div>
   );
