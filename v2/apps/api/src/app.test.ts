@@ -10,6 +10,7 @@ import type { ArenaStore } from "./routes/arena.ts";
 import type { ArenaHistoryStore } from "./routes/arenaHistory.ts";
 import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
 import type { MemberStore } from "./routes/member.ts";
+import type { ProfileStore } from "./routes/profile.ts";
 
 const env = {
   SUPABASE_URL: "https://example.supabase.co",
@@ -55,7 +56,7 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-type Store = MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore;
+type Store = MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore;
 
 const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -69,6 +70,8 @@ const tournament = (groupId: string, status = "completed"): TournamentData => ({
 function setup(store: Partial<Store> = {}) {
   const periodCalls: string[] = [];
   const full: Store = {
+    getProfile: async () => ({ fullName: "Minh", nickname: null, phone: null, bio: null, email: "a@b.c", avatarUrl: null }),
+    updateProfile: async (_id, input) => ({ ...input, email: "a@b.c", avatarUrl: null }),
     markNotificationsRead: async () => {},
     findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
     mutateOpenDay: async () => {},
@@ -106,7 +109,13 @@ function setup(store: Partial<Store> = {}) {
     app.request(path, { headers });
   const post = (headers: Record<string, string>, path: string) =>
     app.request(path, { method: "POST", headers });
-  return { get, post, periodCalls };
+  const put = (headers: Record<string, string>, path: string, body: unknown) =>
+    app.request(path, {
+      method: "PUT",
+      headers: { ...headers, "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+    });
+  return { get, post, put, periodCalls };
 }
 
 test("bootstrap rejects a missing token", async () => {
@@ -273,4 +282,23 @@ test("arena history is asked only for the caller active group", async () => {
   const res = await get(await bearer(), "/me/arena/history");
   assert.equal(res.status, 200);
   assert.deepEqual(seen, ["g1"]);
+});
+
+test("saving a profile writes only the caller row and only the cleaned display fields", async () => {
+  const writes: unknown[] = [];
+  const { get } = setup();
+  const app = setup({ updateProfile: async (id, input) => { writes.push([id, input]); return { ...input, email: null, avatarUrl: null }; } });
+  const res = await app.put(await bearer(), "/me/profile", { fullName: " Minh  Anh ", nickname: "", phone: "0901 234 567", bio: null, status: "inactive" });
+  assert.equal(res.status, 200);
+  assert.deepEqual(writes, [["p1", { fullName: "Minh Anh", nickname: null, phone: "0901234567", bio: null }]]);
+  assert.equal((await get(await bearer(), "/me/profile")).status, 200);
+});
+
+test("an invalid profile is rejected before anything is written", async () => {
+  let written = 0;
+  const app = setup({ updateProfile: async (_id, input) => { written++; return { ...input, email: null, avatarUrl: null }; } });
+  const res = await app.put(await bearer(), "/me/profile", { fullName: "A" });
+  assert.equal(res.status, 400);
+  assert.equal((await res.json()).code, "INVALID");
+  assert.equal(written, 0);
 });

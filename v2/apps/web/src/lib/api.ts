@@ -21,7 +21,16 @@ export function apiPost<T>(path: string): Promise<T> {
   return request<T>("POST", path);
 }
 
-async function request<T>(method: "GET" | "POST", path: string, signal?: AbortSignal): Promise<T> {
+export function apiPut<T>(path: string, body: unknown): Promise<T> {
+  return request<T>("PUT", path, undefined, body);
+}
+
+async function request<T>(
+  method: "GET" | "POST" | "PUT",
+  path: string,
+  signal?: AbortSignal,
+  body?: unknown,
+): Promise<T> {
   // getSession đọc phiên từ bộ nhớ trình duyệt và tự làm mới token khi sắp hết hạn.
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -31,7 +40,11 @@ async function request<T>(method: "GET" | "POST", path: string, signal?: AbortSi
     response = await fetch(`${API_URL}${path}`, {
       method,
       signal,
-      headers: token ? { Authorization: `Bearer ${token}` } : {},
+      headers: {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        ...(body === undefined ? {} : { "Content-Type": "application/json" }),
+      },
+      body: body === undefined ? undefined : JSON.stringify(body),
     });
   } catch (error) {
     if (signal?.aborted) throw error;

@@ -1,6 +1,7 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
+import { parseProfileInput, ValidationError, type ProfileStore } from "./routes/profile.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
 import { ActionError, changeOpenDay, type ActionsStore, type OpenDayAction } from "./routes/actions.ts";
 import { loadArena, type ArenaStore } from "./routes/arena.ts";
@@ -17,7 +18,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore;
+  store: MemberStore & ArenaStore & ArenaHistoryStore & ExtrasStore & ActionsStore & ProfileStore;
   corsOrigins: string[];
 }
 
@@ -30,6 +31,9 @@ function fail(c: Context, error: unknown) {
   }
   if (error instanceof NoProfileError) {
     return c.json({ code: "NO_PROFILE", message: "Tài khoản chưa có hồ sơ người chơi." }, 404);
+  }
+  if (error instanceof ValidationError) {
+    return c.json({ code: "INVALID", message: error.message }, 400);
   }
   if (error instanceof ActionError) {
     return c.json({ code: error.code, message: error.message }, error.status);
@@ -124,6 +128,27 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
     try {
       const member = await resolveMember(c.get("user"), store);
       return c.json(await loadTournament(member, c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/me/profile", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      const profile = await store.getProfile(member.personId);
+      if (!profile) throw new NotFoundError();
+      return c.json(profile);
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.put("/me/profile", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      const input = parseProfileInput(await c.req.json().catch(() => null));
+      return c.json(await store.updateProfile(member.personId, input));
     } catch (error) {
       return fail(c, error);
     }

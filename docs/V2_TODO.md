@@ -17,8 +17,8 @@ Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và 
 4. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần thêm khóa PayOS vào `v2/apps/api/.env`. Phải thử trên bản sao trước, không thử trên database thật.
 5. **Tạo kèo, nhận kèo, ghi tỷ số** — ghi qua RPC `finalize_pk_match`; kiểm tra người gọi là người tham gia trận.
 6. ~~Bảng lịch sử Đấu trường các kỳ cũ~~ — xong (`GET /me/arena/history`, thẻ Các kỳ trước trong màn hình Đấu trường).
-7. **Sửa hồ sơ và ảnh đại diện**.
-8. **Tách mã theo màn hình** — gói web đang 169 KB nén; dùng `lazyRouteComponent` cho Giải đấu, Đấu trường, Ví.
+7. ~~Sửa hồ sơ~~ — xong phần họ tên, biệt danh, số điện thoại, giới thiệu (`GET/PUT /me/profile`), **chưa bấm lưu trên dữ liệu thật**. Còn lại: đổi ảnh đại diện (tải lên bucket `avatars` của Supabase Storage).
+8. ~~Tách mã theo màn hình~~ — đã tách, nhưng gần như không giảm dung lượng: mỗi màn hình chỉ 1–2 KB nén, còn ~169 KB nén là thư viện (supabase-js, react-dom, TanStack). Muốn nhẹ hơn thật thì thay `@supabase/supabase-js` ở web bằng `@supabase/auth-js` (chỉ cần đăng nhập); việc này đụng luồng đăng nhập nên phải thử lại đăng nhập, Google và làm mới token.
 9. **Deploy thử v2** lên hai project Vercel mới (API ở `sin1`), rồi đo lại tốc độ thật.
 
 Quy ước khi làm tiếp:
@@ -27,6 +27,8 @@ Quy ước khi làm tiếp:
 - Truy vấn nằm trong `v2/apps/api/src/store*.ts`; logic nằm trong `routes/` và `domain/`, có test đi kèm.
 - Mọi đường `/me/*` đi qua `resolveMember` để lấy đúng người và đúng nhóm đang chọn.
 - Thao tác ghi về tiền và xếp hạng chỉ gọi RPC có sẵn của database, không viết lại bằng nhiều câu lệnh rời.
+
+> **Cần chủ CLB làm một lần:** Git trên máy này đã mất đăng nhập GitHub, nên các commit mới chỉ nằm trên máy, chưa lên GitHub. Mở terminal trong thư mục dự án và chạy `git push origin claude/project-analysis-83dc4c`, đăng nhập GitHub trong cửa sổ hiện ra.
 
 ## Đã xong
 
@@ -50,7 +52,8 @@ Quy ước khi làm tiếp:
 - [x] Đăng nhập thật trên v2 và xem `/bootstrap` trả đúng hồ sơ, nhóm, kỳ (trang chủ tải đủ trong ~1 giây)
 - [ ] Đăng ký, quên mật khẩu, đặt lại mật khẩu
 - [ ] Màn hình cho tài khoản chưa có hồ sơ, đang chờ duyệt, đã nghỉ
-- [ ] Tách mã theo màn hình (gói web hiện 164 KB nén)
+- [x] Tách mã theo màn hình (màn hình đã tách; phần nặng còn lại là thư viện)
+- [ ] Giảm dung lượng thư viện: dùng `@supabase/auth-js` thay cho `@supabase/supabase-js` ở web
 - [ ] Service worker: mở lại app khi mất mạng, nút cài app
 - [ ] Deploy thử: project Vercel cho `v2/apps/api` (sin1) và `v2/apps/web`
 - [ ] CI: kiểm tra kiểu, test, build mỗi lần đẩy code
@@ -78,7 +81,8 @@ Quy ước khi làm tiếp:
 - [ ] Khai lịch bận
 - [ ] Tạo kèo, nhận kèo, ghi tỷ số
 - [ ] Ghép cặp ngẫu nhiên
-- [ ] Sửa hồ sơ và ảnh đại diện
+- [x] Sửa hồ sơ: họ tên, biệt danh, số điện thoại, giới thiệu (đã viết và có test; chưa bấm lưu trên dữ liệu thật)
+- [ ] Đổi ảnh đại diện
 - [x] Đánh dấu thông báo đã đọc (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Xóa thông báo
 

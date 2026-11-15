@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file-if-exists=.env src/dev.ts",
     "typecheck": "tsc --noEmit -p .",
-    "test": "tsx --test src/app.test.ts src/domain/leaderboard.test.ts src/domain/standings.test.ts src/routes/arenaHistory.test.ts"
+    "test": "tsx --test src/app.test.ts src/domain/leaderboard.test.ts src/domain/standings.test.ts src/routes/arenaHistory.test.ts src/routes/profile.test.ts"
   },
   "dependencies": {
     "@hono/node-server": "^1.13.0",

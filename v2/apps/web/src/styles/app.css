@@ -419,3 +419,19 @@ h3 { margin: 14px 0 0; font-size: 14px; font-weight: 600; color: var(--muted); }
 @media (min-width: 900px) {
   .arena > .card:nth-child(3) { grid-column: 1 / -1; }
 }
+
+/* Biểu mẫu */
+.narrow { max-width: 520px; }
+.form label { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.form input, .form textarea {
+  min-height: 48px;
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 12px 14px;
+  font: inherit;
+  resize: vertical;
+}
+.form .btn { margin-top: 8px; }
+.ok { color: #8fd8ae; font-size: 14px; }

@@ -79,18 +79,6 @@ function Root() {
   );
 }
 
-function Profile() {
-  const { me } = useBootstrapData();
-  return (
-    <section className="card rise">
-      <h1>{me?.fullName ?? "Tài khoản"}</h1>
-      <button className="btn btn-ghost" onClick={() => void supabase.auth.signOut()}>
-        Đăng xuất
-      </button>
-    </section>
-  );
-}
-
 const rootRoute = createRootRoute({ component: Root });
 
 const homeRoute = createRoute({
@@ -128,7 +116,11 @@ const notificationsRoute = createRoute({
   path: "/thong-bao",
   component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
-const profileRoute = createRoute({ getParentRoute: () => rootRoute, path: "/toi", component: Profile });
+const profileRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/toi",
+  component: lazyRouteComponent(() => import("./screens/Profile"), "Profile"),
+});
 
 const routeTree = rootRoute.addChildren([
   homeRoute,

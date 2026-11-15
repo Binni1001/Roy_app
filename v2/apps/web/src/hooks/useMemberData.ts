@@ -3,12 +3,14 @@ import type {
   Arena,
   ArenaHistoryPeriod,
   Notifications,
+  Profile,
+  ProfileInput,
   Schedule,
   TournamentDetail,
   TournamentSummary,
   Wallet,
 } from "@roy/shared";
-import { apiGet, apiPost } from "../lib/api";
+import { apiGet, apiPost, apiPut } from "../lib/api";
 
 // Cùng một khóa cache cho mọi màn hình: trang chủ và màn hình chi tiết dùng chung một lần tải.
 
@@ -83,5 +85,25 @@ export function useArenaHistory() {
     queryFn: ({ signal }) => apiGet<ArenaHistoryPeriod[]>("/me/arena/history", signal),
     // Bảng của kỳ đã đóng không đổi nữa.
     staleTime: 60 * 60_000,
+  });
+}
+
+export function useProfile() {
+  return useQuery({
+    queryKey: ["me", "profile"],
+    queryFn: ({ signal }) => apiGet<Profile>("/me/profile", signal),
+  });
+}
+
+export function useSaveProfile() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (input: Record<keyof ProfileInput, string>) => apiPut<Profile>("/me/profile", input),
+    onSuccess: (data) => {
+      client.setQueryData(["me", "profile"], data);
+      // Tên và biệt danh còn hiện ở trang chủ và bảng xếp hạng.
+      void client.invalidateQueries({ queryKey: ["bootstrap"] });
+      void client.invalidateQueries({ queryKey: ["me", "arena"] });
+    },
   });
 }

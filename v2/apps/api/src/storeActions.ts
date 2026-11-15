@@ -1,8 +1,32 @@
 import { db } from "./db.ts";
+import type { Profile } from "@roy/shared";
 import { ActionError, type ActionsStore } from "./routes/actions.ts";
+import type { ProfileStore } from "./routes/profile.ts";
+
+const PROFILE = "full_name, nickname, phone, bio, email, avatar_url";
+
+interface ProfileRow {
+  full_name: string;
+  nickname: string | null;
+  phone: string | null;
+  bio: string | null;
+  email: string | null;
+  avatar_url: string | null;
+}
+
+function toProfile(row: ProfileRow): Profile {
+  return {
+    fullName: row.full_name,
+    nickname: row.nickname,
+    phone: row.phone,
+    bio: row.bio,
+    email: row.email,
+    avatarUrl: row.avatar_url,
+  };
+}
 
 /** Các thao tác ghi của thành viên. Việc kiểm tra nghiệp vụ nằm trong RPC của database. */
-export const supabaseActions: ActionsStore = {
+export const supabaseActions: ActionsStore & ProfileStore = {
   async markNotificationsRead(personId) {
     const { error } = await db()
       .from("notifications")
@@ -52,5 +76,22 @@ export const supabaseActions: ActionsStore = {
     }
     console.error("[mutate_open_play_day]", error.message);
     throw new ActionError("Không lưu được đăng ký. Thử lại sau.", 503, "OPEN_DAY_ERROR");
+  },
+
+  async getProfile(personId) {
+    const { data, error } = await db().from("people").select(PROFILE).eq("id", personId).maybeSingle();
+    if (error) throw new Error(error.message);
+    return data ? toProfile(data as unknown as ProfileRow) : null;
+  },
+
+  async updateProfile(personId, input) {
+    const { data, error } = await db()
+      .from("people")
+      .update({ full_name: input.fullName, nickname: input.nickname, phone: input.phone, bio: input.bio })
+      .eq("id", personId)
+      .select(PROFILE)
+      .single();
+    if (error) throw new Error(error.message);
+    return toProfile(data as unknown as ProfileRow);
   },
 };

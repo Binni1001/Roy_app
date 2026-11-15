@@ -255,3 +255,16 @@ export interface ArenaHistoryPeriod {
   singles: ArenaHistoryRow[];
   doubles: ArenaHistoryRow[];
 }
+
+/** Phần hồ sơ thành viên tự sửa được. */
+export interface ProfileInput {
+  fullName: string;
+  nickname: string | null;
+  phone: string | null;
+  bio: string | null;
+}
+
+export interface Profile extends ProfileInput {
+  email: string | null;
+  avatarUrl: string | null;
+}
