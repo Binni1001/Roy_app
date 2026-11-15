@@ -119,6 +119,11 @@ const notificationsRoute = createRoute({
   path: "/thong-bao",
   component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
+const adminMatchesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/quan-ly-keo",
+  component: lazyRouteComponent(() => import("./screens/AdminMatches"), "AdminMatches"),
+});
 const moneyRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/cong-no",
@@ -183,6 +188,7 @@ const routeTree = rootRoute.addChildren([
   shuttlesRoute,
   moneyRoute,
   reportRoute,
+  adminMatchesRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });

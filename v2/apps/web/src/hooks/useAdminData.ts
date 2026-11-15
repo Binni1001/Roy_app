@@ -291,3 +291,33 @@ export function useReport(periodId: string) {
     queryFn: ({ signal }) => apiGet<PeriodReport>("/admin/periods/" + encodeURIComponent(periodId) + "/report", signal),
   });
 }
+
+export interface AdminMatchesData {
+  period: import("@roy/shared").PeriodSummary | null;
+  matches: import("@roy/shared").AdminMatch[];
+  notice: string | null;
+}
+
+const ADMIN_MATCHES = ["me", "admin", "matches"] as const;
+
+export function useAdminMatches(enabled: boolean) {
+  return useQuery({
+    queryKey: ADMIN_MATCHES,
+    enabled,
+    queryFn: ({ signal }) => apiGet<AdminMatchesData>("/admin/matches", signal),
+  });
+}
+
+/** Sửa hoặc hủy kết quả đổi bảng xếp hạng: làm mới đấu trường của mọi người. */
+export function useAdminMatchAction() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, action, body }: { id: string; action: "cancel" | "result" | "correct" | "void"; body?: unknown }) =>
+      apiPost<AdminMatchesData>("/admin/matches/" + encodeURIComponent(id) + "/" + action, body),
+    onSuccess: (data) => {
+      client.setQueryData(ADMIN_MATCHES, data);
+      void client.invalidateQueries({ queryKey: ["me", "arena"] });
+    },
+    onError: () => void client.invalidateQueries({ queryKey: ADMIN_MATCHES }),
+  });
+}

@@ -7,7 +7,7 @@ Cập nhật lần cuối: phiên 5.
 
 Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo, khai lịch bận), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Owner duyệt được yêu cầu vào nhóm ngay trên v2. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã đẩy lên GitHub, đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
 
-Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 104 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 109 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
 
 0. **Chủ CLB chạy ba migration** trong Supabase SQL Editor, mỗi file một lần:
    - `supabase/20261116_avatars_own_only.sql`: siết quyền ảnh đại diện. Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
@@ -108,7 +108,7 @@ Quy ước khi làm tiếp:
 - [x] Mượn cầu đánh sân ngoài: ghi, đánh dấu đã trả vào quỹ, hủy
 - [x] Công nợ: khoản thu tay, nhắc nợ, thu tiền (đánh dấu đã trả và ghi quỹ cùng lúc qua `deposit_fund_atomic`), hủy nợ; bù trừ số dư vẫn chỉ chạy tự động bằng trigger (Tôi → Quản trị → Công nợ & sổ quỹ)
 - [x] Sổ quỹ: thu (nộp quỹ), chi, hoàn số dư qua `refund_person_balance`; không có kết chuyển. Số dư quỹ đã đối chiếu khớp với hàm `shuttle_fund_balance` trên 3 kỳ thật
-- [ ] Quản lý kèo PK: sửa và hủy kết quả; chỉ tính luật +3/−2
+- [x] Quản lý kèo PK: ghi kết quả hộ, hủy kèo, sửa tỷ số (`correct_pk_match_result`), hủy kết quả có lý do (`void_pk_match`); chỉ kỳ đang mở (Tôi → Quản trị → Quản lý kèo)
 - [ ] Giải đấu đôi: tạo giải, xếp đội, nhập tỷ số
 - [x] Một trang báo cáo kỳ, có in (Kỳ quỹ → Báo cáo): phải thu, đã thu, còn nợ theo loại, quỹ, tiền cầu, kết quả chốt, người còn nợ
 - [ ] Chạy thử trọn một kỳ trên bản sao

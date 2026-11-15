@@ -622,3 +622,12 @@ export interface PeriodReport {
   };
   unpaid: PersonDebts[];
 }
+
+/** Kèo như owner thấy ở màn hình Quản lý kèo. */
+export interface AdminMatch extends ArenaMatch {
+  matchNumber: number | null;
+  note: string | null;
+  voidReason: string | null;
+  /** Gửi lại khi sửa tỷ số, để không ghi đè thay đổi ở nơi khác. */
+  updatedAt: string;
+}

@@ -14,6 +14,7 @@ import {
   removeSession,
   type AdminScheduleStore,
 } from "./routes/adminSchedule.ts";
+import { adminMatchAction, loadAdminMatches, type AdminMatchStore } from "./routes/adminMatches.ts";
 import {
   addDebt as addDebtRoute,
   addFund,
@@ -73,7 +74,8 @@ export interface AppDeps {
     PeriodsStore &
     AdminScheduleStore &
     ShuttleStore &
-    MoneyStore;
+    MoneyStore &
+    AdminMatchStore;
   corsOrigins: string[];
 }
 
@@ -138,6 +140,23 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
         return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
       }
       return c.json(await decide(c.get("user"), c.req.param("personId"), decision, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.get("/admin/matches", async (c) => {
+    try {
+      return c.json(await loadAdminMatches(c.get("user"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/admin/matches/:id/:action", async (c) => {
+    try {
+      const body = await c.req.json().catch(() => null);
+      return c.json(await adminMatchAction(c.get("user"), c.req.param("id"), c.req.param("action"), body, store));
     } catch (error) {
       return fail(c, error);
     }
