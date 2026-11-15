@@ -1,18 +1,20 @@
 import { createContext, useContext } from "react";
-import { Outlet, createRootRoute, createRoute, createRouter } from "@tanstack/react-router";
+import {
+  Outlet,
+  createRootRoute,
+  createRoute,
+  createRouter,
+  lazyRouteComponent,
+} from "@tanstack/react-router";
 import type { Bootstrap } from "@roy/shared";
 import { useBootstrap } from "./hooks/useBootstrap";
 import { useSession } from "./hooks/useSession";
 import { ApiRequestError } from "./lib/api";
 import { supabase } from "./lib/supabase";
 import { Shell } from "./layouts/Shell";
-import { Arena } from "./screens/Arena";
 import { Home } from "./screens/Home";
 import { Login } from "./screens/Login";
-import { NotificationsScreen } from "./screens/NotificationsScreen";
 import { Schedule } from "./screens/Schedule";
-import { TournamentDetail, Tournaments } from "./screens/Tournaments";
-import { Wallet } from "./screens/Wallet";
 
 const BootstrapContext = createContext<Bootstrap | null>(null);
 
@@ -104,27 +106,27 @@ const scheduleRoute = createRoute({
 const arenaRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/dau-truong",
-  component: Arena,
+  component: lazyRouteComponent(() => import("./screens/Arena"), "Arena"),
 });
 const walletRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/vi",
-  component: Wallet,
+  component: lazyRouteComponent(() => import("./screens/Wallet"), "Wallet"),
 });
 const tournamentsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/giai-dau",
-  component: Tournaments,
+  component: lazyRouteComponent(() => import("./screens/Tournaments"), "Tournaments"),
 });
 const tournamentRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/giai-dau/$id",
-  component: TournamentDetail,
+  component: lazyRouteComponent(() => import("./screens/Tournaments"), "TournamentDetail"),
 });
 const notificationsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/thong-bao",
-  component: NotificationsScreen,
+  component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
 const profileRoute = createRoute({ getParentRoute: () => rootRoute, path: "/toi", component: Profile });
 
