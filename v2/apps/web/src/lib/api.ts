@@ -13,7 +13,15 @@ export class ApiRequestError extends Error {
   }
 }
 
-export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+export function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  return request<T>("GET", path, signal);
+}
+
+export function apiPost<T>(path: string): Promise<T> {
+  return request<T>("POST", path);
+}
+
+async function request<T>(method: "GET" | "POST", path: string, signal?: AbortSignal): Promise<T> {
   // getSession đọc phiên từ bộ nhớ trình duyệt và tự làm mới token khi sắp hết hạn.
   const { data } = await supabase.auth.getSession();
   const token = data.session?.access_token;
@@ -21,6 +29,7 @@ export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> 
   let response: Response;
   try {
     response = await fetch(`${API_URL}${path}`, {
+      method,
       signal,
       headers: token ? { Authorization: `Bearer ${token}` } : {},
     });

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import type {
   Arena,
   Notifications,
@@ -7,7 +7,7 @@ import type {
   TournamentSummary,
   Wallet,
 } from "@roy/shared";
-import { apiGet } from "../lib/api";
+import { apiGet, apiPost } from "../lib/api";
 
 // Cùng một khóa cache cho mọi màn hình: trang chủ và màn hình chi tiết dùng chung một lần tải.
 
@@ -53,5 +53,25 @@ export function useTournament(id: string) {
     queryFn: ({ signal }) =>
       apiGet<TournamentDetail>("/me/tournaments/" + encodeURIComponent(id), signal),
     staleTime: 5 * 60_000,
+  });
+}
+
+/** Ghi xong thì đặt luôn kết quả máy chủ trả về vào cache, không phải tải lại. */
+export function useMarkNotificationsRead() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: () => apiPost<Notifications>("/me/notifications/read"),
+    onSuccess: (data) => client.setQueryData(["me", "notifications"], data),
+  });
+}
+
+export function useOpenDayAction() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: ({ dayId, action }: { dayId: string; action: "join" | "leave" }) =>
+      apiPost<Schedule>("/me/open-days/" + encodeURIComponent(dayId) + "/" + action),
+    onSuccess: (data) => client.setQueryData(["me", "schedule"], data),
+    // Lỗi thường do dữ liệu đã đổi (đủ người, quá giờ): tải lại để màn hình khớp thực tế.
+    onError: () => void client.invalidateQueries({ queryKey: ["me", "schedule"] }),
   });
 }

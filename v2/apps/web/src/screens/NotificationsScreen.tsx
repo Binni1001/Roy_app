@@ -1,9 +1,10 @@
-import { useNotifications } from "../hooks/useMemberData";
+import { useMarkNotificationsRead, useNotifications } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
 
 export function NotificationsScreen() {
   const query = useNotifications();
+  const markRead = useMarkNotificationsRead();
   return (
     <>
       <h1 className="page-title">Thông báo</h1>
@@ -11,9 +12,25 @@ export function NotificationsScreen() {
         {({ items, unread }) =>
           items.length ? (
             <section className="card rise">
-              <p className="muted small">
-                {unread ? `${unread} thông báo chưa đọc` : "Bạn đã đọc hết thông báo"}
-              </p>
+              <div className="card-head">
+                <p className="muted small">
+                  {unread ? `${unread} thông báo chưa đọc` : "Bạn đã đọc hết thông báo"}
+                </p>
+                {unread > 0 && (
+                  <button
+                    className="btn btn-ghost btn-small"
+                    onClick={() => markRead.mutate()}
+                    disabled={markRead.isPending}
+                  >
+                    {markRead.isPending ? "Đang lưu…" : "Đánh dấu đã đọc"}
+                  </button>
+                )}
+              </div>
+              {markRead.isError && (
+                <p className="error" role="alert">
+                  {markRead.error.message}
+                </p>
+              )}
               <ul className="rows">
                 {items.map((item) => (
                   <li className={`row notice-row${item.read ? "" : " unread"}`} key={item.id}>
@@ -25,7 +42,6 @@ export function NotificationsScreen() {
                   </li>
                 ))}
               </ul>
-              <p className="muted small">Đánh dấu đã đọc sẽ có ở bản cập nhật tới.</p>
             </section>
           ) : (
             <section className="card rise">

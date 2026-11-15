@@ -2,6 +2,7 @@ import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
 import { requireAuth, type AuthEnv, type TokenVerifier } from "./auth.ts";
 import { AccountInactiveError, loadBootstrap } from "./routes/bootstrap.ts";
+import { ActionError, changeOpenDay, type ActionsStore, type OpenDayAction } from "./routes/actions.ts";
 import { loadArena, type ArenaStore } from "./routes/arena.ts";
 import { loadNotifications, loadTournament, NotFoundError, type ExtrasStore } from "./routes/extras.ts";
 import {
@@ -15,7 +16,7 @@ import {
 
 export interface AppDeps {
   verify: TokenVerifier;
-  store: MemberStore & ArenaStore & ExtrasStore;
+  store: MemberStore & ArenaStore & ExtrasStore & ActionsStore;
   corsOrigins: string[];
 }
 
@@ -28,6 +29,9 @@ function fail(c: Context, error: unknown) {
   }
   if (error instanceof NoProfileError) {
     return c.json({ code: "NO_PROFILE", message: "Tài khoản chưa có hồ sơ người chơi." }, 404);
+  }
+  if (error instanceof ActionError) {
+    return c.json({ code: error.code, message: error.message }, error.status);
   }
   if (error instanceof NotFoundError) {
     return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
@@ -110,6 +114,30 @@ export function createApp({ verify, store, corsOrigins }: AppDeps) {
     try {
       const member = await resolveMember(c.get("user"), store);
       return c.json(await loadTournament(member, c.req.param("id"), store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/me/notifications/read", async (c) => {
+    try {
+      const member = await resolveMember(c.get("user"), store);
+      await store.markNotificationsRead(member.personId);
+      return c.json(await loadNotifications(member, store));
+    } catch (error) {
+      return fail(c, error);
+    }
+  });
+
+  app.post("/me/open-days/:id/:action", async (c) => {
+    try {
+      const action = c.req.param("action");
+      if (action !== "join" && action !== "leave") {
+        return c.json({ code: "NOT_FOUND", message: "Không tìm thấy nội dung này." }, 404);
+      }
+      const user = c.get("user");
+      const member = await resolveMember(user, store);
+      return c.json(await changeOpenDay(user, member, c.req.param("id"), action as OpenDayAction, store));
     } catch (error) {
       return fail(c, error);
     }

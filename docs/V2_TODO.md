@@ -9,9 +9,11 @@ Trạng thái ngày 16/11/2026: phần thành viên chỉ xem đã chạy với 
 
 Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`.
 
-1. **Đánh dấu thông báo đã đọc** — thao tác ghi đầu tiên, đơn giản nhất. Thêm `POST /me/notifications/read` (cập nhật `notifications.read = true` theo `person_id`), gọi khi mở màn hình Thông báo, làm mới cache `["me","notifications"]`.
-2. **Giữ chỗ và hủy chỗ buổi tự đăng ký** — gọi RPC có sẵn `mutate_open_play_day` (xem cách bản cũ gọi trong `backend/src/modules/session-planning/`). RPC đã tự kiểm tra sức chứa 8 chỗ, hạn 17:30 và quyền nhóm.
-3. **Lịch: xem ai đã giữ chỗ** — `open_play_registrations` nối `people`; thành viên chỉ thấy tên, không thấy email.
+1. ~~Đánh dấu thông báo đã đọc~~ — đã viết (`POST /me/notifications/read`), **chưa bấm thử trên dữ liệu thật**.
+   Bản gốc: Thêm `POST /me/notifications/read` (cập nhật `notifications.read = true` theo `person_id`), gọi khi mở màn hình Thông báo, làm mới cache `["me","notifications"]`.
+2. ~~Giữ chỗ và hủy chỗ buổi tự đăng ký~~ — đã viết (`POST /me/open-days/:id/join|leave`), **chưa bấm thử trên dữ liệu thật** vì kỳ đang mở không có buổi sắp tới. Cần admin mở một ngày tự đăng ký rồi thử giữ chỗ và hủy chỗ.
+   Bản gốc: gọi RPC có sẵn `mutate_open_play_day` (xem cách bản cũ gọi trong `backend/src/modules/session-planning/`). RPC đã tự kiểm tra sức chứa 8 chỗ, hạn 17:30 và quyền nhóm.
+3. **Lịch: xem ai đã giữ chỗ** — CẦN HỎI CHỦ CLB TRƯỚC. Quy tắc bản cũ (docs/open-play-days.md): thành viên chỉ thấy số người, chỉ admin thấy tên. Không tự đổi quy tắc này.
 4. **Trả gộp bằng QR PayOS** — dùng lại RPC `create_pending_payment` và `attach_payos_link`; webhook `process_paid_payment` vẫn do backend cũ nhận cho tới khi chuyển đổi. Cần thêm khóa PayOS vào `v2/apps/api/.env`. Phải thử trên bản sao trước, không thử trên database thật.
 5. **Tạo kèo, nhận kèo, ghi tỷ số** — ghi qua RPC `finalize_pk_match`; kiểm tra người gọi là người tham gia trận.
 6. **Bảng lịch sử Đấu trường các kỳ cũ** — đọc `pk_leaderboard_snapshots.result`, không tính lại.
@@ -59,7 +61,8 @@ Quy ước khi làm tiếp:
 - [x] Trang chủ: hạng và kèo đang chờ
 - [x] Ví: công nợ, số dư, lịch sử giao dịch, tiền mượn cầu (một màn hình)
 - [x] Lịch: buổi tự đăng ký sắp tới, buổi đã chơi trong kỳ
-- [ ] Lịch: xem ai đã giữ chỗ, lịch cố định của tôi
+- [ ] Lịch: lịch cố định của tôi
+- [ ] Lịch: thành viên có được xem tên người đã giữ chỗ không? (hỏi chủ CLB; bản cũ chỉ cho admin xem)
 - [x] Ví hai cột trên máy tính
 - [x] Đấu trường: bảng xếp hạng đơn và đôi theo luật +3/−2, kèo của tôi (khớp cách tính bản cũ trên dữ liệu thật)
 - [ ] Đấu trường: bảng lịch sử các kỳ cũ (đọc từ bảng đã lưu), xem kèo của người khác
@@ -70,12 +73,13 @@ Quy ước khi làm tiếp:
 ## Giai đoạn 3 — Thành viên, thao tác
 
 - [ ] Trả gộp mọi khoản nợ bằng QR PayOS, màn hình kết quả thanh toán
-- [ ] Giữ chỗ và hủy chỗ buổi đánh
+- [x] Giữ chỗ và hủy chỗ buổi tự đăng ký (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Khai lịch bận
 - [ ] Tạo kèo, nhận kèo, ghi tỷ số
 - [ ] Ghép cặp ngẫu nhiên
 - [ ] Sửa hồ sơ và ảnh đại diện
-- [ ] Đánh dấu thông báo đã đọc, xóa thông báo
+- [x] Đánh dấu thông báo đã đọc (đã viết và có test; chưa bấm thử trên dữ liệu thật)
+- [ ] Xóa thông báo
 
 ## Giai đoạn 4 — Quản trị
 

@@ -5,6 +5,7 @@ import type { Debt } from "@roy/shared";
 import { createApp } from "./app.ts";
 import { createTokenVerifier, userFromClaims } from "./auth.ts";
 import { pickActiveGroup, type PersonRow } from "./routes/bootstrap.ts";
+import { ActionError, type ActionsStore } from "./routes/actions.ts";
 import type { ArenaStore } from "./routes/arena.ts";
 import type { ExtrasStore, TournamentData } from "./routes/extras.ts";
 import type { MemberStore } from "./routes/member.ts";
@@ -53,7 +54,7 @@ const debt = (id: string, status: Debt["status"], amount: number): Debt => ({
   paidAt: null,
 });
 
-type Store = MemberStore & ArenaStore & ExtrasStore;
+type Store = MemberStore & ArenaStore & ExtrasStore & ActionsStore;
 
 const tournament = (groupId: string, status = "completed"): TournamentData => ({
   summary: { id: "t1", name: "Giai doi", status, startDate: null, endDate: null, championName: null },
@@ -67,6 +68,9 @@ const tournament = (groupId: string, status = "completed"): TournamentData => ({
 function setup(store: Partial<Store> = {}) {
   const periodCalls: string[] = [];
   const full: Store = {
+    markNotificationsRead: async () => {},
+    findOpenDay: async () => ({ periodId: "k1", date: "2026-11-20", groupId: "g1" }),
+    mutateOpenDay: async () => {},
     listNotifications: async () => [],
     countUnreadNotifications: async () => 4,
     listTournaments: async () => [],
@@ -98,7 +102,9 @@ function setup(store: Partial<Store> = {}) {
   });
   const get = (headers: Record<string, string> = {}, path = "/bootstrap") =>
     app.request(path, { headers });
-  return { get, periodCalls };
+  const post = (headers: Record<string, string>, path: string) =>
+    app.request(path, { method: "POST", headers });
+  return { get, post, periodCalls };
 }
 
 test("bootstrap rejects a missing token", async () => {
@@ -209,4 +215,52 @@ test("the tournament list is asked only for the caller active group", async () =
   const { get } = setup({ listTournaments: async (groupId) => { seen.push(groupId); return []; } });
   await get(await bearer(), "/me/tournaments");
   assert.deepEqual(seen, ["g1"]);
+});
+
+test("marking notifications read touches only the caller", async () => {
+  const seen: string[] = [];
+  const { post } = setup({ markNotificationsRead: async (personId) => void seen.push(personId) });
+  const res = await post(await bearer(), "/me/notifications/read");
+  assert.equal(res.status, 200);
+  assert.deepEqual(seen, ["p1"]);
+});
+
+test("joining an open day calls the database with the signed-in account and returns the schedule", async () => {
+  const calls: string[] = [];
+  const { post } = setup({
+    mutateOpenDay: async (periodId, date, actorId, action) => void calls.push([periodId, date, actorId, action].join("|")),
+  });
+  const res = await post(await bearer(), "/me/open-days/d1/join");
+  assert.equal(res.status, 200);
+  assert.deepEqual(calls, ["k1|2026-11-20|user-1|join"]);
+  assert.equal((await res.json()).period.id, "k1");
+});
+
+test("an open day of another group or an unknown action is not found and nothing is written", async () => {
+  let written = 0;
+  const other = setup({
+    findOpenDay: async () => ({ periodId: "k9", date: "2026-11-20", groupId: "other" }),
+    mutateOpenDay: async () => void written++,
+  });
+  assert.equal((await other.post(await bearer(), "/me/open-days/d1/join")).status, 404);
+  const mine = setup({ mutateOpenDay: async () => void written++ });
+  assert.equal((await mine.post(await bearer(), "/me/open-days/d1/open")).status, 404);
+  assert.equal(written, 0);
+});
+
+test("a full day is reported with its own code", async () => {
+  const { post } = setup({
+    mutateOpenDay: async () => {
+      throw new ActionError("full", 409, "OPEN_DAY_FULL");
+    },
+  });
+  const res = await post(await bearer(), "/me/open-days/d1/join");
+  assert.equal(res.status, 409);
+  assert.equal((await res.json()).code, "OPEN_DAY_FULL");
+});
+
+test("write routes require a token", async () => {
+  const { post } = setup();
+  assert.equal((await post({}, "/me/open-days/d1/join")).status, 401);
+  assert.equal((await post({}, "/me/notifications/read")).status, 401);
 });

@@ -392,3 +392,9 @@ a.brand { color: inherit; text-decoration: none; }
   .wallet { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: start; }
   .wallet .due { grid-column: 1 / -1; }
 }
+
+/* Nút nhỏ trong thẻ */
+.btn-small { min-height: 44px; padding: 0 16px; font-size: 14px; }
+.btn-dark { background: var(--bg); color: var(--text); }
+.btn-dark:hover { background: #1a202b; }
+.day .btn { margin-top: 10px; width: 100%; }
