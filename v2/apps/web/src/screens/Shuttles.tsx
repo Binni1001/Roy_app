@@ -13,6 +13,7 @@ import {
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { formatDate, formatMoney } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 const todayVn = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
 const digits = (value: string, max = 9) => value.replace(/\D/g, "").slice(0, max);
@@ -138,7 +139,7 @@ function Expenses({ data }: { data: ShuttleOverview }) {
                 <button
                   className="btn btn-dark btn-small"
                   disabled={remove.isPending}
-                  onClick={() => window.confirm(`Xóa lần mua của ${e.buyerName}?`) && remove.mutate(e.id)}
+                  onClick={async () => (await confirmDialog(`Xóa lần mua của ${e.buyerName}?`)) && remove.mutate(e.id)}
                 >
                   Xóa
                 </button>
@@ -224,10 +225,10 @@ function Loans({ data }: { data: ShuttleOverview }) {
               <div className="row-amount">{formatMoney(l.amount)}</div>
               {l.status === "unpaid" && !locked && (
                 <div className="actions">
-                  <button className="btn btn-gold btn-small" disabled={act.isPending} onClick={() => window.confirm(`${l.personName} đã trả ${formatMoney(l.amount)} vào quỹ?`) && act.mutate({ id: l.id, action: "repay" })}>
+                  <button className="btn btn-gold btn-small" disabled={act.isPending} onClick={async () => (await confirmDialog(`${l.personName} đã trả ${formatMoney(l.amount)} vào quỹ?`)) && act.mutate({ id: l.id, action: "repay" })}>
                     Đã trả
                   </button>
-                  <button className="btn btn-dark btn-small" disabled={act.isPending} onClick={() => window.confirm("Hủy khoản mượn này?") && act.mutate({ id: l.id, action: "cancel" })}>
+                  <button className="btn btn-dark btn-small" disabled={act.isPending} onClick={async () => (await confirmDialog("Hủy khoản mượn này?")) && act.mutate({ id: l.id, action: "cancel" })}>
                     Hủy
                   </button>
                 </div>
@@ -327,8 +328,8 @@ function Settlement({ data }: { data: ShuttleOverview }) {
           <button
             className="btn btn-gold"
             disabled={!s.canSettle || settle.isPending}
-            onClick={() =>
-              window.confirm("Chốt chia tiền cầu? Sau khi chốt không thể sửa chi cầu, thành viên hay mức miễn của kỳ. Mỗi người sẽ nhận thông báo.") &&
+            onClick={async () =>
+              (await confirmDialog("Chốt chia tiền cầu? Sau khi chốt không thể sửa chi cầu, thành viên hay mức miễn của kỳ. Mỗi người sẽ nhận thông báo.")) &&
               settle.mutate(undefined)
             }
           >
@@ -347,7 +348,7 @@ function Settlement({ data }: { data: ShuttleOverview }) {
           <button
             className="btn btn-dark"
             disabled={!data.canClose || close.isPending}
-            onClick={() => window.confirm(`Đóng ${data.period?.name}? Kỳ đã đóng không mở lại được.`) && close.mutate(undefined)}
+            onClick={async () => (await confirmDialog(`Đóng ${data.period?.name}? Kỳ đã đóng không mở lại được.`)) && close.mutate(undefined)}
           >
             {close.isPending ? "Đang đóng…" : `Đóng ${data.period?.name ?? "kỳ"}`}
           </button>

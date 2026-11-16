@@ -14,6 +14,7 @@ import { useBootstrapData } from "../hooks/useBootstrapData";
 import { ApiRequestError } from "../lib/api";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 const STATUS: Record<string, string> = {
   draft: "Bản nháp",
@@ -176,9 +177,9 @@ function TeamBuilder({ t }: { t: AdminTournament }) {
   const set = (i: number, patch: Partial<TeamRow>) => setRows((cur) => cur.map((r, j) => (j === i ? { ...r, ...patch } : r)));
   const filled = rows.filter((r) => r.a && r.b);
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
-    if (t.teamCount && !window.confirm("Dựng lại sẽ xóa đội, bảng và lịch hiện có của giải nháp. Tiếp tục?")) return;
+    if (t.teamCount && !(await confirmDialog("Dựng lại sẽ xóa đội, bảng và lịch hiện có của giải nháp. Tiếp tục?"))) return;
     configure.mutate({
       groupCount,
       bestOf: t.bestOf,
@@ -262,8 +263,8 @@ function MatchScore({ match, t }: { match: TournamentMatch; t: AdminTournament }
       { matchId: match.id, setScores, rebuildKnockout },
       {
         onSuccess: () => setOpen(false),
-        onError: (error) => {
-          if (error instanceof ApiRequestError && error.code === "CONFIRM_REBUILD" && window.confirm(`${error.message} Đồng ý?`)) submit(event, true);
+        onError: async (error) => {
+          if (error instanceof ApiRequestError && error.code === "CONFIRM_REBUILD" && (await confirmDialog(`${error.message} Đồng ý?`))) submit(event, true);
         },
       },
     );
@@ -339,7 +340,7 @@ function TournamentView({ t }: { t: AdminTournament }) {
         {remove.isError && <p className="error">{remove.error.message}</p>}
         <div className="actions">
           {t.status === "draft" && t.teamCount > 0 && (
-            <button className="btn btn-gold btn-small" disabled={step.isPending} onClick={() => window.confirm("Công bố giải? Thành viên sẽ thấy lịch vòng bảng.") && step.mutate("publish")}>
+            <button className="btn btn-gold btn-small" disabled={step.isPending} onClick={async () => (await confirmDialog("Công bố giải? Thành viên sẽ thấy lịch vòng bảng.")) && step.mutate("publish")}>
               Công bố giải
             </button>
           )}
@@ -349,7 +350,7 @@ function TournamentView({ t }: { t: AdminTournament }) {
             </button>
           )}
           {t.status !== "cancelled" && t.status !== "completed" && t.status !== "draft" && (
-            <button className="btn btn-dark btn-small" disabled={step.isPending} onClick={() => window.confirm("Hủy giải này?") && step.mutate("cancel")}>
+            <button className="btn btn-dark btn-small" disabled={step.isPending} onClick={async () => (await confirmDialog("Hủy giải này?")) && step.mutate("cancel")}>
               Hủy giải
             </button>
           )}
@@ -357,7 +358,7 @@ function TournamentView({ t }: { t: AdminTournament }) {
             <button
               className="btn btn-dark btn-small"
               disabled={remove.isPending}
-              onClick={() => window.confirm("Xóa hẳn giải này? Không hoàn tác được.") && remove.mutate(t.id, { onSuccess: () => void navigate({ to: "/quan-ly-giai" }) })}
+              onClick={async () => (await confirmDialog("Xóa hẳn giải này? Không hoàn tác được.")) && remove.mutate(t.id, { onSuccess: () => void navigate({ to: "/quan-ly-giai" }) })}
             >
               Xóa giải
             </button>

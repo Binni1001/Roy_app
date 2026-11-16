@@ -2,6 +2,7 @@ import { X } from "lucide-react";
 import { useDeleteNotifications, useMarkNotificationsRead, useNotifications } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 export function NotificationsScreen() {
   const query = useNotifications();
@@ -9,8 +10,8 @@ export function NotificationsScreen() {
   const remove = useDeleteNotifications();
   const failure = markRead.error ?? remove.error;
 
-  function removeAll() {
-    if (window.confirm("Xóa tất cả thông báo? Không khôi phục lại được.")) remove.mutate(undefined);
+  async function removeAll() {
+    if ((await confirmDialog("Xóa tất cả thông báo? Không khôi phục lại được."))) remove.mutate(undefined);
   }
 
   return (

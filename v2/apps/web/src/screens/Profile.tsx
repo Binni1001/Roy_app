@@ -14,15 +14,22 @@ function AvatarPicker({ profile }: { profile: ProfileData }) {
   const input = useRef<HTMLInputElement>(null);
   const upload = useUploadAvatar();
   const [problem, setProblem] = useState("");
+  const [preparing, setPreparing] = useState(false);
+  const busy = preparing || upload.isPending;
 
   async function pick(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
     event.target.value = "";
     if (!file) return;
     setProblem("");
+    upload.reset();
+    setPreparing(true);
     try {
-      upload.mutate(await squareAvatar(file));
+      const image = await squareAvatar(file);
+      setPreparing(false);
+      upload.mutate(image);
     } catch (error) {
+      setPreparing(false);
       setProblem((error as Error).message);
     }
   }
@@ -38,13 +45,9 @@ function AvatarPicker({ profile }: { profile: ProfileData }) {
 
   return (
     <div className="avatar-picker">
-      <button
-        type="button"
-        className="avatar-edit"
-        onClick={() => input.current?.click()}
-        disabled={upload.isPending}
-        aria-label="Đổi ảnh đại diện"
-      >
+      {/* Nhãn gắn thẳng với ô chọn file: trình duyệt tự mở hộp chọn ảnh, không cần gọi click bằng code
+          (một số trình duyệt nhúng bỏ qua lệnh click đó). */}
+      <label className={`avatar-edit${busy ? " busy" : ""}`} htmlFor="avatar-file" aria-label="Đổi ảnh đại diện">
         {profile.avatarUrl ? (
           <img className="avatar" src={profile.avatarUrl} alt="" width="88" height="88" />
         ) : (
@@ -55,9 +58,19 @@ function AvatarPicker({ profile }: { profile: ProfileData }) {
         <span className="avatar-badge" aria-hidden="true">
           <Camera size={16} />
         </span>
-      </button>
-      <input ref={input} type="file" accept="image/*" hidden onChange={(e) => void pick(e)} />
-      <p className="muted small">{upload.isPending ? "Đang tải ảnh lên…" : "Chạm vào ảnh để đổi"}</p>
+      </label>
+      <input
+        ref={input}
+        id="avatar-file"
+        className="visually-hidden"
+        type="file"
+        accept="image/jpeg,image/png,image/webp,image/*"
+        disabled={busy}
+        onChange={(e) => void pick(e)}
+      />
+      <p className="muted small" role="status">
+        {preparing ? "Đang thu nhỏ ảnh…" : upload.isPending ? "Đang tải ảnh lên…" : upload.isSuccess ? "Đã đổi ảnh đại diện." : "Chạm vào ảnh để đổi"}
+      </p>
       {message && (
         <p className="error" role="alert">
           {message}

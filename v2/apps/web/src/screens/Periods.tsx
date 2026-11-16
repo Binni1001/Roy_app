@@ -13,6 +13,7 @@ import {
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { formatDate, formatMoney } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 const STATUS_LABEL: Record<AdminPeriod["status"], string> = { draft: "Bản nháp", open: "Đang mở", closed: "Đã đóng" };
 const MEMBER_LABEL: Record<PeriodMemberStatus, string> = { fixed: "Cố định", guest: "Vãng lai", inactive: "Nghỉ" };
@@ -108,8 +109,8 @@ function PeriodForm({
 
 function MemberRow({ member, periodId, locked }: { member: PeriodMemberRow; periodId: string; locked: boolean }) {
   const change = useChangePeriodMember(periodId);
-  const save = (status: PeriodMemberStatus, discountPercent: ShuttleDiscount) => {
-    if (status !== member.status && member.status === "fixed" && !window.confirm(`Đổi ${member.name} khỏi cố định? Phí cố định chưa trả sẽ bị hủy.`)) return;
+  const save = async (status: PeriodMemberStatus, discountPercent: ShuttleDiscount) => {
+    if (status !== member.status && member.status === "fixed" && !(await confirmDialog(`Đổi ${member.name} khỏi cố định? Phí cố định chưa trả sẽ bị hủy.`))) return;
     change.mutate({ id: member.id, status, discountPercent });
   };
   return (
@@ -223,8 +224,8 @@ function PeriodCard({ period, selected, onSelect }: { period: AdminPeriod; selec
   const edit = useEditPeriod();
   const open = useOpenPeriod();
 
-  function openNow() {
-    if (window.confirm(`Mở ${period.name}? Thành viên sẽ thấy kỳ này ngay. Chỉ được có một kỳ mở cùng lúc.`)) open.mutate(period.id);
+  async function openNow() {
+    if ((await confirmDialog(`Mở ${period.name}? Thành viên sẽ thấy kỳ này ngay. Chỉ được có một kỳ mở cùng lúc.`))) open.mutate(period.id);
   }
 
   return (

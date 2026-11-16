@@ -4,6 +4,7 @@ import { useAddDebt, useCancelDebt, useCollect, useFundEntry, useMoney, useRemin
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { debtLabel, formatDate, formatMoney } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 const digits = (value: string) => value.replace(/\D/g, "").slice(0, 9);
 const FUND_LABEL: Record<FundType, string> = { income: "Thu", expense: "Chi", refund: "Hoàn tiền", adjustment: "Điều chỉnh" };
@@ -17,10 +18,10 @@ function PersonCard({ person }: { person: PersonDebts }) {
   const chosen = person.debts.filter((d) => picked.includes(d.id)).reduce((a, d) => a + d.amount, 0);
   const error = collect.error ?? cancel.error ?? remind.error;
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     const paid = Number(amount || chosen);
-    if (!window.confirm(`Ghi nhận ${person.name} đã nộp ${formatMoney(paid)} cho ${picked.length} khoản? Tiền được ghi vào quỹ kỳ đang mở.`)) return;
+    if (!(await confirmDialog(`Ghi nhận ${person.name} đã nộp ${formatMoney(paid)} cho ${picked.length} khoản? Tiền được ghi vào quỹ kỳ đang mở.`))) return;
     collect.mutate({ personId: person.personId, debtIds: picked, amount: paid, note: null }, { onSuccess: () => setAmount("") });
   }
 
@@ -55,7 +56,7 @@ function PersonCard({ person }: { person: PersonDebts }) {
             <button
               className="icon-text"
               disabled={cancel.isPending}
-              onClick={() => window.confirm(`Hủy khoản ${formatMoney(d.amount)} của ${person.name}? Không hoàn tác được.`) && cancel.mutate(d.id)}
+              onClick={async () => (await confirmDialog(`Hủy khoản ${formatMoney(d.amount)} của ${person.name}? Không hoàn tác được.`)) && cancel.mutate(d.id)}
             >
               Hủy
             </button>
@@ -119,11 +120,11 @@ function FundForm({ data }: { data: MoneyOverview }) {
   const positive = data.people.filter((p) => p.balance > 0);
   const choices = form.type === "refund" ? positive : data.people;
 
-  function submit(event: FormEvent) {
+  async function submit(event: FormEvent) {
     event.preventDefault();
     const amount = Number(form.amount || 0);
     const verb = form.type === "income" ? "Ghi thu" : form.type === "expense" ? "Ghi chi" : "Hoàn";
-    if (!window.confirm(`${verb} ${formatMoney(amount)}?`)) return;
+    if (!(await confirmDialog(`${verb} ${formatMoney(amount)}?`))) return;
     entry.mutate(
       { type: form.type, personId: form.personId || null, amount, description: form.description.trim() || null },
       { onSuccess: () => setForm({ ...form, personId: "", amount: "", description: "" }) },

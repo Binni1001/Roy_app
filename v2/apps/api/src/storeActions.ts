@@ -94,7 +94,13 @@ export const supabaseActions: ActionsStore & ProfileStore = {
   async updateProfile(personId, input) {
     const { data, error } = await db()
       .from("people")
-      .update({ full_name: input.fullName, nickname: input.nickname, phone: input.phone, bio: input.bio })
+      .update({
+        full_name: input.fullName,
+        nickname: input.nickname,
+        phone: input.phone,
+        bio: input.bio,
+        updated_at: new Date().toISOString(),
+      })
       .eq("id", personId)
       .select(PROFILE)
       .single();

@@ -3,6 +3,7 @@ import { useBootstrapData } from "../hooks/useBootstrapData";
 import { useDecideMember, usePendingMembers } from "../hooks/useMemberData";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 /** Thẻ nhỏ ở trang chủ của owner khi có người đang chờ duyệt. */
 export function PendingCard() {
@@ -34,8 +35,8 @@ export function Approvals() {
     );
   }
 
-  function reject(personId: string, name: string) {
-    if (window.confirm(`Từ chối ${name}? Nếu người này không còn nhóm nào khác, hồ sơ sẽ chuyển sang đã nghỉ.`)) {
+  async function reject(personId: string, name: string) {
+    if ((await confirmDialog(`Từ chối ${name}? Nếu người này không còn nhóm nào khác, hồ sơ sẽ chuyển sang đã nghỉ.`))) {
       decide.mutate({ personId, decision: "reject" });
     }
   }

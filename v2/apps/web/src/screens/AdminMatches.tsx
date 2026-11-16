@@ -4,6 +4,7 @@ import { useAdminMatchAction, useAdminMatches, type AdminMatchesData } from "../
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { formatDate } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog, promptDialog } from "../lib/dialog";
 
 const names = (m: AdminMatch, side: "challengers" | "opponents") => m[side].map((p) => p.name).join(", ");
 
@@ -67,8 +68,13 @@ function MatchRow({ match }: { match: AdminMatch }) {
   const open = match.status === "pending" || match.status === "active";
   const done = match.status === "completed" && !match.voided;
 
-  function voidResult() {
-    const reason = window.prompt("Lý do hủy kết quả (ít nhất 5 ký tự). Bảng xếp hạng sẽ tính lại không có trận này.");
+  async function voidResult() {
+    const reason = await promptDialog("Lý do hủy kết quả? Bảng xếp hạng sẽ tính lại không có trận này.", {
+      placeholder: "Ví dụ: nhập nhầm đội",
+      minLength: 5,
+      confirmLabel: "Hủy kết quả",
+      danger: true,
+    });
     if (reason) act.mutate({ id: match.id, action: "void", body: { reason } });
   }
 
@@ -100,7 +106,7 @@ function MatchRow({ match }: { match: AdminMatch }) {
                 <button className="btn btn-ghost btn-small" onClick={() => setMode("result")}>
                   Ghi tỷ số
                 </button>
-                <button className="btn btn-dark btn-small" disabled={act.isPending} onClick={() => window.confirm("Hủy kèo này?") && act.mutate({ id: match.id, action: "cancel" })}>
+                <button className="btn btn-dark btn-small" disabled={act.isPending} onClick={async () => (await confirmDialog("Hủy kèo này?")) && act.mutate({ id: match.id, action: "cancel" })}>
                   Hủy kèo
                 </button>
               </>

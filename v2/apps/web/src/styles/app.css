@@ -716,3 +716,54 @@ ul.plain { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: c
 .team-row input, .team-row select { min-width: 0; }
 @media (max-width: 640px) { .team-row { grid-template-columns: 1fr 1fr; } }
 .match-sides .win { color: var(--gold-hi); font-weight: 600; }
+
+/* Hộp xác nhận trong app */
+.dialog-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  background: rgba(8, 10, 14, 0.72);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+  animation: fade 0.15s ease-out;
+}
+.dialog {
+  width: 100%;
+  max-width: 420px;
+  background: var(--surface);
+  border: 1px solid rgba(216, 174, 82, 0.35);
+  border-radius: 22px;
+  padding: 22px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.5);
+  animation: rise 0.2s var(--ease);
+}
+.dialog p { line-height: 1.5; }
+.dialog textarea {
+  border-radius: 14px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--text);
+  padding: 10px 14px;
+  font: inherit;
+  resize: vertical;
+}
+.dialog-actions { display: flex; justify-content: flex-end; gap: 8px; }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}
+label.avatar-edit { display: inline-block; }
+label.avatar-edit.busy { opacity: 0.7; pointer-events: none; }
+.avatar-picker input:focus-visible + p, label.avatar-edit:focus-within { outline: none; }

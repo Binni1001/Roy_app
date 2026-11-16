@@ -3,6 +3,7 @@ import type { ManagedPerson, PersonInput } from "@roy/shared";
 import { useAddPerson, useEditPerson, usePeople, usePersonStatus } from "../hooks/useAdminData";
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 type Form = Record<keyof PersonInput, string>;
 
@@ -93,9 +94,9 @@ function PersonRow({ person, meId }: { person: ManagedPerson; meId: string | und
   const status = usePersonStatus();
   const resting = person.status === "inactive";
 
-  function toggle() {
+  async function toggle() {
     if (resting) return status.mutate({ id: person.id, status: "active" });
-    if (window.confirm(`Cho ${person.fullName} nghỉ? Người này sẽ không vào được app của nhóm cho tới khi được cho chơi lại.`)) {
+    if ((await confirmDialog(`Cho ${person.fullName} nghỉ? Người này sẽ không vào được app của nhóm cho tới khi được cho chơi lại.`))) {
       status.mutate({ id: person.id, status: "inactive" });
     }
   }

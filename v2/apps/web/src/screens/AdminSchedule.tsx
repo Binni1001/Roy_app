@@ -13,6 +13,7 @@ import {
 import { useBootstrapData } from "../hooks/useBootstrapData";
 import { formatDate, formatMoney, formatWeekday } from "../lib/format";
 import { QueryState } from "./QueryState";
+import { confirmDialog } from "../lib/dialog";
 
 const todayVn = () => new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Ho_Chi_Minh" }).format(new Date());
 const digits = (value: string, max = 9) => value.replace(/\D/g, "").slice(0, max);
@@ -157,7 +158,7 @@ function Guest({ guest, locked }: { guest: GuestRow; locked: boolean }) {
             <button
               className="btn btn-dark btn-small"
               disabled={remove.isPending}
-              onClick={() => window.confirm(`Xóa ${guest.name} khỏi buổi? Phí khách chưa trả sẽ bị hủy.`) && remove.mutate(guest.id)}
+              onClick={async () => (await confirmDialog(`Xóa ${guest.name} khỏi buổi? Phí khách chưa trả sẽ bị hủy.`)) && remove.mutate(guest.id)}
             >
               Xóa
             </button>
@@ -235,7 +236,7 @@ function Session({ session, data }: { session: AdminSession; data: ScheduleData 
               <button
                 className="btn btn-dark btn-small"
                 disabled={remove.isPending}
-                onClick={() => window.confirm("Xóa buổi này?") && remove.mutate(session.id)}
+                onClick={async () => (await confirmDialog("Xóa buổi này?")) && remove.mutate(session.id)}
               >
                 Xóa buổi
               </button>
