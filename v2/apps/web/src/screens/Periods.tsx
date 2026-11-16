@@ -294,7 +294,17 @@ function PeriodsView({ periods }: { periods: AdminPeriod[] }) {
           <PeriodForm
             busy={create.isPending}
             error={create.error?.message ?? null}
-            onSubmit={(input) => create.mutate(input, { onSuccess: () => setCreating(false) })}
+            onSubmit={(input) =>
+              create.mutate(input, {
+                onSuccess: (list) => {
+                  setCreating(false);
+                  // Mở luôn danh sách thành viên của kỳ nháp vừa tạo, để thêm người ngay.
+                  const name = input.name.trim().replace(/\s+/g, " ");
+                  const created = list.find((p) => p.status === "draft" && p.name === name);
+                  if (created) setSelected(created.id);
+                },
+              })
+            }
             onCancel={() => {
               create.reset();
               setCreating(false);
