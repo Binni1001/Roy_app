@@ -767,3 +767,60 @@ ul.plain { margin: 6px 0 0; padding-left: 18px; display: flex; flex-direction: c
 label.avatar-edit { display: inline-block; }
 label.avatar-edit.busy { opacity: 0.7; pointer-events: none; }
 .avatar-picker input:focus-visible + p, label.avatar-edit:focus-within { outline: none; }
+
+/* Khu quản trị */
+.brand span { display: inline-flex; align-items: baseline; gap: 8px; }
+.brand-tag {
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--bg);
+  background: var(--gold);
+  border-radius: 999px;
+  padding: 2px 8px;
+}
+.mode-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  min-width: 44px;
+  justify-content: center;
+  padding: 0 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(239, 231, 210, 0.28);
+  color: var(--text);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+  transition: border-color 0.2s, background 0.2s;
+}
+.mode-switch.to-admin { border-color: rgba(216, 174, 82, 0.6); color: var(--gold-hi); }
+.mode-switch:hover { background: var(--surface-2); }
+.app-header .header-end { display: flex; align-items: center; gap: 8px; }
+.app-header .mode-switch { padding: 0; }
+.is-admin .web-header, .is-admin .app-header { border-bottom-color: rgba(216, 174, 82, 0.35); }
+.is-admin .dock { border-color: rgba(216, 174, 82, 0.35); }
+.admin-tabs {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 16px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.admin-tabs a {
+  flex: none;
+  min-height: 40px;
+  display: inline-flex;
+  align-items: center;
+  padding: 0 16px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  color: var(--muted);
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 500;
+}
+.admin-tabs a.on { color: var(--bg); background: var(--gold); border-color: var(--gold); }
+.admin-tile .big { font-size: 26px; }

@@ -223,33 +223,9 @@ export function Profile() {
       <div className="stack narrow">
         <QueryState query={query}>{(profile) => <ProfileForm profile={profile} />}</QueryState>
         {role === "owner" && (
-          <section className="card rise d1 admin-links">
-            <h2>Quản trị câu lạc bộ</h2>
-            <Link to="/lich-quan-tri" className="btn btn-ghost link-btn">
-              Lịch & điểm danh
-            </Link>
-            <Link to="/cong-no" className="btn btn-ghost link-btn">
-              Công nợ & sổ quỹ
-            </Link>
-            <Link to="/tien-cau" className="btn btn-ghost link-btn">
-              Tiền cầu & chốt kỳ
-            </Link>
-            <Link to="/ky-quy" className="btn btn-ghost link-btn">
-              Kỳ quỹ
-            </Link>
-            <Link to="/quan-ly-keo" className="btn btn-ghost link-btn">
-              Quản lý kèo
-            </Link>
-            <Link to="/quan-ly-giai" className="btn btn-ghost link-btn">
-              Quản lý giải đấu
-            </Link>
-            <Link to="/nhan-su" className="btn btn-ghost link-btn">
-              Nhân sự
-            </Link>
-            <Link to="/duyet" className="btn btn-ghost link-btn">
-              Duyệt thành viên xin vào nhóm
-            </Link>
-          </section>
+          <Link to="/quan-tri" className="btn btn-ghost link-btn">
+            Vào khu quản trị
+          </Link>
         )}
         <GroupSwitcher />
         <InstallCard />

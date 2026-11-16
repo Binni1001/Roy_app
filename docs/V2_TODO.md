@@ -101,16 +101,16 @@ Quy ước khi làm tiếp:
 
 ## Giai đoạn 4 — Quản trị
 
-- [x] Nhân sự: thêm, sửa, cho nghỉ, cho chơi lại (Tôi → Quản trị → Nhân sự; chỉ owner, theo nhóm đang xem; chưa thử ghi trên dữ liệu thật). Không có nút xóa: bản cũ cũng khuyên cho nghỉ thay vì xóa
-- [x] Kỳ quỹ: tạo, mở, đóng; thành viên trong kỳ; mức miễn tiền cầu — đóng kỳ nằm ở màn hình Tiền cầu & chốt kỳ, lưu bảng xếp hạng đúng định dạng bản cũ (đã so trùng khớp với bảng đã lưu của kỳ đóng trước). Xong tạo bản nháp, sửa, mở kỳ, thêm người vào kỳ, đổi cố định/vãng lai/nghỉ và mức miễn cầu (Tôi → Quản trị → Kỳ quỹ; cần migration `20261116_v2_period_members.sql`). Còn **đóng kỳ**: làm sau phần chốt chia tiền cầu, vì đóng kỳ đòi đã chia cầu, trả hết tiền mượn cầu, quỹ về 0 và lưu bảng xếp hạng của kỳ
-- [ ] Luồng lịch gộp: lên lịch → giữ chỗ → điểm danh → buổi đã chơi tự sinh; khách vãng lai — xong phần owner (Tôi → Quản trị → Lịch & điểm danh): mở, đóng, mở lại ngày tự đăng ký; ghi, sửa, xóa buổi đã chơi; ghi khách vãng lai với phí khách (người đã giữ chỗ ngày đó lên đầu danh sách). Cần migration `20261116_v2_guest_attendance.sql`. Còn: tự sinh buổi từ ngày tự đăng ký và xếp lịch cố định từ lịch bận
-- [x] Chi cầu: mua cầu, chia nguồn quỹ và cá nhân, dùng quỹ dư bù (Tôi → Quản trị → Tiền cầu & chốt kỳ; gọi các hàm database có sẵn của bản cũ)
+- [x] Nhân sự: thêm, sửa, cho nghỉ, cho chơi lại (Quản trị → Nhân sự; chỉ owner, theo nhóm đang xem; chưa thử ghi trên dữ liệu thật). Không có nút xóa: bản cũ cũng khuyên cho nghỉ thay vì xóa
+- [x] Kỳ quỹ: tạo, mở, đóng; thành viên trong kỳ; mức miễn tiền cầu — đóng kỳ nằm ở màn hình Tiền cầu & chốt kỳ, lưu bảng xếp hạng đúng định dạng bản cũ (đã so trùng khớp với bảng đã lưu của kỳ đóng trước). Xong tạo bản nháp, sửa, mở kỳ, thêm người vào kỳ, đổi cố định/vãng lai/nghỉ và mức miễn cầu (Quản trị → Kỳ quỹ; cần migration `20261116_v2_period_members.sql`). Còn **đóng kỳ**: làm sau phần chốt chia tiền cầu, vì đóng kỳ đòi đã chia cầu, trả hết tiền mượn cầu, quỹ về 0 và lưu bảng xếp hạng của kỳ
+- [ ] Luồng lịch gộp: lên lịch → giữ chỗ → điểm danh → buổi đã chơi tự sinh; khách vãng lai — xong phần owner (Quản trị → Lịch & điểm danh): mở, đóng, mở lại ngày tự đăng ký; ghi, sửa, xóa buổi đã chơi; ghi khách vãng lai với phí khách (người đã giữ chỗ ngày đó lên đầu danh sách). Cần migration `20261116_v2_guest_attendance.sql`. Còn: tự sinh buổi từ ngày tự đăng ký và xếp lịch cố định từ lịch bận
+- [x] Chi cầu: mua cầu, chia nguồn quỹ và cá nhân, dùng quỹ dư bù (Quản trị → Tiền cầu & chốt kỳ; gọi các hàm database có sẵn của bản cũ)
 - [x] Chốt chia tiền cầu cuối kỳ (hàm `settle_shuttle_period` có sẵn, gửi thông báo cho từng người như bản cũ)
 - [x] Mượn cầu đánh sân ngoài: ghi, đánh dấu đã trả vào quỹ, hủy
-- [x] Công nợ: khoản thu tay, nhắc nợ, thu tiền (đánh dấu đã trả và ghi quỹ cùng lúc qua `deposit_fund_atomic`), hủy nợ; bù trừ số dư vẫn chỉ chạy tự động bằng trigger (Tôi → Quản trị → Công nợ & sổ quỹ)
+- [x] Công nợ: khoản thu tay, nhắc nợ, thu tiền (đánh dấu đã trả và ghi quỹ cùng lúc qua `deposit_fund_atomic`), hủy nợ; bù trừ số dư vẫn chỉ chạy tự động bằng trigger (Quản trị → Công nợ & sổ quỹ)
 - [x] Sổ quỹ: thu (nộp quỹ), chi, hoàn số dư qua `refund_person_balance`; không có kết chuyển. Số dư quỹ đã đối chiếu khớp với hàm `shuttle_fund_balance` trên 3 kỳ thật
-- [x] Quản lý kèo PK: ghi kết quả hộ, hủy kèo, sửa tỷ số (`correct_pk_match_result`), hủy kết quả có lý do (`void_pk_match`); chỉ kỳ đang mở (Tôi → Quản trị → Quản lý kèo)
-- [x] Giải đấu đôi: tạo giải nháp, ghép đội và chia bảng (`configure_doubles_tournament`), công bố, nhập và sửa tỷ số (`save_tournament_match`), tạo vòng trong từ thứ hạng vòng bảng (`replace_tournament_knockout`; dựng lại giải thật ra đúng các cặp bản cũ đã dựng), hủy và xóa giải nháp (Tôi → Quản trị → Quản lý giải đấu). Chưa có: đổi thứ tự trận trong bảng
+- [x] Quản lý kèo PK: ghi kết quả hộ, hủy kèo, sửa tỷ số (`correct_pk_match_result`), hủy kết quả có lý do (`void_pk_match`); chỉ kỳ đang mở (Quản trị → Quản lý kèo)
+- [x] Giải đấu đôi: tạo giải nháp, ghép đội và chia bảng (`configure_doubles_tournament`), công bố, nhập và sửa tỷ số (`save_tournament_match`), tạo vòng trong từ thứ hạng vòng bảng (`replace_tournament_knockout`; dựng lại giải thật ra đúng các cặp bản cũ đã dựng), hủy và xóa giải nháp (Quản trị → Quản lý giải đấu). Chưa có: đổi thứ tự trận trong bảng
 - [x] Một trang báo cáo kỳ, có in (Kỳ quỹ → Báo cáo): phải thu, đã thu, còn nợ theo loại, quỹ, tiền cầu, kết quả chốt, người còn nợ
 - [ ] Chạy thử trọn một kỳ trên bản sao
 

@@ -282,7 +282,7 @@ function PeriodCard({ period, selected, onSelect }: { period: AdminPeriod; selec
           <button className="btn btn-ghost btn-small" onClick={onSelect}>
             {selected ? "Ẩn thành viên" : "Thành viên trong kỳ"}
           </button>
-          <Link to="/bao-cao/$id" params={{ id: period.id }} className="btn btn-ghost btn-small link-btn">
+          <Link to="/quan-tri/bao-cao/$id" params={{ id: period.id }} className="btn btn-ghost btn-small link-btn">
             Báo cáo
           </Link>
           {period.status !== "closed" && (

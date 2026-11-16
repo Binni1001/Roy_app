@@ -111,7 +111,7 @@ export function Report() {
   return (
     <>
       <div className="card-head no-print">
-        <Link to="/ky-quy" className="back">
+        <Link to="/quan-tri/ky-quy" className="back">
           ← Kỳ quỹ
         </Link>
         <button className="btn btn-ghost btn-small" onClick={() => window.print()}>

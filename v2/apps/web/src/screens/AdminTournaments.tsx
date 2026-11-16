@@ -57,7 +57,7 @@ function CreateForm() {
         knockoutStart: defaultStart(form.groupCount),
         thirdPlace: form.thirdPlace,
       },
-      { onSuccess: (t) => void navigate({ to: "/quan-ly-giai/$id", params: { id: t.id } }) },
+      { onSuccess: (t) => void navigate({ to: "/quan-tri/giai/$id", params: { id: t.id } }) },
     );
   }
   return (
@@ -138,7 +138,7 @@ export function AdminTournaments() {
                 <ul className="rows">
                   {list.map((t) => (
                     <li className="row" key={t.id}>
-                      <Link to="/quan-ly-giai/$id" params={{ id: t.id }} className="grow plain-link">
+                      <Link to="/quan-tri/giai/$id" params={{ id: t.id }} className="grow plain-link">
                         <div className="row-title">{t.name}</div>
                         <div className="row-sub">
                           {STATUS[t.status] ?? t.status} · {t.teamCount} đội · {t.groupCount} bảng · {t.bestOf} ván
@@ -358,7 +358,7 @@ function TournamentView({ t }: { t: AdminTournament }) {
             <button
               className="btn btn-dark btn-small"
               disabled={remove.isPending}
-              onClick={async () => (await confirmDialog("Xóa hẳn giải này? Không hoàn tác được.")) && remove.mutate(t.id, { onSuccess: () => void navigate({ to: "/quan-ly-giai" }) })}
+              onClick={async () => (await confirmDialog("Xóa hẳn giải này? Không hoàn tác được.")) && remove.mutate(t.id, { onSuccess: () => void navigate({ to: "/quan-tri/giai" }) })}
             >
               Xóa giải
             </button>
@@ -430,7 +430,7 @@ export function AdminTournamentDetail() {
   const query = useAdminTournament(id);
   return (
     <OwnerOnly>
-      <Link to="/quan-ly-giai" className="back">
+      <Link to="/quan-tri/giai" className="back">
         ← Quản lý giải đấu
       </Link>
       <QueryState query={query}>{(t) => <TournamentView t={t} />}</QueryState>

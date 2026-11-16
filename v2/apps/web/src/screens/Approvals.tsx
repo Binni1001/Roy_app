@@ -11,7 +11,7 @@ export function PendingCard() {
   const { data } = usePendingMembers(role === "owner");
   if (!data?.length) return null;
   return (
-    <Link to="/duyet" className="card card-link rise d3">
+    <Link to="/quan-tri/duyet" className="card card-link rise d3">
       <h2>Chờ duyệt</h2>
       <p className="big gold">{data.length} người</p>
       <p className="muted">đang xin vào nhóm · chạm để duyệt</p>

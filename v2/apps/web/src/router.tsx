@@ -119,54 +119,59 @@ const notificationsRoute = createRoute({
   path: "/thong-bao",
   component: lazyRouteComponent(() => import("./screens/NotificationsScreen"), "NotificationsScreen"),
 });
+const adminHomeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/quan-tri",
+  component: lazyRouteComponent(() => import("./screens/AdminHome"), "AdminHome"),
+});
 const adminTournamentsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/quan-ly-giai",
+  path: "/quan-tri/giai",
   component: lazyRouteComponent(() => import("./screens/AdminTournaments"), "AdminTournaments"),
 });
 const adminTournamentRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/quan-ly-giai/$id",
+  path: "/quan-tri/giai/$id",
   component: lazyRouteComponent(() => import("./screens/AdminTournaments"), "AdminTournamentDetail"),
 });
 const adminMatchesRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/quan-ly-keo",
+  path: "/quan-tri/keo",
   component: lazyRouteComponent(() => import("./screens/AdminMatches"), "AdminMatches"),
 });
 const moneyRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/cong-no",
+  path: "/quan-tri/cong-no",
   component: lazyRouteComponent(() => import("./screens/Money"), "Money"),
 });
 const reportRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/bao-cao/$id",
+  path: "/quan-tri/bao-cao/$id",
   component: lazyRouteComponent(() => import("./screens/Report"), "Report"),
 });
 const shuttlesRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/tien-cau",
+  path: "/quan-tri/tien-cau",
   component: lazyRouteComponent(() => import("./screens/Shuttles"), "Shuttles"),
 });
 const adminScheduleRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/lich-quan-tri",
+  path: "/quan-tri/lich",
   component: lazyRouteComponent(() => import("./screens/AdminSchedule"), "AdminSchedule"),
 });
 const periodsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/ky-quy",
+  path: "/quan-tri/ky-quy",
   component: lazyRouteComponent(() => import("./screens/Periods"), "Periods"),
 });
 const peopleRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/nhan-su",
+  path: "/quan-tri/nhan-su",
   component: lazyRouteComponent(() => import("./screens/People"), "People"),
 });
 const approvalsRoute = createRoute({
   getParentRoute: () => rootRoute,
-  path: "/duyet",
+  path: "/quan-tri/duyet",
   component: lazyRouteComponent(() => import("./screens/Approvals"), "Approvals"),
 });
 // Màn hình đặt lại mật khẩu do Root vẽ; route này chỉ để địa chỉ được nhận là hợp lệ.
@@ -201,6 +206,7 @@ const routeTree = rootRoute.addChildren([
   adminMatchesRoute,
   adminTournamentsRoute,
   adminTournamentRoute,
+  adminHomeRoute,
 ]);
 
 export const router = createRouter({ routeTree, defaultPreload: "intent" });
