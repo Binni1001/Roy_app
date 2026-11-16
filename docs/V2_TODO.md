@@ -7,9 +7,9 @@ Cập nhật lần cuối: phiên 5.
 
 Trạng thái sau phiên 5: phần thành viên đã gần đủ: xem (trang chủ, Ví, Lịch, Đấu trường, Giải đấu, Thông báo) và thao tác (giữ chỗ, kèo, hồ sơ, ảnh đại diện, thông báo, khai lịch bận), cùng đăng ký, quên mật khẩu, vào nhóm bằng mã mời, đổi nhóm và PWA. Owner duyệt được yêu cầu vào nhóm ngay trên v2. Code nằm trên nhánh `claude/roy-bad-refactoring-4b915c` (đã đẩy lên GitHub, đã gộp toàn bộ nhánh `claude/project-analysis-83dc4c`), chưa vào `main`, chưa deploy.
 
-Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 119 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
+Cách chạy: `cd v2 && npm install`, rồi `npm run dev:api` (cổng 5050) và `npm run dev:web` (cổng 5174). Kiểm tra: `npm run typecheck && npm test && npm run build`. 120 test API đang qua (gồm 3 bài chạy migration trên PostgreSQL nhúng và 1 bài so bảng xếp hạng với code bản cũ).
 
-0. **Chủ CLB chạy ba migration** trong Supabase SQL Editor, mỗi file một lần:
+0. **Chủ CLB chạy migration mới** `supabase/20261116_v2_fixed_means_in_period.sql` (quy cố định/vãng lai về một trạng thái: có tên trong kỳ đang mở là cố định; đồng bộ một lần ô cố định/vãng lai của hồ sơ theo Mùa 6). Ba file dưới đã chạy ngày 16/11:
    - `supabase/20261116_avatars_own_only.sql`: siết quyền ảnh đại diện. Chạy xong thì thử đổi ảnh của mình ở cả bản cũ và v2.
    - `supabase/20261116_v2_period_members.sql`: chỉ thêm hai hàm mới cho màn hình Kỳ quỹ của v2 (thêm người vào kỳ, đổi trạng thái và mức miễn cầu, kèm tạo hoặc hủy phí cố định trong một giao dịch). Không đổi bảng hay dữ liệu cũ.
    - `supabase/20261116_v2_guest_attendance.sql`: chỉ thêm hàm mới cho màn hình Lịch & điểm danh (ghi khách vãng lai kèm tạo, đổi, hủy phí khách trong một giao dịch; không bao giờ hủy phí đã trả).
@@ -93,6 +93,7 @@ Quy ước khi làm tiếp:
 - [x] Khai lịch bận: thứ thường bận và ngoại lệ từng ngày, qua RPC `save_session_planning_preferences` (chưa thử lưu trên dữ liệu thật)
 - [x] Tạo kèo, nhận kèo, hủy kèo, ghi tỷ số (đã viết và có test; chưa bấm thử trên dữ liệu thật)
 - [ ] Ghép cặp ngẫu nhiên
+- [x] Cố định/vãng lai quy về một trạng thái: có tên trong kỳ đang mở là cố định (chủ CLB quyết định 16/11). Hồ sơ không còn ô chọn riêng; vào/rời kỳ tự cập nhật `people.attendance_type` để bản cũ thấy giống
 - [x] Sửa hồ sơ: họ tên, biệt danh, số điện thoại, giới thiệu (đã viết và có test; chưa bấm lưu trên dữ liệu thật)
 - [x] Đổi ảnh đại diện (cắt vuông 512 px WebP ở trình duyệt, API kiểm tra nội dung file; chưa thử trên dữ liệu thật)
 - [x] Đánh dấu thông báo đã đọc (đã viết và có test; chưa bấm thử trên dữ liệu thật)

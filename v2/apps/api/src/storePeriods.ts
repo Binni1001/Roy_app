@@ -174,11 +174,7 @@ export const supabasePeriods: Own = {
       }[])
         .map(({ person }) => person)
         .filter((person) => !inPeriod.has(person.id))
-        .map((person) => ({
-          id: person.id,
-          name: person.nickname || person.full_name,
-          attendanceType: person.attendance_type === "fixed" ? ("fixed" as const) : ("guest" as const),
-        }))
+        .map((person) => ({ id: person.id, name: person.nickname || person.full_name }))
         .sort((a, b) => a.name.localeCompare(b.name, "vi")),
     };
   },

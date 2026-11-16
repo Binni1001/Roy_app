@@ -124,7 +124,8 @@ export async function changeMember(user: AuthUser, memberId: string, body: unkno
   const raw = (body && typeof body === "object" ? body : {}) as Record<string, unknown>;
   const status = raw.status;
   const discount = Number(raw.discountPercent);
-  if (status !== "fixed" && status !== "guest" && status !== "inactive") throw new ValidationError("Chọn cố định, vãng lai hoặc nghỉ.");
+  // Trong kỳ là cố định; rời kỳ là inactive. Không có "vãng lai trong kỳ".
+  if (status !== "fixed" && status !== "inactive") throw new ValidationError("Chỉ có thể ở trong kỳ hoặc rời kỳ.");
   if (discount !== 0 && discount !== 50 && discount !== 100) throw new ValidationError("Mức miễn tiền cầu chỉ là 0%, 50% hoặc 100%.");
   if (period.status === "closed") throw new ActionError("Kỳ đã đóng, không sửa được.", 409, "PERIOD_CLOSED");
   if (period.settled) throw new ActionError("Kỳ đã chốt chia tiền cầu, không đổi trạng thái hay mức miễn được.", 409, "PERIOD_SETTLED");

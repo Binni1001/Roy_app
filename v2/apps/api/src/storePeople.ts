@@ -13,6 +13,15 @@ const now = () => new Date().toISOString();
 /** Truy vấn cho màn hình Nhân sự. Không chứa logic nghiệp vụ. */
 export const supabasePeople: Own = {
   async listGroupPeople(groupId) {
+    // Cố định = có tên (fixed) trong kỳ đang mở của nhóm.
+    const open = await db().from("periods").select("id").eq("group_id", groupId).eq("status", "open").maybeSingle();
+    ensure(open.error);
+    const fixed = new Set<string>();
+    if (open.data) {
+      const members = await db().from("period_members").select("person_id").eq("period_id", open.data.id).eq("status", "fixed");
+      ensure(members.error);
+      for (const row of members.data ?? []) fixed.add(row.person_id as string);
+    }
     const { data, error } = await db()
       .from("person_groups")
       .select(
@@ -45,7 +54,7 @@ export const supabasePeople: Own = {
           email: person.email,
           phone: person.phone,
           avatarUrl: person.avatar_url,
-          attendanceType: person.attendance_type === "fixed" ? "fixed" : "guest",
+          attendanceType: fixed.has(person.id) ? "fixed" : "guest",
           status,
           role: member_role,
           joinedAt: joined_at,
@@ -70,7 +79,8 @@ export const supabasePeople: Own = {
         nickname: input.nickname,
         email: input.email,
         phone: input.phone,
-        attendance_type: input.attendanceType,
+        // Người mới chưa có tên trong kỳ nào nên là vãng lai.
+        attendance_type: "guest",
         status: "active",
         group_id: groupId,
         active_group_id: groupId,
@@ -96,7 +106,6 @@ export const supabasePeople: Own = {
         nickname: input.nickname,
         email: input.email,
         phone: input.phone,
-        attendance_type: input.attendanceType,
         updated_at: now(),
       })
       .eq("id", personId);

@@ -16,7 +16,6 @@ import { QueryState } from "./QueryState";
 import { confirmDialog } from "../lib/dialog";
 
 const STATUS_LABEL: Record<AdminPeriod["status"], string> = { draft: "Bản nháp", open: "Đang mở", closed: "Đã đóng" };
-const MEMBER_LABEL: Record<PeriodMemberStatus, string> = { fixed: "Cố định", guest: "Vãng lai", inactive: "Nghỉ" };
 
 type Form = { name: string; startDate: string; endDate: string; fixedMemberFee: string; guestFeePerSession: string; note: string };
 
@@ -109,39 +108,46 @@ function PeriodForm({
 
 function MemberRow({ member, periodId, locked }: { member: PeriodMemberRow; periodId: string; locked: boolean }) {
   const change = useChangePeriodMember(periodId);
+  const inPeriod = member.status === "fixed";
   const save = async (status: PeriodMemberStatus, discountPercent: ShuttleDiscount) => {
-    if (status !== member.status && member.status === "fixed" && !(await confirmDialog(`Đổi ${member.name} khỏi cố định? Phí cố định chưa trả sẽ bị hủy.`))) return;
+    if (status === "inactive" && inPeriod) {
+      const ok = await confirmDialog(`Cho ${member.name} rời kỳ? Người này thành vãng lai; phí cố định chưa trả sẽ bị hủy.`, {
+        confirmLabel: "Rời kỳ",
+        danger: true,
+      });
+      if (!ok) return;
+    }
     change.mutate({ id: member.id, status, discountPercent });
   };
   return (
-    <li className="person">
+    <li className={`person${inPeriod ? "" : " resting"}`}>
       <div className="person-head">
         <div className="grow">
           <div className="row-title">{member.name}</div>
+          {!inPeriod && <div className="row-sub">Đã rời kỳ · vãng lai</div>}
           {change.isError && <div className="error">{change.error.message}</div>}
         </div>
-        <select
-          aria-label={`Trạng thái của ${member.name}`}
-          value={member.status}
-          disabled={locked || change.isPending}
-          onChange={(e) => save(e.target.value as PeriodMemberStatus, member.discountPercent)}
-        >
-          {(Object.keys(MEMBER_LABEL) as PeriodMemberStatus[]).map((status) => (
-            <option key={status} value={status}>
-              {MEMBER_LABEL[status]}
-            </option>
-          ))}
-        </select>
-        <select
-          aria-label={`Miễn tiền cầu cho ${member.name}`}
-          value={member.discountPercent}
-          disabled={locked || change.isPending}
-          onChange={(e) => save(member.status, Number(e.target.value) as ShuttleDiscount)}
-        >
-          <option value={0}>Không miễn cầu</option>
-          <option value={50}>Miễn 50% cầu</option>
-          <option value={100}>Miễn 100% cầu</option>
-        </select>
+        {inPeriod && (
+          <select
+            aria-label={`Miễn tiền cầu cho ${member.name}`}
+            value={member.discountPercent}
+            disabled={locked || change.isPending}
+            onChange={(e) => void save("fixed", Number(e.target.value) as ShuttleDiscount)}
+          >
+            <option value={0}>Không miễn cầu</option>
+            <option value={50}>Miễn 50% cầu</option>
+            <option value={100}>Miễn 100% cầu</option>
+          </select>
+        )}
+        {!locked && (
+          <button
+            className={`btn btn-small ${inPeriod ? "btn-dark" : "btn-ghost"}`}
+            disabled={change.isPending}
+            onClick={() => void save(inPeriod ? "inactive" : "fixed", member.discountPercent)}
+          >
+            {inPeriod ? "Rời kỳ" : "Vào lại"}
+          </button>
+        )}
       </div>
     </li>
   );
@@ -155,7 +161,10 @@ function Roster({ period }: { period: AdminPeriod }) {
 
   return (
     <QueryState query={query}>
-      {(roster) => (
+      {(roster) => {
+        const fixed = roster.members.filter((m) => m.status === "fixed");
+        const left = roster.members.filter((m) => m.status !== "fixed");
+        return (
         <div className="stack">
           {(roster.notice || add.isError) && (
             <p className={add.isError ? "error" : "ok"} role="status">
@@ -167,22 +176,34 @@ function Roster({ period }: { period: AdminPeriod }) {
               {period.status === "closed" ? "Kỳ đã đóng, chỉ xem." : "Kỳ đã chốt chia tiền cầu: không đổi trạng thái hay mức miễn được nữa."}
             </p>
           )}
-          <h3>Trong kỳ · {roster.members.length} người</h3>
-          {roster.members.length ? (
+          <h3>Cố định trong kỳ · {fixed.length} người</h3>
+          <p className="muted small">Có tên trong kỳ là cố định; còn lại là vãng lai.</p>
+          {fixed.length ? (
             <ul className="people">
-              {roster.members.map((member) => (
+              {fixed.map((member) => (
                 <MemberRow key={member.id} member={member} periodId={period.id} locked={locked} />
               ))}
             </ul>
           ) : (
             <p className="muted">Kỳ chưa có ai.</p>
           )}
+          {left.length > 0 && (
+            <>
+              <h3>Đã rời kỳ · {left.length}</h3>
+              <ul className="people">
+                {left.map((member) => (
+                  <MemberRow key={member.id} member={member} periodId={period.id} locked={locked} />
+                ))}
+              </ul>
+            </>
+          )}
 
           {!locked && roster.candidates.length > 0 && (
             <>
               <h3>Thêm vào kỳ</h3>
               <p className="muted small">
-                Người cố định được tạo phí cố định {formatMoney(period.fixedMemberFee)} ngay khi thêm. Loại cố định hay vãng lai lấy theo hồ sơ ở Nhân sự.
+                Ai được thêm vào kỳ là cố định
+                {period.fixedMemberFee ? ` và có phí cố định ${formatMoney(period.fixedMemberFee)}, tạo ngay khi thêm.` : "."}
               </p>
               <div className="pick-list">
                 {roster.candidates.map((person) => (
@@ -195,7 +216,6 @@ function Roster({ period }: { period: AdminPeriod }) {
                       }
                     />
                     <span>{person.name}</span>
-                    <span className="muted small">{person.attendanceType === "fixed" ? "Cố định" : "Vãng lai"}</span>
                   </label>
                 ))}
               </div>
@@ -214,7 +234,8 @@ function Roster({ period }: { period: AdminPeriod }) {
             </>
           )}
         </div>
-      )}
+        );
+      }}
     </QueryState>
   );
 }

@@ -7,14 +7,13 @@ import { confirmDialog } from "../lib/dialog";
 
 type Form = Record<keyof PersonInput, string>;
 
-const EMPTY: Form = { fullName: "", nickname: "", email: "", phone: "", attendanceType: "guest" };
+const EMPTY: Form = { fullName: "", nickname: "", email: "", phone: "" };
 
 const toForm = (person: ManagedPerson): Form => ({
   fullName: person.fullName,
   nickname: person.nickname ?? "",
   email: person.email ?? "",
   phone: person.phone ?? "",
-  attendanceType: person.attendanceType,
 });
 
 const toInput = (form: Form): PersonInput => ({
@@ -22,7 +21,6 @@ const toInput = (form: Form): PersonInput => ({
   nickname: form.nickname || null,
   email: form.email || null,
   phone: form.phone || null,
-  attendanceType: form.attendanceType === "fixed" ? "fixed" : "guest",
 });
 
 function PersonForm({
@@ -66,11 +64,7 @@ function PersonForm({
       />
       <label htmlFor={id("phone")}>Số điện thoại</label>
       <input id={id("phone")} type="tel" inputMode="tel" value={form.phone} onChange={(e) => set("phone")(e.target.value)} />
-      <label htmlFor={id("type")}>Loại thành viên</label>
-      <select id={id("type")} value={form.attendanceType} onChange={(e) => set("attendanceType")(e.target.value)}>
-        <option value="fixed">Cố định</option>
-        <option value="guest">Vãng lai</option>
-      </select>
+      <p className="muted small">Cố định hay vãng lai không chọn ở đây: có tên trong kỳ đang mở (màn hình Kỳ quỹ) là cố định.</p>
       {error && (
         <p className="error" role="alert">
           {error}
@@ -110,7 +104,7 @@ function PersonRow({ person, meId }: { person: ManagedPerson; meId: string | und
             {person.nickname ? <span className="muted"> · {person.nickname}</span> : null}
           </div>
           <div className="row-sub">
-            {person.attendanceType === "fixed" ? "Cố định" : "Vãng lai"}
+            {person.attendanceType === "fixed" ? "Cố định (trong kỳ đang mở)" : "Vãng lai"}
             {person.role !== "member" ? ` · ${person.role === "owner" ? "Owner" : "Quản trị"}` : ""}
             {resting ? " · Đã nghỉ" : ""}
             {person.email ? ` · ${person.email}` : " · chưa có email"}

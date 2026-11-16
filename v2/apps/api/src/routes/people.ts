@@ -44,11 +44,8 @@ export function parsePersonInput(body: unknown): PersonInput {
   if (email && !EMAIL.test(email)) throw new ValidationError("Email chưa đúng dạng, ví dụ ten@gmail.com.");
   const phone = text(raw.phone, "Số điện thoại", 20)?.replace(/[\s.-]/g, "") ?? null;
   if (phone && !/^\+?\d{9,12}$/.test(phone)) throw new ValidationError("Số điện thoại gồm 9 đến 12 chữ số.");
-  const attendanceType = raw.attendanceType ?? "guest";
-  if (attendanceType !== "fixed" && attendanceType !== "guest") {
-    throw new ValidationError("Chọn cố định hoặc vãng lai.");
-  }
-  return { fullName, nickname, email, phone, attendanceType };
+  // Cố định hay vãng lai không chọn ở đây: có tên trong kỳ đang mở là cố định (màn hình Kỳ quỹ).
+  return { fullName, nickname, email, phone };
 }
 
 async function assertEmailFree(store: PeopleStore, email: string | null, personId: string | null) {

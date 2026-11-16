@@ -335,7 +335,7 @@ export interface ManagedPerson {
   email: string | null;
   phone: string | null;
   avatarUrl: string | null;
-  /** Cố định hay vãng lai: mặc định khi thêm người vào kỳ. */
+  /** Cố định = có tên trong kỳ đang mở của nhóm; còn lại là vãng lai. Không lưu riêng. */
   attendanceType: AttendanceType;
   /** Trạng thái trong nhóm này: active = đang chơi, inactive = đã nghỉ. */
   status: "active" | "inactive";
@@ -349,7 +349,6 @@ export interface PersonInput {
   /** Email đăng nhập; phải trùng email tài khoản Supabase để người đó vào được app. */
   email: string | null;
   phone: string | null;
-  attendanceType: AttendanceType;
 }
 
 /** Kỳ quỹ như owner thấy ở màn hình Kỳ quỹ. */
@@ -393,7 +392,6 @@ export interface PeriodMemberRow {
 export interface PeriodCandidate {
   id: string;
   name: string;
-  attendanceType: AttendanceType;
 }
 
 export interface PeriodRoster {

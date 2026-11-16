@@ -68,10 +68,12 @@ test("adding members goes through the database function once, de-duplicated, and
 test("changing a member validates the input, checks the group and the settlement, then explains the fee change", async () => {
   const calls: unknown[] = [];
   const app = setup({ updatePeriodMember: async (...args) => (calls.push(args), "fee_paid_refund_needed") });
-  const ok = await app.put(await owner(), "/admin/period-members/m1", { status: "guest", discountPercent: 50 });
+  const ok = await app.put(await owner(), "/admin/period-members/m1", { status: "inactive", discountPercent: 50 });
   assert.equal(ok.status, 200);
   assert.match((await ok.json()).notice, /hoàn tiền/);
-  assert.deepEqual(calls, [["m1", "guest", 50]]);
+  assert.deepEqual(calls, [["m1", "inactive", 50]]);
+  // Không còn "vãng lai trong kỳ": trong kỳ là cố định.
+  assert.equal((await app.put(await owner(), "/admin/period-members/m1", { status: "guest", discountPercent: 0 })).status, 400);
   assert.equal((await app.put(await owner(), "/admin/period-members/m1", { status: "vip", discountPercent: 0 })).status, 400);
   assert.equal((await app.put(await owner(), "/admin/period-members/m1", { status: "fixed", discountPercent: 30 })).status, 400);
   assert.equal((await app.put(await owner(), "/admin/period-members/m-other", { status: "fixed", discountPercent: 0 })).status, 404);

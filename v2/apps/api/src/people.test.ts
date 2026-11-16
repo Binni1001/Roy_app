@@ -27,14 +27,15 @@ test("adding a person cleans the input and refuses an email already linked to so
     status: "inactive",
   });
   assert.equal(res.status, 201);
-  const expected: PersonInput = { fullName: "Lan Anh", nickname: null, email: "lan@example.com", phone: "0901234567", attendanceType: "fixed" };
+  // Không còn chọn cố định/vãng lai ở hồ sơ: trường gửi lên bị bỏ qua.
+  const expected: PersonInput = { fullName: "Lan Anh", nickname: null, email: "lan@example.com", phone: "0901234567" };
   assert.deepEqual(created, [["g1", expected]]);
 
   const taken = setup({ findPersonIdByEmail: async () => "p9", createMember: async () => void (created as unknown[]).push("again") });
   const dup = await taken.post(await owner(), "/admin/people", { fullName: "Lan Anh", email: "lan@example.com" });
   assert.equal(dup.status, 409);
   assert.equal((await dup.json()).code, "EMAIL_TAKEN");
-  for (const bad of [{ fullName: "A" }, { fullName: "Lan", email: "lan@" }, { fullName: "Lan", phone: "12ab" }, { fullName: "Lan", attendanceType: "vip" }]) {
+  for (const bad of [{ fullName: "A" }, { fullName: "Lan", email: "lan@" }, { fullName: "Lan", phone: "12ab" }]) {
     assert.equal((await app.post(await owner(), "/admin/people", bad)).status, 400);
   }
   assert.equal(created.length, 1);
