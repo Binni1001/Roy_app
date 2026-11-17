@@ -1,8 +1,14 @@
 {
-  "rewrites": [
+  "redirects": [
     {
-      "source": "/(.*)",
-      "destination": "/index.html"
+      "source": "/reset-password",
+      "destination": "https://royminton.vercel.app/dat-lai-mat-khau",
+      "permanent": false
+    },
+    {
+      "source": "/:path*",
+      "destination": "https://royminton.vercel.app/",
+      "permanent": false
     }
   ]
 }
